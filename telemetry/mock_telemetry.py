@@ -1,6 +1,11 @@
 import random
 import time
+from sqlalchemy.orm import sessionmaker
+from database import engine, Session as RacingSession, Lap as RacingLap, Telemetry
 
+
+DBSession = sessionmaker(bind=engine)
+db = DBSession()
 
 track_info = {
     "TrackLength": "5.15 km",
@@ -147,6 +152,15 @@ class Car:
 car = Car()
 
 try:
+
+    current_session = RacingSession(track_name=weekend_info["TrackDisplayName"])
+    db.add(current_session)
+    db.commit()
+
+    current_lap = RacingLap(session_id=current_session.id, lap_number=lap, lap_time=0.0)
+    db.add(current_lap)
+    db.commit()
+
     while True:
         if car.state == "accelerating":
             car.update_accelerating()
@@ -165,6 +179,19 @@ try:
         print(f"Lap {lap} | {car.speed:6.1f} km/h | RPM {car.rpm:6.0f} | "
             f"G{car.gear} | T:{car.throttle:.1f} B:{car.brake:.1f} | "
             f"Wheel: {car.wheel_angle:+.3f} rad {car.state}")
+
+        new_data = Telemetry(
+            lap_id=current_lap.id,
+            session_time=lap_current_lap_time,
+            speed=car.speed,
+            rpm=car.rpm,
+            gear=car.gear,
+            throttle=car.throttle,
+            brake=car.brake,
+            wheel_angle=car.wheel_angle
+        )
+        db.add(new_data)
+        db.commit()
 
         time.sleep(0.5)
 

@@ -7,12 +7,14 @@ DATABASE_URL = "postgresql://iracing:iracing_local@localhost:5432/telemetry"
 engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
 
+
 class Session(Base):
     __tablename__ = 'sessions'
 
     id = Column(Integer, primary_key=True)
     track_name = Column(String)
     laps = relationship("Lap", back_populates="session")
+
 
 class Lap(Base):
     __tablename__ = 'laps'
@@ -24,6 +26,7 @@ class Lap(Base):
 
     session = relationship("Session", back_populates="laps")
     telemetry_data = relationship("Telemetry", back_populates="lap")
+
 
 class Telemetry(Base):
     __tablename__ = 'telemetry'
@@ -39,6 +42,7 @@ class Telemetry(Base):
     wheel_angle = Column(Float)
 
     lap = relationship("Lap", back_populates="telemetry_data")
+
 
 if __name__ == "__main__":
     Base.metadata.create_all(engine)
