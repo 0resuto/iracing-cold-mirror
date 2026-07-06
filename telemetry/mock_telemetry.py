@@ -1,5 +1,4 @@
 import random
-import math
 import time
 
 
@@ -19,7 +18,6 @@ weekend_info = {
 
 lap = 1
 lap_current_lap_time = 0        # seconds
-lap_best_lap_time = 0           # seconds
 lap_best_lap_time = 117.352     # seconds
 lap_dist = 0                    # meters
 lap_dist_pct = 0                # percent

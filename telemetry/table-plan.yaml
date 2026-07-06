@@ -1,0 +1,44 @@
+table: weekend_info
+    TrackName
+    TrackID
+    Category
+    SessionID
+    TrackDisplayName
+    Time
+
+table: track_info
+    (TrackID)
+    TrackLength
+    SectorNum
+    TrackVersion
+
+table: cars
+    (SessionID)
+    player_id
+    player_name
+    car
+    safety_rating
+    irating
+
+table: laps
+    (SessionID)
+    (player_id)
+    (Time)
+    lap
+    lap_current_lap_time
+    lap_best_lap_time
+
+table: telemetry
+    (SessionID)
+    (player_id)
+    (Time)
+    (lap)
+    lap_dist
+    lap_dist_pct
+    track_surface
+    speed
+    rpm
+    gear
+    throttle
+    brake
+    wheel_angle
