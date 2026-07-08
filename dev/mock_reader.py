@@ -127,16 +127,12 @@ class MockReader:
         self.car = Car()
 
     def read(self):
-        # 1. Обновить физику машины (вызвать нужный update_*)
         if self.car.state == "accelerating":
             self.car.update_accelerating()
         elif self.car.state == "braking":
             self.car.update_braking()
         elif self.car.state == "coasting":
             self.car.update_coasting()
-
-
-        # 2. Собрать словарь и вернуть его
 
         self.car_data = {
             "speed": self.car.speed,

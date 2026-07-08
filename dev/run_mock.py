@@ -1,9 +1,5 @@
-import time
 from dev.mock_reader import MockReader
+from telemetry.collector import run
 
 reader = MockReader()
-
-while True:
-    data = reader.read()
-    print(data)
-    time.sleep(0.5)
+run(reader, track_name="Nürburgring GP (Mock)")
