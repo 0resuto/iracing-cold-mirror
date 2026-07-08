@@ -1,36 +1,5 @@
 import random
-import time
-from sqlalchemy.orm import sessionmaker
-from telemetry.database import engine, Session as RacingSession, Lap as RacingLap, Telemetry
-import redis
-import json
 
-
-DBSession = sessionmaker(bind=engine)
-db = DBSession()
-
-redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-
-track_info = {
-    "TrackLength": "5.15 km",
-    "SectorNum": 3,
-    "TrackVersion": "2013.1"
-}
-
-weekend_info = {
-    "TrackName": "nurburgring gp",
-    "TrackID": 154,
-    "Category": "Road",
-    "SessionID": 84321092,
-    "TrackDisplayName": "Nürburgring - Grand-Prix-Strecke"
-}
-
-lap = 1
-lap_current_lap_time = 0        # seconds
-lap_best_lap_time = 117.352     # seconds
-lap_dist = 0                    # meters
-lap_dist_pct = 0                # percent
-track_surface = 4               # 0 = NotInWorld, 1 = OffTrack, 2 = InPitStall, 3 = AproachingPits, 4 = OnTrack
 
 GEAR_RANGES = {
     1: (0, 60),
@@ -153,73 +122,29 @@ class Car:
             self.state = "accelerating"
 
 
-car = Car()
+class MockReader:
+    def __init__(self):
+        self.car = Car()
 
-try:
+    def read(self):
+        # 1. Обновить физику машины (вызвать нужный update_*)
+        if self.car.state == "accelerating":
+            self.car.update_accelerating()
+        elif self.car.state == "braking":
+            self.car.update_braking()
+        elif self.car.state == "coasting":
+            self.car.update_coasting()
 
-    current_session = RacingSession(track_name=weekend_info["TrackDisplayName"])
-    db.add(current_session)
-    db.commit()
 
-    current_lap = RacingLap(session_id=current_session.id, lap_number=lap, lap_time=0.0)
-    db.add(current_lap)
-    db.commit()
+        # 2. Собрать словарь и вернуть его
 
-    while True:
-        if car.state == "accelerating":
-            car.update_accelerating()
-        elif car.state == "braking":
-            car.update_braking()
-        elif car.state == "coasting":
-            car.update_coasting()
-        lap_current_lap_time += 0.5
-        lap_dist += car.speed / 3.6  # км/ч → м/с, за 1 секунду
-        lap_dist_pct = lap_dist / 5150
-        if lap_dist >= 5150:
-            current_lap.lap_time = lap_current_lap_time
-            db.commit()
-
-            lap_dist = 0
-            lap_current_lap_time = 0
-            lap_dist_pct = 0
-            lap += 1
-            
-            current_lap = RacingLap(session_id=current_session.id, lap_number=lap, lap_time=0.0)
-            db.add(current_lap)
-            db.commit()
-
-        print(f"Lap {lap} | {car.speed:6.1f} km/h | RPM {car.rpm:6.0f} | "
-            f"G{car.gear} | T:{car.throttle:.1f} B:{car.brake:.1f} | "
-            f"Wheel: {car.wheel_angle:+.3f} rad {car.state}")
-
-        live_data = {
-            "speed": car.speed,
-            "rpm": car.rpm,
-            "gear": car.gear,
-            "throttle": car.throttle,
-            "brake": car.brake,
-            "wheel_angle": car.wheel_angle,
-            "session_time": lap_current_lap_time,
-            "lap_dist_pct": lap_dist_pct
+        self.car_data = {
+            "speed": self.car.speed,
+            "rpm": self.car.rpm,
+            "gear": self.car.gear,
+            "throttle": self.car.throttle,
+            "brake": self.car.brake,
+            "wheel_angle": self.car.wheel_angle
         }
 
-        redis_client.set("telemetry:latest", json.dumps(live_data))
-
-        new_data = Telemetry(
-            lap_id=current_lap.id,
-            session_time=lap_current_lap_time,
-            speed=car.speed,
-            rpm=car.rpm,
-            gear=car.gear,
-            throttle=car.throttle,
-            brake=car.brake,
-            wheel_angle=car.wheel_angle,
-            lap_dist_pct=lap_dist_pct
-        )
-        db.add(new_data)
-        db.commit()
-
-        time.sleep(0.5)
-
-except KeyboardInterrupt:
-    print("Exiting...")
+        return self.car_data

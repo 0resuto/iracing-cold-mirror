@@ -40,6 +40,7 @@ class Telemetry(Base):
     throttle = Column(Float)
     brake = Column(Float)
     wheel_angle = Column(Float)
+    lap_dist_pct = Column(Float)
 
     lap = relationship("Lap", back_populates="telemetry_data")
 
