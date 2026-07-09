@@ -1,5 +1,5 @@
 from sqlalchemy.orm import sessionmaker
-from telemetry.database import engine, Session as RacingSession, Lap as RacingLap, Telemetry
+from telemetry.database import engine, Session as RacingSession, Lap as RacingLap, Telemetry, Player
 import redis
 import time
 import json
@@ -8,14 +8,21 @@ import json
 DBSession = sessionmaker(bind=engine)
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
-def run(reader, track_name="Unknown Track", track_length=5150):
+def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unknown Player"):
     db = DBSession()
     lap = 1
     lap_dist = 0
     lap_current_lap_time = 0
 
     try:
-        current_session = RacingSession(track_name=track_name)
+        player = db.query(Player).filter_by(name=player_name).first()
+
+        if not player:
+            player = Player(name=player_name)
+            db.add(player)
+            db.commit()
+
+        current_session = RacingSession(track_name=track_name, player_id=player.id)
         db.add(current_session)
         db.commit()
 
@@ -47,7 +54,7 @@ def run(reader, track_name="Unknown Track", track_length=5150):
                 "brake": data["brake"],
                 "wheel_angle": data["wheel_angle"],
                 "session_time": lap_current_lap_time,
-                "lap_dist_pct": lap_dist_pct
+                "lap_dist_pct": lap_dist_pct,
             }
 
             redis_client.set("telemetry:latest", json.dumps(live_data))
@@ -61,7 +68,7 @@ def run(reader, track_name="Unknown Track", track_length=5150):
                 throttle=data["throttle"],
                 brake=data["brake"],
                 wheel_angle=data["wheel_angle"],
-                lap_dist_pct=lap_dist_pct
+                lap_dist_pct=lap_dist_pct,
             )
             db.add(new_data)
             db.commit()

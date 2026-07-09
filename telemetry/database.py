@@ -8,10 +8,21 @@ engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
 
 
+class Player(Base):
+    __tablename__ = 'players'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+
+    sessions = relationship("Session", back_populates="player", cascade="all, delete-orphan")
+
+
 class Session(Base):
     __tablename__ = 'sessions'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
+    player_id = Column(Integer, ForeignKey('players.id'))
+    player = relationship("Player", back_populates="sessions")
     track_name = Column(String)
     laps = relationship("Lap", back_populates="session")
 
@@ -45,6 +56,7 @@ class Telemetry(Base):
     lap = relationship("Lap", back_populates="telemetry_data")
 
 
+
 if __name__ == "__main__":
     Base.metadata.create_all(engine)
-    print("Таблицы успешно созданы!")
+    print("Tables successfully created!")

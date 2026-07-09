@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from sqlalchemy.orm import sessionmaker, joinedload
-from telemetry.database import engine, Telemetry, Session, Lap
+from telemetry.database import engine, Telemetry, Session, Lap, Player
 from pydantic import BaseModel
 import redis
 import json
@@ -23,7 +23,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], # Vite default port
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,6 +63,15 @@ class SessionResponse(BaseModel):
         from_attributes = True
 
 
+class PlayerResponse(BaseModel):
+    id: int
+    name: str
+    sessions: list[SessionResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
 @app.get("/api/status")
 def get_status():
     return {"status": "ok", "message": "API is running"}
@@ -86,7 +95,7 @@ def get_live_telemetry():
     else:
         return {"status": "waiting for data"}
     
-@app.get("/api/history", response_model=list[SessionResponse])
+@app.get("/api/history", response_model=list[PlayerResponse])
 def get_history(db = Depends(get_db)):
-    sessions = db.query(Session).options(joinedload(Session.laps)).all()
-    return sessions
+    players = db.query(Player).options(joinedload(Player.sessions).joinedload(Session.laps)).all()
+    return players
