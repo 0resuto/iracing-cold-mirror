@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 export function useTelemetry(selectedLap) {
   const [lapData, setLapData] = useState([]);
+  const [referenceData, setReferenceData] = useState([]);
   const [hoveredData, setHoveredData] = useState(null);
   const [isUserHovering, setIsUserHovering] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -13,12 +14,37 @@ export function useTelemetry(selectedLap) {
     let ws = null;
 
     if (selectedLap.lap_time > 0) {
+      // 1. Fetch current lap telemetry
       fetch(`http://localhost:8000/api/laps/${selectedLap.id}/telemetry`)
         .then(res => res.json())
         .then(data => {
           if (isMounted) setLapData(data);
         })
         .catch(err => console.error("Telemetry fetch error:", err));
+
+      // 2. Fetch best lap telemetry if we know the player and track
+      if (selectedLap.player_id && selectedLap.track_name) {
+        fetch(`http://localhost:8000/api/players/${selectedLap.player_id}/best_lap?track_name=${encodeURIComponent(selectedLap.track_name)}`)
+          .then(res => {
+            if (!res.ok) throw new Error("No best lap found");
+            return res.json();
+          })
+          .then(bestLap => {
+            if (bestLap && bestLap.id && isMounted) {
+              return fetch(`http://localhost:8000/api/laps/${bestLap.id}/telemetry`);
+            }
+          })
+          .then(res => res ? res.json() : null)
+          .then(data => {
+            if (data && isMounted) setReferenceData(data);
+          })
+          .catch(err => {
+            console.log("No reference lap found or error:", err);
+            if (isMounted) setReferenceData([]);
+          });
+      } else {
+        setReferenceData([]);
+      }
     } else {
       setLapData([]);
       
@@ -72,5 +98,5 @@ export function useTelemetry(selectedLap) {
     };
   }, [selectedLap]);
 
-  return { lapData, hoveredData, setHoveredData, setIsUserHovering, refreshTrigger };
+  return { lapData, referenceData, hoveredData, setHoveredData, setIsUserHovering, refreshTrigger };
 }

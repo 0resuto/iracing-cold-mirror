@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from sqlalchemy.orm import sessionmaker, joinedload
 from telemetry.database import engine, Telemetry, Session, Lap, Player
 from pydantic import BaseModel
@@ -86,9 +86,23 @@ def get_latest_telemetry(db = Depends(get_db)):
 
 @app.get("/api/laps/{lap_id}/telemetry", response_model=list[TelemetryResponse])
 def get_lap_telemetry(lap_id: int, db = Depends(get_db)):
-    data_objects = db.query(Telemetry).filter(Telemetry.lap_id == lap_id).all()
+    data_objects = db.query(Telemetry).filter(Telemetry.lap_id == lap_id).order_by(Telemetry.session_time.asc()).all()
     return data_objects
+
+
+@app.get("/api/players/{player_id}/best_lap", response_model=LapResponse)
+def get_best_lap(player_id: int, track_name: str, db = Depends(get_db)):
+    best_lap = db.query(Lap).join(Session).filter(
+        Session.player_id == player_id,
+        Session.track_name == track_name,
+        Lap.lap_time > 0
+    ).order_by(Lap.lap_time.asc()).first()
     
+    if not best_lap:
+        raise HTTPException(status_code=404, detail="Best lap not found")
+        
+    return best_lap
+
 
 @app.websocket("/ws/telemetry/live")
 async def websocket_telemetry(websocket: WebSocket):

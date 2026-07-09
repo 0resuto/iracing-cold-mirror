@@ -22,7 +22,7 @@ export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger }) {
             }
           } else if (refreshTrigger > 0) {
             // Auto-transition to the new live lap
-            onSelectLap(latestLap);
+            onSelectLap({ ...latestLap, player_id: latestPlayer.id, track_name: latestSession.track_name });
           }
         }
       })
@@ -109,7 +109,7 @@ export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger }) {
                                 justifyContent: 'space-between',
                                 fontSize: '12px'
                               }}
-                              onClick={() => onSelectLap(lap)}
+                              onClick={() => onSelectLap({ ...lap, player_id: player.id, track_name: session.track_name })}
                             >
                               <span>Lap {lap.lap_number}</span>
                               <span className="digital-number">{lap.lap_time > 0 ? lap.lap_time.toFixed(1) + 's' : 'Live'}</span>

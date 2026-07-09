@@ -12,6 +12,7 @@ function App() {
 
   const { 
     lapData, 
+    referenceData,
     hoveredData, 
     setHoveredData, 
     setIsUserHovering, 
@@ -71,6 +72,7 @@ function App() {
               lapTime={selectedLap ? selectedLap.lap_time : 0} 
               hoveredData={hoveredData} 
               lapData={lapData}
+              referenceData={referenceData}
             />
           </div>
           <div className="panel" style={{ flex: 1, overflow: 'hidden' }}>
@@ -82,6 +84,7 @@ function App() {
         <div className="panel" style={{ flex: 1, minHeight: '400px', display: 'flex', padding: '16px' }}>
           <TelemetryChart 
             lapData={lapData} 
+            referenceData={referenceData}
             onHoverData={setHoveredData} 
             onHoverStateChange={setIsUserHovering}
           />
