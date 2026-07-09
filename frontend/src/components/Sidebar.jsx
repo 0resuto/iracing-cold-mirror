@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export function Sidebar({ selectedLapId, onSelectLap }) {
+export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger }) {
   const [players, setPlayers] = useState([]);
   const [expandedPlayer, setExpandedPlayer] = useState(null);
   const [expandedSession, setExpandedSession] = useState(null);
@@ -12,14 +12,22 @@ export function Sidebar({ selectedLapId, onSelectLap }) {
         setPlayers(data);
         if (data.length > 0) {
           const latestPlayer = data[data.length - 1];
-          setExpandedPlayer(latestPlayer.id);
-          if (latestPlayer.sessions.length > 0) {
-            setExpandedSession(latestPlayer.sessions[latestPlayer.sessions.length - 1].id);
+          const latestSession = latestPlayer.sessions[latestPlayer.sessions.length - 1];
+          const latestLap = latestSession.laps[latestSession.laps.length - 1];
+
+          if (!selectedLapId) {
+            setExpandedPlayer(latestPlayer.id);
+            if (latestPlayer.sessions.length > 0) {
+              setExpandedSession(latestSession.id);
+            }
+          } else if (refreshTrigger > 0) {
+            // Auto-transition to the new live lap
+            onSelectLap(latestLap);
           }
         }
       })
       .catch(err => console.error("History fetch error:", err));
-  }, []);
+  }, [refreshTrigger]);
 
   return (
     <div className="glass-panel" style={{ height: '100%', overflowY: 'auto', padding: '24px' }}>

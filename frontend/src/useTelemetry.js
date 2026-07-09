@@ -12,25 +12,39 @@ export function useTelemetry() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Poll every 100ms
-    const interval = setInterval(async () => {
+    // Open a persistent WebSocket connection
+    const ws = new WebSocket('ws://localhost:8000/ws/telemetry/live');
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+      setError(null);
+    };
+
+    ws.onmessage = (event) => {
       try {
-        const response = await fetch('http://localhost:8000/api/telemetry/live');
-        if (!response.ok) throw new Error('Network response was not ok');
-        const json = await response.json();
-        
-        // If the backend returns 'waiting for data', skip update
+        const json = JSON.parse(event.data);
         if (json.status !== 'waiting for data') {
           setData(json);
-          setError(null);
         }
       } catch (err) {
-        console.error("Telemetry fetch error:", err);
-        setError(err.message);
+        console.error("Error parsing WebSocket message:", err);
       }
-    }, 100);
+    };
 
-    return () => clearInterval(interval);
+    ws.onerror = (err) => {
+      console.error("WebSocket error:", err);
+      setError("WebSocket connection error");
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      setError("WebSocket disconnected");
+    };
+
+    // Cleanup: close the connection when the component unmounts
+    return () => {
+      ws.close();
+    };
   }, []);
 
   return { data, error };
