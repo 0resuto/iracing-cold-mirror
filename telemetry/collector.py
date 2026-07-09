@@ -35,6 +35,8 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
             lap_current_lap_time += 0.5
             lap_dist += data["speed"] / 3.6 * 0.5 
             lap_dist_pct = lap_dist / track_length
+            if hasattr(reader, 'set_lap_dist_pct'):
+                reader.set_lap_dist_pct(lap_dist_pct)
 
             if lap_dist >= track_length:
                 current_lap.lap_time = lap_current_lap_time
@@ -55,6 +57,21 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
                 "wheel_angle": data["wheel_angle"],
                 "session_time": lap_current_lap_time,
                 "lap_dist_pct": lap_dist_pct,
+                "lat": data.get("lat"),
+                "lon": data.get("lon"),
+                "lat_accel": data.get("lat_accel"),
+                "long_accel": data.get("long_accel"),
+                "yaw_rate": data.get("yaw_rate"),
+                "velocity_x": data.get("velocity_x"),
+                "velocity_z": data.get("velocity_z"),
+                "slip_angle": data.get("slip_angle"),
+                "lf_speed": data.get("lf_speed"),
+                "rf_speed": data.get("rf_speed"),
+                "lr_speed": data.get("lr_speed"),
+                "rr_speed": data.get("rr_speed"),
+                "abs_active": data.get("abs_active"),
+                "tc_active": data.get("tc_active"),
+                "wheel_lock": data.get("wheel_lock"),
             }
 
             redis_client.set("telemetry:latest", json.dumps(live_data))
@@ -69,6 +86,21 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
                 brake=data["brake"],
                 wheel_angle=data["wheel_angle"],
                 lap_dist_pct=lap_dist_pct,
+                lat=data.get("lat"),
+                lon=data.get("lon"),
+                lat_accel=data.get("lat_accel"),
+                long_accel=data.get("long_accel"),
+                yaw_rate=data.get("yaw_rate"),
+                velocity_x=data.get("velocity_x"),
+                velocity_z=data.get("velocity_z"),
+                slip_angle=data.get("slip_angle"),
+                lf_speed=data.get("lf_speed"),
+                rf_speed=data.get("rf_speed"),
+                lr_speed=data.get("lr_speed"),
+                rr_speed=data.get("rr_speed"),
+                abs_active=data.get("abs_active"),
+                tc_active=data.get("tc_active"),
+                wheel_lock=data.get("wheel_lock"),
             )
             db.add(new_data)
             db.commit()

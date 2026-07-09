@@ -45,14 +45,33 @@ class Telemetry(Base):
     id = Column(Integer, primary_key=True)
     lap_id = Column(Integer, ForeignKey('laps.id'))
     session_time = Column(Float)
-    speed = Column(Float)
-    rpm = Column(Integer)
-    gear = Column(Integer)
-    throttle = Column(Float)
-    brake = Column(Float)
-    wheel_angle = Column(Float)
-    lap_dist_pct = Column(Float)
+    speed = Column(Float)                       # Speed (km/h)
+    rpm = Column(Integer)                       # Engine RPM
+    gear = Column(Integer)                      # Current gear
+    throttle = Column(Float)                    # Throttle input (0.0 to 1.0)
+    brake = Column(Float)                       # Brake input (0.0 to 1.0)
+    wheel_angle = Column(Float)                 # Steering wheel angle (rad)
+    lap_dist_pct = Column(Float)                # Lap distance percentage (0.0 to 1.0)
 
+    lat = Column(Float, nullable=True)          # GPS Latitude
+    lon = Column(Float, nullable=True)          # GPS Longitude
+
+    lat_accel = Column(Float, nullable=True)    # Lateral acceleration (G)
+    long_accel = Column(Float, nullable=True)   # Longitudinal acceleration (G)
+    yaw_rate = Column(Float, nullable=True)     # Yaw rate (rad/s)
+    velocity_x = Column(Float, nullable=True)   # Longitudinal velocity in car's frame (m/s)
+    velocity_z = Column(Float, nullable=True)   # Lateral velocity in car's frame (m/s)
+    slip_angle = Column(Float, nullable=True)   # Angle between car's nose and direction of travel
+
+    lf_speed = Column(Float, nullable=True)     # Left front wheel speed (m/s)
+    rf_speed = Column(Float, nullable=True)     # Right front wheel speed (m/s)
+    lr_speed = Column(Float, nullable=True)     # Left rear wheel speed (m/s)
+    rr_speed = Column(Float, nullable=True)     # Right rear wheel speed (m/s)
+
+    abs_active = Column(Float, nullable=True)   # ABS active flag (0.0 or 1.0)
+    tc_active = Column(Float, nullable=True)    # Traction Control active flag (0.0 or 1.0)
+    wheel_lock = Column(Float, nullable=True)   # Any wheel locked flag (0.0 or 1.0)
+    
     lap = relationship("Lap", back_populates="telemetry_data")
 
 

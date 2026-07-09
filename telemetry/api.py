@@ -41,7 +41,22 @@ class TelemetryResponse(BaseModel):
     wheel_angle: float
     session_time: float
     lap_dist_pct: float
-
+    lat: float | None = None
+    lon: float | None = None
+    lat_accel: float | None = None
+    long_accel: float | None = None
+    yaw_rate: float | None = None
+    velocity_x: float | None = None
+    velocity_z: float | None = None
+    slip_angle: float | None = None
+    lf_speed: float | None = None
+    rf_speed: float | None = None
+    lr_speed: float | None = None
+    rr_speed: float | None = None
+    abs_active: float | None = None
+    tc_active: float | None = None
+    wheel_lock: float | None = None
+    
     class Config:
         from_attributes = True
 
