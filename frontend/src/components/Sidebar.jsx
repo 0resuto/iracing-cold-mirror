@@ -30,30 +30,40 @@ export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger }) {
   }, [refreshTrigger]);
 
   return (
-    <div className="glass-panel" style={{ height: '100%', overflowY: 'auto', padding: '24px' }}>
-      <h2 className="panel-title" style={{ marginBottom: '16px' }}>History</h2>
+    <div style={{ 
+      height: '100%', 
+      overflowY: 'auto', 
+      padding: '24px',
+      background: 'var(--card-bg)',
+      borderRight: '1px solid var(--card-border)',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h2 className="panel-title" style={{ margin: 0 }}>History</h2>
+      </div>
       
       {players.length === 0 ? (
-        <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading history...</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Loading history...</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {players.map(player => (
             <div key={player.id} style={{ 
-              background: 'rgba(255,255,255,0.02)', 
-              borderRadius: '8px',
+              background: 'transparent', 
               border: '1px solid var(--card-border)',
               overflow: 'hidden'
             }}>
               {/* Player Header */}
               <div 
                 style={{ 
-                  padding: '12px 16px', 
+                  padding: '10px 14px', 
                   cursor: 'pointer', 
                   display: 'flex', 
                   justifyContent: 'space-between',
-                  background: expandedPlayer === player.id ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                  fontWeight: 'bold',
-                  color: 'var(--accent-blue)'
+                  background: expandedPlayer === player.id ? 'var(--card-border)' : 'transparent',
+                  fontWeight: '500',
+                  color: 'var(--text-main)',
+                  fontSize: '14px'
                 }}
                 onClick={() => setExpandedPlayer(expandedPlayer === player.id ? null : player.id)}
               >
@@ -69,51 +79,51 @@ export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger }) {
                       {/* Session Header */}
                       <div 
                         style={{ 
-                          padding: '8px 16px 8px 24px', 
+                          padding: '8px 14px 8px 24px', 
                           cursor: 'pointer', 
                           display: 'flex', 
                           justifyContent: 'space-between',
-                          background: expandedSession === session.id ? 'rgba(255,255,255,0.05)' : 'transparent',
+                          background: expandedSession === session.id ? 'rgba(255,255,255,0.02)' : 'transparent',
                           borderTop: '1px solid var(--card-border)'
                         }}
                         onClick={() => setExpandedSession(expandedSession === session.id ? null : session.id)}
                       >
-                        <span style={{ fontSize: '14px' }}>🏁 {session.track_name}</span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{expandedSession === session.id ? '▼' : '▶'}</span>
+                        <span style={{ fontSize: '13px' }}>🏁 {session.track_name}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{expandedSession === session.id ? '▼' : '▶'}</span>
                       </div>
 
                       {/* Laps List */}
                       {expandedSession === session.id && (
-                        <div style={{ padding: '4px 8px 4px 32px', background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ padding: '4px 8px 4px 24px', background: 'rgba(0,0,0,0.2)' }}>
                           {session.laps.map(lap => (
                             <div 
                               key={lap.id}
                               style={{
-                                padding: '6px 12px',
-                                margin: '4px 0',
+                                padding: '6px 10px',
+                                margin: '2px 0',
                                 cursor: 'pointer',
-                                borderRadius: '4px',
-                                background: selectedLapId === lap.id ? 'var(--accent-blue)' : 'transparent',
-                                color: selectedLapId === lap.id ? '#fff' : 'var(--text-muted)',
+                                borderLeft: selectedLapId === lap.id ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                                background: selectedLapId === lap.id ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
+                                color: selectedLapId === lap.id ? 'var(--text-main)' : 'var(--text-muted)',
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                fontSize: '13px'
+                                fontSize: '12px'
                               }}
                               onClick={() => onSelectLap(lap)}
                             >
                               <span>Lap {lap.lap_number}</span>
-                              <span className="digital-number">{lap.lap_time > 0 ? lap.lap_time.toFixed(1) + 's' : 'In Progress'}</span>
+                              <span className="digital-number">{lap.lap_time > 0 ? lap.lap_time.toFixed(1) + 's' : 'Live'}</span>
                             </div>
                           ))}
                           {session.laps.length === 0 && (
-                            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--text-muted)' }}>No laps recorded yet.</div>
+                            <div style={{ padding: '8px 10px', fontSize: '11px', color: 'var(--text-muted)' }}>No laps recorded yet.</div>
                           )}
                         </div>
                       )}
                     </div>
                   ))}
                   {player.sessions.length === 0 && (
-                    <div style={{ padding: '8px 24px', fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--card-border)' }}>No sessions yet.</div>
+                    <div style={{ padding: '8px 24px', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--card-border)' }}>No sessions yet.</div>
                   )}
                 </div>
               )}

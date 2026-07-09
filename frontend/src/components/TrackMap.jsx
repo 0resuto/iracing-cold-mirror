@@ -4,7 +4,7 @@ export function TrackMap({ lapTime, hoveredData, lapData }) {
   // If no lap is selected at all, show empty state
   if (lapTime === undefined || lapTime === null) {
     return (
-      <div className="glass-panel" style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ color: 'var(--text-muted)' }}>Track Map</div>
       </div>
     );
@@ -41,8 +41,10 @@ export function TrackMap({ lapTime, hoveredData, lapData }) {
   const dotY = cy + ry * Math.sin(angle);
 
   return (
-    <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h2 className="panel-title">Track Position</h2>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+        <h2 className="panel-title" style={{ margin: 0 }}>Track Position</h2>
+      </div>
       
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         {/* Track Outline (Outer Edge) */}
@@ -81,10 +83,9 @@ export function TrackMap({ lapTime, hoveredData, lapData }) {
         <circle cx={dotX} cy={dotY} r="4" fill="var(--accent-red)" />
       </svg>
       
-      <div style={{ marginTop: '16px', fontSize: '14px', color: 'var(--text-muted)' }}>
+      <div style={{ marginTop: '16px', fontSize: '14px', color: 'var(--text-muted)', textAlign: 'center' }}>
         Progress: {(progress * 100).toFixed(1)}% <br/>
-        <span style={{ fontSize: '12px' }}>Time: {displayTime.toFixed(1)}s / {lapTime.toFixed(1)}s</span><br/>
-        <span style={{ fontSize: '10px', color: 'gray' }}>Debug: pct={hoveredData?.lap_dist_pct} X={dotX.toFixed(1)} Y={dotY.toFixed(1)}</span>
+        <span style={{ fontSize: '12px' }}>Time: {displayTime.toFixed(1)}s / {lapTime.toFixed(1)}s</span>
       </div>
     </div>
   );

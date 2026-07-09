@@ -2,92 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TelemetryChart } from './components/TelemetryChart';
 import { TrackMap } from './components/TrackMap';
+import { StatsWidget } from './components/StatsWidget';
+
+import { useTelemetry } from './useTelemetry';
 
 function App() {
   const [selectedLap, setSelectedLap] = useState(null);
-  const [lapData, setLapData] = useState([]);
-  const [hoveredData, setHoveredData] = useState(null);
-  const [isUserHovering, setIsUserHovering] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Fetch telemetry when a lap is selected
-  useEffect(() => {
-    if (!selectedLap) return;
-
-    let isMounted = true;
-    let ws = null;
-
-    if (selectedLap.lap_time > 0) {
-      // Historical lap: fetch all telemetry once
-      fetch(`http://localhost:8000/api/laps/${selectedLap.id}/telemetry`)
-        .then(res => res.json())
-        .then(data => {
-          if (isMounted) setLapData(data);
-        })
-        .catch(err => console.error("Telemetry fetch error:", err));
-    } else {
-      // Live lap: Fetch existing data first, then connect via WebSocket
-      setLapData([]);
-      
-      fetch(`http://localhost:8000/api/laps/${selectedLap.id}/telemetry`)
-        .then(res => res.json())
-        .then(data => {
-          if (!isMounted) return;
-          setLapData(data);
-          
-          ws = new WebSocket('ws://localhost:8000/ws/telemetry/live');
-          let lastTime = data.length > 0 ? data[data.length - 1].session_time : -1;
-          
-          ws.onmessage = (event) => {
-            try {
-              const newData = JSON.parse(event.data);
-              if (newData.status === 'waiting for data') return;
-
-              // Detect lap end (sudden drop in session_time)
-              if (lastTime !== -1 && newData.session_time < lastTime - 5) {
-                 setRefreshTrigger(t => t + 1);
-                 return; // Stop processing, we are transitioning to a new lap
-              }
-              lastTime = newData.session_time;
-              
-              setLapData(prevData => {
-                if (prevData.length > 0) {
-                  const lastPoint = prevData[prevData.length - 1];
-                  if (newData.session_time <= lastPoint.session_time) {
-                    return prevData;
-                  }
-                }
-                return [...prevData, newData];
-              });
-
-              // Update TrackMap automatically if user is not hovering
-              setIsUserHovering(hovering => {
-                if (!hovering) {
-                  setHoveredData(newData);
-                }
-                return hovering;
-              });
-            } catch (err) {
-              console.error("Live WS parse error:", err);
-            }
-          };
-
-          ws.onerror = (err) => console.error("Live WS error:", err);
-        })
-        .catch(err => console.error("Failed to preload live lap:", err));
-    }
-
-    return () => {
-      isMounted = false;
-      if (ws) ws.close();
-    };
-  }, [selectedLap]);
+  const { 
+    lapData, 
+    hoveredData, 
+    setHoveredData, 
+    setIsUserHovering, 
+    refreshTrigger 
+  } = useTelemetry(selectedLap);
 
   return (
-    <div style={{ width: '100%', height: '100vh', display: 'flex', overflow: 'hidden', padding: '24px', gap: '24px' }}>
+    <div style={{ width: '100%', height: '100vh', display: 'flex', overflow: 'hidden' }}>
       
       {/* Left Sidebar */}
-      <div style={{ width: '300px', flexShrink: 0 }}>
+      <div style={{ 
+        width: isSidebarOpen ? '280px' : '0px', 
+        transition: 'width 0.3s ease',
+        flexShrink: 0,
+        overflow: 'hidden'
+      }}>
         <Sidebar 
           selectedLapId={selectedLap ? selectedLap.id : null} 
           onSelectLap={(lap) => setSelectedLap(lap)} 
@@ -96,34 +36,50 @@ function App() {
       </div>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px', overflowY: 'auto', paddingRight: '10px' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '24px', gap: '24px' }}>
         
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            style={{ 
+              background: 'var(--card-bg)', 
+              border: '1px solid var(--card-border)', 
+              color: 'var(--text-main)',
+              cursor: 'pointer',
+              padding: '8px 12px',
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {isSidebarOpen ? '◀' : '▶'}
+          </button>
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '1px' }}>Historical Analysis</h1>
-            <div style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: '600', letterSpacing: '0.5px' }}>Telemetry Analysis</h1>
+            <div style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' }}>
               {selectedLap ? `Viewing Lap ${selectedLap.lap_number} (${selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Live'})` : 'Select a lap to begin'}
             </div>
           </div>
         </div>
 
         {/* Top Row: Track Map & Future Widgets */}
-        <div style={{ display: 'flex', gap: '24px' }}>
-          <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', gap: '24px', height: '240px' }}>
+          <div className="panel" style={{ flex: '0 0 300px', padding: '16px' }}>
             <TrackMap 
               lapTime={selectedLap ? selectedLap.lap_time : 0} 
               hoveredData={hoveredData} 
               lapData={lapData}
             />
           </div>
-          <div className="glass-panel" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ color: 'var(--text-muted)' }}>Stats Widget (Coming Soon)</div>
+          <div className="panel" style={{ flex: 1, overflow: 'hidden' }}>
+            <StatsWidget data={hoveredData || (lapData.length > 0 ? lapData[lapData.length - 1] : null)} />
           </div>
         </div>
 
         {/* Bottom Row: Chart */}
-        <div style={{ flex: 1, minHeight: '400px', display: 'flex' }}>
+        <div className="panel" style={{ flex: 1, minHeight: '400px', display: 'flex', padding: '16px' }}>
           <TelemetryChart 
             lapData={lapData} 
             onHoverData={setHoveredData} 
