@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import trackPaths from '../assets/track_paths.json';
 
-export function TrackMap({ lapTime, hoveredData, lapData }) {
-  // If no lap is selected at all, show empty state
+export function TrackMap({ trackName, lapTime, hoveredData, lapData }) {
   if (lapTime === undefined || lapTime === null) {
     return (
       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: 'var(--text-muted)' }}>Track Map</div>
+        <div style={{ color: 'var(--text-muted)' }}>Select a lap to view map</div>
       </div>
     );
   }
+
+  const actualTrackName = trackName || "Spa-Francorchamps"; 
+  const svgPathData = trackPaths[actualTrackName] || trackPaths["Spa-Francorchamps"] || trackPaths["Nürburgring GP"];
 
   let progress = 0;
   let displayTime = 0;
@@ -25,20 +28,23 @@ export function TrackMap({ lapTime, hoveredData, lapData }) {
     }
   }
 
-  // Track Dimensions
-  const width = 300;
-  const height = 200;
-  const cx = width / 2;
-  const cy = height / 2;
-  const rx = 120;
-  const ry = 60;
-  const trackWidth = 10;
+  const width = 400;
+  const height = 300;
 
-  // Calculate dot position based on progress
-  // Start at top (270 degrees or -PI/2) and go clockwise
-  const angle = (progress * 2 * Math.PI) - (Math.PI / 2);
-  const dotX = cx + rx * Math.cos(angle);
-  const dotY = cy + ry * Math.sin(angle);
+  const pathRef = useRef(null);
+  const [dotPos, setDotPos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (pathRef.current) {
+      const totalLength = pathRef.current.getTotalLength();
+      if (totalLength > 0) {
+        // Lap distance percentage (0.0 to 1.0)
+        // Some tracks might be drawn clockwise or counter-clockwise, we can just use progress.
+        const point = pathRef.current.getPointAtLength(totalLength * progress);
+        setDotPos({ x: point.x, y: point.y });
+      }
+    }
+  }, [progress, svgPathData]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
@@ -46,42 +52,35 @@ export function TrackMap({ lapTime, hoveredData, lapData }) {
         <h2 className="panel-title" style={{ margin: 0 }}>Track Position</h2>
       </div>
       
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        {/* Track Outline (Outer Edge) */}
-        <ellipse 
-          cx={cx} 
-          cy={cy} 
-          rx={rx + trackWidth} 
-          ry={ry + trackWidth} 
-          fill="none" 
-          stroke="rgba(255, 255, 255, 0.2)" 
-          strokeWidth="1" 
-        />
-        
-        {/* Track Outline (Inner Edge) */}
-        <ellipse 
-          cx={cx} 
-          cy={cy} 
-          rx={rx - trackWidth} 
-          ry={ry - trackWidth} 
-          fill="none" 
-          stroke="rgba(255, 255, 255, 0.2)" 
-          strokeWidth="1" 
-        />
-
-        {/* Start/Finish Line */}
-        <line 
-          x1={cx} 
-          y1={cy - ry - trackWidth} 
-          x2={cx} 
-          y2={cy - ry + trackWidth} 
-          stroke="rgba(255, 255, 255, 0.5)" 
-          strokeWidth="2" 
-        />
-
-        {/* Car Position Dot */}
-        <circle cx={dotX} cy={dotY} r="4" fill="var(--accent-red)" />
-      </svg>
+      <div style={{ flex: 1, width: '100%', position: 'relative' }}>
+        <svg width="100%" height="100%" viewBox="0 0 1920 1080" style={{ backgroundColor: 'var(--card-bg)' }}>
+          {svgPathData ? (
+            <>
+              {/* Track Path */}
+              <path 
+                ref={pathRef}
+                d={svgPathData} 
+                fill="none" 
+                stroke="var(--card-border)" 
+                strokeWidth="30" 
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path 
+                d={svgPathData} 
+                fill="none" 
+                stroke="var(--text-muted)" 
+                strokeWidth="2" 
+              />
+              
+              {/* Car Position Dot */}
+              <circle cx={dotPos.x} cy={dotPos.y} r="15" fill="var(--accent-red)" stroke="white" strokeWidth="3" />
+            </>
+          ) : (
+            <text x="50%" y="50%" fill="white" textAnchor="middle">Track Map Not Found</text>
+          )}
+        </svg>
+      </div>
       
       <div style={{ marginTop: '16px', fontSize: '14px', color: 'var(--text-muted)', textAlign: 'center' }}>
         Progress: {(progress * 100).toFixed(1)}% <br/>

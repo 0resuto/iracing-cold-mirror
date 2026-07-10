@@ -17,8 +17,8 @@ export function StatsWidget({ data }) {
   const maxRpm = 8500;
   const rpmPct = Math.min((data.rpm / maxRpm) * 100, 100);
 
-  // Steering angle (assuming -180 to 180 degrees)
-  const steeringRotation = data.wheel_angle || 0;
+  // Steering angle (iRacing gives wheel_angle in radians, convert to degrees for CSS rotate)
+  const steeringRotation = (data.wheel_angle || 0) * (180 / Math.PI);
 
   const formatGear = (g) => {
     if (g === 0) return 'N';
@@ -73,7 +73,7 @@ export function StatsWidget({ data }) {
             <div style={{ 
               width: '100%', 
               height: `${throttlePct}%`, 
-              background: 'var(--text-main)', // White/grey for throttle
+              background: '#22c55e', // Green for throttle
               transition: 'height 0.1s linear'
             }}></div>
           </div>

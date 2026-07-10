@@ -13,15 +13,15 @@ const CustomTooltip = ({ active, payload, label, onHoverData, visible }) => {
   if (!visible || !active || !payload || payload.length === 0) return null;
 
   const data = payload[0].payload;
-  const hasRef = data.ref_time !== null && data.ref_time !== undefined;
-  const timeDelta = hasRef ? (data.session_time - data.ref_time) : 0;
+  const hasRef = data.ref_elapsed_time !== null && data.ref_elapsed_time !== undefined;
+  const timeDelta = hasRef ? (data.elapsed_time - data.ref_elapsed_time) : 0;
   
   return (
     <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', padding: '8px', fontSize: '12px', zIndex: 100 }}>
       <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '4px' }}>
         Dist: {(data.lap_dist_pct * 100).toFixed(1)}% 
         {hasRef && (
-          <span style={{ color: timeDelta <= 0 ? 'var(--text-main)' : 'var(--accent-red)', marginLeft: '8px' }}>
+          <span style={{ color: timeDelta <= 0 ? '#22c55e' : 'var(--accent-red)', marginLeft: '8px' }}>
             Δ {timeDelta > 0 ? '+' : ''}{timeDelta.toFixed(2)}s
           </span>
         )}
@@ -30,7 +30,7 @@ const CustomTooltip = ({ active, payload, label, onHoverData, visible }) => {
         <span style={{ color: 'var(--accent-red)' }}>Speed: {data.speed?.toFixed(1)}</span>
         <span style={{ color: 'gray' }}>Ref: {data.ref_speed?.toFixed(1)}</span>
         
-        <span style={{ color: 'var(--accent-red)' }}>Thr: {data.throttle?.toFixed(2)}</span>
+        <span style={{ color: '#22c55e' }}>Thr: {data.throttle?.toFixed(2)}</span>
         <span style={{ color: 'gray' }}>Ref: {data.ref_throttle?.toFixed(2)}</span>
         
         <span style={{ color: 'var(--accent-red)' }}>Brk: {data.brake?.toFixed(2)}</span>
@@ -57,19 +57,47 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
   const [activeChart, setActiveChart] = useState('speed');
 
   const mergedData = useMemo(() => {
-    if (!lapData) return [];
-    return lapData.map((point, index) => {
-      const refPoint = referenceData && referenceData.length > index ? referenceData[index] : null;
+    if (!lapData || lapData.length === 0) return [];
+
+    const lapStartTime = Math.min(...lapData.map(p => p.session_time));
+    const sortedLap = [...lapData].sort((a, b) => a.lap_dist_pct - b.lap_dist_pct);
+
+    const refStartTime = referenceData && referenceData.length > 0 ? Math.min(...referenceData.map(p => p.session_time)) : 0;
+    const sortedRef = referenceData && referenceData.length > 0 
+      ? [...referenceData].sort((a, b) => a.lap_dist_pct - b.lap_dist_pct)
+      : [];
+
+    let refIdx = 0;
+    return sortedLap.map(point => {
+      let refPoint = null;
+      if (sortedRef.length > 0) {
+        const targetPct = point.lap_dist_pct;
+        while (refIdx < sortedRef.length - 1) {
+          const currentDiff = Math.abs(sortedRef[refIdx].lap_dist_pct - targetPct);
+          const nextDiff = Math.abs(sortedRef[refIdx + 1].lap_dist_pct - targetPct);
+          if (nextDiff <= currentDiff) {
+            refIdx++;
+          } else {
+            break;
+          }
+        }
+        refPoint = sortedRef[refIdx];
+      }
+
+      const elapsed = point.session_time - lapStartTime;
+      const ref_elapsed = refPoint ? (refPoint.session_time - refStartTime) : null;
+
       return {
         ...point,
+        elapsed_time: elapsed,
         ref_speed: refPoint ? refPoint.speed : null,
         ref_throttle: refPoint ? refPoint.throttle : null,
         ref_brake: refPoint ? refPoint.brake : null,
         ref_wheel_angle: refPoint ? refPoint.wheel_angle : null,
         ref_slip_angle: refPoint ? refPoint.slip_angle : null,
-        ref_time: refPoint ? refPoint.session_time : null
+        ref_elapsed_time: ref_elapsed
       };
-    }).sort((a, b) => a.lap_dist_pct - b.lap_dist_pct);
+    });
   }, [lapData, referenceData]);
 
   if (!lapData || lapData.length === 0) {
@@ -111,9 +139,10 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
       <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', paddingRight: '8px' }}>
         
         {/* Speed Chart */}
-        <div style={{ flex: 1, minHeight: '120px', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 4, left: 40, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', zIndex: 1 }}>SPEED</div>
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ flex: 1, minHeight: '120px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', marginLeft: '40px', marginBottom: '-8px', position: 'relative', zIndex: 10 }}>SPEED</div>
+          <div style={{ flex: 1 }}>
+            <ResponsiveContainer width="100%" height="100%">
             <LineChart 
               data={mergedData} 
               syncId="telemetry"
@@ -130,12 +159,14 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
               <Line type="linear" dataKey="ref_speed" stroke="gray" strokeWidth={1.5} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Throttle Chart */}
-        <div style={{ flex: 1, minHeight: '100px', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 4, left: 40, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', zIndex: 1 }}>THROTTLE</div>
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ flex: 1, minHeight: '100px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', marginLeft: '40px', marginBottom: '-8px', position: 'relative', zIndex: 10 }}>THROTTLE</div>
+          <div style={{ flex: 1 }}>
+            <ResponsiveContainer width="100%" height="100%">
             <AreaChart 
               data={mergedData} 
               syncId="telemetry"
@@ -148,18 +179,20 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
               <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
               <YAxis domain={[0, 1]} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip onHoverData={onHoverData} visible={activeChart === 'throttle'} />} />
-              <Area type="step" dataKey="throttle" stroke="var(--accent-red)" fill="var(--accent-red)" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
+              <Area type="step" dataKey="throttle" stroke="#22c55e" fill="#22c55e" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
               <Line type="step" dataKey="ref_throttle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
               {/* TC Flag as an area */}
               <Area type="step" dataKey="tc_active" stroke="none" fill="#eab308" fillOpacity={0.3} isAnimationActive={false} />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Brake Chart */}
-        <div style={{ flex: 1, minHeight: '100px', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 4, left: 40, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', zIndex: 1 }}>BRAKE</div>
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ flex: 1, minHeight: '100px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', marginLeft: '40px', marginBottom: '-8px', position: 'relative', zIndex: 10 }}>BRAKE</div>
+          <div style={{ flex: 1 }}>
+            <ResponsiveContainer width="100%" height="100%">
             <AreaChart 
               data={mergedData} 
               syncId="telemetry"
@@ -179,12 +212,14 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
               <Area type="step" dataKey="wheel_lock" stroke="none" fill="var(--accent-red)" fillOpacity={0.5} isAnimationActive={false} />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Steering Chart */}
-        <div style={{ flex: 1, minHeight: '100px', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 4, left: 40, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', zIndex: 1 }}>STEERING</div>
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ flex: 1, minHeight: '100px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', marginLeft: '40px', marginBottom: '-8px', position: 'relative', zIndex: 10 }}>STEERING</div>
+          <div style={{ flex: 1 }}>
+            <ResponsiveContainer width="100%" height="100%">
             <LineChart 
               data={mergedData} 
               syncId="telemetry"
@@ -201,12 +236,14 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
               <Line type="linear" dataKey="ref_wheel_angle" stroke="gray" strokeWidth={1.5} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Slip Angle Chart */}
-        <div style={{ flex: 1, minHeight: '100px', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 4, left: 40, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', zIndex: 1 }}>SLIP ANGLE</div>
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ flex: 1, minHeight: '100px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', marginLeft: '40px', marginBottom: '-8px', position: 'relative', zIndex: 10 }}>SLIP ANGLE</div>
+          <div style={{ flex: 1 }}>
+            <ResponsiveContainer width="100%" height="100%">
             <AreaChart 
               data={mergedData} 
               syncId="telemetry"
@@ -231,6 +268,7 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
               <Line type="linear" dataKey="ref_slip_angle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
         </div>
 
       </div>

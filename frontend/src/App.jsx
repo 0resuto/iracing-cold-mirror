@@ -24,7 +24,7 @@ function App() {
       
       {/* Left Sidebar */}
       <div style={{ 
-        width: isSidebarOpen ? '280px' : '0px', 
+        width: isSidebarOpen ? '320px' : '64px', 
         transition: 'width 0.3s ease',
         flexShrink: 0,
         overflow: 'hidden'
@@ -33,6 +33,8 @@ function App() {
           selectedLapId={selectedLap ? selectedLap.id : null} 
           onSelectLap={(lap) => setSelectedLap(lap)} 
           refreshTrigger={refreshTrigger}
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         />
       </div>
 
@@ -41,24 +43,7 @@ function App() {
         
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            style={{ 
-              background: 'var(--card-bg)', 
-              border: '1px solid var(--card-border)', 
-              color: 'var(--text-main)',
-              cursor: 'pointer',
-              padding: '8px 12px',
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {isSidebarOpen ? '◀' : '▶'}
-          </button>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: '600', letterSpacing: '0.5px' }}>Telemetry Analysis</h1>
             <div style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' }}>
               {selectedLap ? `Viewing Lap ${selectedLap.lap_number} (${selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Live'})` : 'Select a lap to begin'}
             </div>
@@ -69,6 +54,7 @@ function App() {
         <div style={{ display: 'flex', gap: '24px', height: '240px' }}>
           <div className="panel" style={{ flex: '0 0 300px', padding: '16px' }}>
             <TrackMap 
+              trackName={selectedLap ? selectedLap.track_name : null}
               lapTime={selectedLap ? selectedLap.lap_time : 0} 
               hoveredData={hoveredData} 
               lapData={lapData}

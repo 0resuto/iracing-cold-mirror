@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger }) {
+export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger, isOpen, onToggle }) {
   const [players, setPlayers] = useState([]);
   const [expandedPlayer, setExpandedPlayer] = useState(null);
   const [expandedSession, setExpandedSession] = useState(null);
@@ -30,15 +30,32 @@ export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger }) {
   }, [refreshTrigger]);
 
   return (
-    <div style={{ 
-      height: '100%', 
-      overflowY: 'auto', 
-      padding: '24px',
-      background: 'var(--card-bg)',
-      borderRight: '1px solid var(--card-border)',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
+    <div style={{ display: 'flex', height: '100%', width: '100%', background: 'var(--card-bg)' }}>
+      {/* Icon Nav Bar (64px wide) */}
+      <div style={{ width: '64px', minWidth: '64px', borderRight: '1px solid var(--card-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 0', background: 'var(--bg-color)' }}>
+        <button 
+          onClick={onToggle} 
+          style={{ background: 'var(--card-border)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '12px', padding: '8px', marginBottom: '32px', borderRadius: '4px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          {isOpen ? '◀' : '▶'}
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
+          {/* History Icon */}
+          <div title="History" onClick={() => { if (!isOpen) onToggle(); }} style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontSize: '20px', display: 'flex', justifyContent: 'center', borderLeft: '2px solid var(--accent-blue)' }}>
+            ⏱️
+          </div>
+        </div>
+      </div>
+
+      {/* Expanded Content */}
+      <div style={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        padding: '24px',
+        display: isOpen ? 'flex' : 'none',
+        flexDirection: 'column',
+        minWidth: '256px'
+      }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h2 className="panel-title" style={{ margin: 0 }}>History</h2>
       </div>
@@ -131,6 +148,7 @@ export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger }) {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
