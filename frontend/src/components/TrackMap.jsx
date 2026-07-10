@@ -10,8 +10,10 @@ export function TrackMap({ trackName, lapTime, hoveredData, lapData }) {
     );
   }
 
-  const actualTrackName = trackName || "Spa-Francorchamps"; 
-  const svgPathData = trackPaths[actualTrackName] || trackPaths["Spa-Francorchamps"] || trackPaths["Nürburgring GP"];
+  // Extract track ID from the first telemetry point
+  const actualTrackId = (lapData && lapData.length > 0 && lapData[0].track_id) ? String(lapData[0].track_id) : "165";
+  // Fallback to Spa (165) if the track ID doesn't exist in our downloaded JSON
+  const svgPathData = trackPaths[actualTrackId] || trackPaths["165"];
 
   let progress = 0;
   let displayTime = 0;
