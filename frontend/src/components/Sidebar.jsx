@@ -1,47 +1,46 @@
 import React, { useState, useEffect } from 'react';
+import { useAppStore } from '../store/useAppStore';
+import { useHistoryQuery } from '../api/queries';
 
-export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger, isOpen, onToggle }) {
-  const [players, setPlayers] = useState([]);
+export const Sidebar = React.memo(function Sidebar() {
+  const selectedLap = useAppStore(state => state.selectedLap);
+  const setSelectedLap = useAppStore(state => state.setSelectedLap);
+  const isOpen = useAppStore(state => state.isSidebarOpen);
+  const toggleSidebar = useAppStore(state => state.toggleSidebar);
+  const selectedLapId = selectedLap ? selectedLap.id : null;
+
   const [expandedPlayer, setExpandedPlayer] = useState(null);
   const [expandedSession, setExpandedSession] = useState(null);
 
-  useEffect(() => {
-    fetch('http://localhost:8000/api/history')
-      .then(res => res.json())
-      .then(data => {
-        setPlayers(data);
-        if (data.length > 0) {
-          const latestPlayer = data[data.length - 1];
-          const latestSession = latestPlayer.sessions[latestPlayer.sessions.length - 1];
-          const latestLap = latestSession.laps[latestSession.laps.length - 1];
+  const { data: players = [], isLoading, isError } = useHistoryQuery();
 
-          if (!selectedLapId) {
-            setExpandedPlayer(latestPlayer.id);
-            if (latestPlayer.sessions.length > 0) {
-              setExpandedSession(latestSession.id);
-            }
-          } else if (refreshTrigger > 0) {
-            // Auto-transition to the new live lap
-            onSelectLap({ ...latestLap, player_id: latestPlayer.id, track_name: latestSession.track_name });
-          }
+  useEffect(() => {
+    if (players.length > 0) {
+      const latestPlayer = players[players.length - 1];
+      const latestSession = latestPlayer.sessions[latestPlayer.sessions.length - 1];
+
+      if (!selectedLapId) {
+        setExpandedPlayer(latestPlayer.id);
+        if (latestPlayer.sessions.length > 0) {
+          setExpandedSession(latestSession.id);
         }
-      })
-      .catch(err => console.error("History fetch error:", err));
-  }, [refreshTrigger]);
+      }
+    }
+  }, [players, selectedLapId]);
 
   return (
     <div style={{ display: 'flex', height: '100%', width: '100%', background: 'var(--card-bg)' }}>
       {/* Icon Nav Bar (64px wide) */}
       <div style={{ width: '64px', minWidth: '64px', borderRight: '1px solid var(--card-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 0', background: 'var(--bg-color)' }}>
         <button 
-          onClick={onToggle} 
+          onClick={toggleSidebar} 
           style={{ background: 'var(--card-border)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '12px', padding: '8px', marginBottom: '32px', borderRadius: '4px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           {isOpen ? '◀' : '▶'}
         </button>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
           {/* History Icon */}
-          <div title="History" onClick={() => { if (!isOpen) onToggle(); }} style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontSize: '20px', display: 'flex', justifyContent: 'center', borderLeft: '2px solid var(--accent-blue)' }}>
+          <div title="History" onClick={() => { if (!isOpen) toggleSidebar(); }} style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontSize: '20px', display: 'flex', justifyContent: 'center', borderLeft: '2px solid var(--accent-blue)' }}>
             ⏱️
           </div>
         </div>
@@ -60,8 +59,12 @@ export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger, isOpen, on
         <h2 className="panel-title" style={{ margin: 0 }}>History</h2>
       </div>
       
-      {players.length === 0 ? (
+      {isLoading ? (
         <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Loading history...</div>
+      ) : isError ? (
+        <div style={{ color: 'var(--accent-red)', fontSize: '12px' }}>Failed to load history</div>
+      ) : players.length === 0 ? (
+        <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>No history found</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {players.map(player => (
@@ -126,7 +129,7 @@ export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger, isOpen, on
                                 justifyContent: 'space-between',
                                 fontSize: '12px'
                               }}
-                              onClick={() => onSelectLap({ ...lap, player_id: player.id, track_name: session.track_name })}
+                              onClick={() => setSelectedLap({ ...lap, player_id: player.id, track_name: session.track_name })}
                             >
                               <span>Lap {lap.lap_number}</span>
                               <span className="digital-number">{lap.lap_time > 0 ? lap.lap_time.toFixed(1) + 's' : 'Live'}</span>
@@ -151,4 +154,4 @@ export function Sidebar({ selectedLapId, onSelectLap, refreshTrigger, isOpen, on
       </div>
     </div>
   );
-}
+});

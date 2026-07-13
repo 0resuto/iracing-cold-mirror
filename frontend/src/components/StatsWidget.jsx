@@ -1,6 +1,13 @@
 import React from 'react';
+import { useAppStore } from '../store/useAppStore';
+import { useTelemetryData } from '../features/telemetry/useTelemetryData';
 
-export function StatsWidget({ data }) {
+export function StatsWidget() {
+  const hoveredData = useAppStore((state) => state.hoveredData);
+  const { lapData } = useTelemetryData();
+
+  const data = hoveredData || (lapData.length > 0 ? lapData[lapData.length - 1] : null);
+
   if (!data) {
     return (
       <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>

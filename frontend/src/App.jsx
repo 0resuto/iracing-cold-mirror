@@ -1,23 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TelemetryChart } from './components/TelemetryChart';
 import { TrackMap } from './components/TrackMap';
 import { StatsWidget } from './components/StatsWidget';
-
-import { useTelemetry } from './useTelemetry';
+import { useAppStore } from './store/useAppStore';
+import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
 
 function App() {
-  const [selectedLap, setSelectedLap] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const selectedLap = useAppStore(state => state.selectedLap);
+  const isSidebarOpen = useAppStore(state => state.isSidebarOpen);
 
-  const { 
-    lapData, 
-    referenceData,
-    hoveredData, 
-    setHoveredData, 
-    setIsUserHovering, 
-    refreshTrigger 
-  } = useTelemetry(selectedLap);
+  // Initialize live telemetry websocket if a live lap is selected
+  useLiveTelemetryWS(selectedLap);
 
   return (
     <div style={{ width: '100%', height: '100vh', display: 'flex', overflow: 'hidden' }}>
@@ -29,13 +23,7 @@ function App() {
         flexShrink: 0,
         overflow: 'hidden'
       }}>
-        <Sidebar 
-          selectedLapId={selectedLap ? selectedLap.id : null} 
-          onSelectLap={(lap) => setSelectedLap(lap)} 
-          refreshTrigger={refreshTrigger}
-          isOpen={isSidebarOpen}
-          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-        />
+        <Sidebar />
       </div>
 
       {/* Main Content Area */}
@@ -50,30 +38,22 @@ function App() {
           </div>
         </div>
 
-        {/* Top Row: Track Map & Future Widgets */}
-        <div style={{ display: 'flex', gap: '24px', height: '240px' }}>
-          <div className="panel" style={{ flex: '0 0 300px', padding: '16px' }}>
-            <TrackMap 
-              trackName={selectedLap ? selectedLap.track_name : null}
-              lapTime={selectedLap ? selectedLap.lap_time : 0} 
-              hoveredData={hoveredData} 
-              lapData={lapData}
-              referenceData={referenceData}
-            />
-          </div>
-          <div className="panel" style={{ flex: 1, overflow: 'hidden' }}>
-            <StatsWidget data={hoveredData || (lapData.length > 0 ? lapData[lapData.length - 1] : null)} />
-          </div>
-        </div>
-
-        {/* Bottom Row: Chart */}
-        <div className="panel" style={{ flex: 1, minHeight: '400px', display: 'flex', padding: '16px' }}>
-          <TelemetryChart 
-            lapData={lapData} 
-            referenceData={referenceData}
-            onHoverData={setHoveredData} 
-            onHoverStateChange={setIsUserHovering}
-          />
+        {/* Two-Column Layout */}
+        <div style={{ display: 'flex', flex: 1, gap: '24px', minHeight: 0, width: '100%' }}>
+            {/* Left Column: Charts */}
+            <div className="panel" style={{ flex: 2, minWidth: 0, display: 'flex', padding: '16px' }}>
+              <TelemetryChart />
+            </div>
+            
+            {/* Right Column: Track & Stats */}
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '24px', overflow: 'hidden', minHeight: '600px' }}>
+                <div className="panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '350px' }}>
+                  <TrackMap />
+                </div>
+                <div className="panel" style={{ flex: '0 0 auto', padding: '0', overflow: 'hidden' }}>
+                  <StatsWidget />
+                </div>
+            </div>
         </div>
 
       </div>

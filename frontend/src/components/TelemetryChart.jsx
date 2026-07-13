@@ -2,13 +2,18 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { useAppStore } from '../store/useAppStore';
+import { useTelemetryData } from '../features/telemetry/useTelemetryData';
+import { lttb } from '../utils/lttb';
 
-const CustomTooltip = ({ active, payload, label, onHoverData, visible }) => {
+const CustomTooltip = ({ active, payload, visible }) => {
+  const setHoveredData = useAppStore(state => state.setHoveredData);
+
   useEffect(() => {
     if (visible && active && payload && payload.length > 0) {
-      if (onHoverData) onHoverData(payload[0].payload);
+      setHoveredData(payload[0].payload);
     }
-  }, [active, payload, onHoverData, visible]);
+  }, [active, payload, setHoveredData, visible]);
 
   if (!visible || !active || !payload || payload.length === 0) return null;
 
@@ -53,8 +58,10 @@ const CustomTooltip = ({ active, payload, label, onHoverData, visible }) => {
   );
 };
 
-export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverStateChange }) {
+export const TelemetryChart = React.memo(function TelemetryChart() {
   const [activeChart, setActiveChart] = useState('speed');
+  const setIsUserHovering = useAppStore(state => state.setIsUserHovering);
+  const { lapData, referenceData } = useTelemetryData();
 
   const mergedData = useMemo(() => {
     if (!lapData || lapData.length === 0) return [];
@@ -67,8 +74,12 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
       ? [...referenceData].sort((a, b) => a.lap_dist_pct - b.lap_dist_pct)
       : [];
 
+    // DOWNSAMPLING using LTTB: Limit to ~400 points
+    const maxPoints = 400;
+    const sampledLap = lttb(sortedLap, maxPoints);
+
     let refIdx = 0;
-    return sortedLap.map(point => {
+    return sampledLap.map(point => {
       let refPoint = null;
       if (sortedRef.length > 0) {
         const targetPct = point.lap_dist_pct;
@@ -110,18 +121,15 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
 
   const handleMouseEnter = (id) => {
     setActiveChart(id);
-    if (onHoverStateChange) onHoverStateChange(true);
+    setIsUserHovering(true);
   };
 
   const handleMouseMove = (e) => {
-    if (e && e.activePayload && e.activePayload.length > 0) {
-      if (onHoverData) onHoverData(e.activePayload[0].payload);
-    }
+    // hoverData updates are handled internally by CustomTooltip to prevent unnecessary chart renders
   };
 
   const handleMouseLeave = () => {
-    if (onHoverStateChange) onHoverStateChange(false);
-    if (onHoverData) onHoverData(null);
+    setIsUserHovering(false);
   };
 
   return (
@@ -154,7 +162,7 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
               <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
               <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
               <YAxis domain={[0, 350]} stroke="var(--text-muted)" fontSize={11} tickCount={5} />
-              <Tooltip isAnimationActive={false} content={<CustomTooltip onHoverData={onHoverData} visible={activeChart === 'speed'} />} />
+              <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'speed'} />} />
               <Line type="linear" dataKey="speed" stroke="var(--accent-red)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
               <Line type="linear" dataKey="ref_speed" stroke="gray" strokeWidth={1.5} dot={false} isAnimationActive={false} />
             </LineChart>
@@ -178,9 +186,9 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
               <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
               <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
               <YAxis domain={[0, 1]} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
-              <Tooltip isAnimationActive={false} content={<CustomTooltip onHoverData={onHoverData} visible={activeChart === 'throttle'} />} />
-              <Area type="step" dataKey="throttle" stroke="#22c55e" fill="#22c55e" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
-              <Line type="step" dataKey="ref_throttle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
+              <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'throttle'} />} />
+              <Area type="linear" dataKey="throttle" stroke="#22c55e" fill="#22c55e" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
+              <Line type="linear" dataKey="ref_throttle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
               {/* TC Flag as an area */}
               <Area type="step" dataKey="tc_active" stroke="none" fill="#eab308" fillOpacity={0.3} isAnimationActive={false} />
             </AreaChart>
@@ -204,9 +212,9 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
               <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
               <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
               <YAxis domain={[0, 1]} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
-              <Tooltip isAnimationActive={false} content={<CustomTooltip onHoverData={onHoverData} visible={activeChart === 'brake'} />} />
-              <Area type="step" dataKey="brake" stroke="var(--accent-red)" fill="var(--accent-red)" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
-              <Line type="step" dataKey="ref_brake" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
+              <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'brake'} />} />
+              <Area type="linear" dataKey="brake" stroke="var(--accent-red)" fill="var(--accent-red)" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
+              <Line type="linear" dataKey="ref_brake" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
               {/* ABS and Lock Flags */}
               <Area type="step" dataKey="abs_active" stroke="none" fill="var(--accent-blue)" fillOpacity={0.3} isAnimationActive={false} />
               <Area type="step" dataKey="wheel_lock" stroke="none" fill="var(--accent-red)" fillOpacity={0.5} isAnimationActive={false} />
@@ -231,7 +239,7 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
               <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
               <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
               <YAxis domain={['auto', 'auto']} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
-              <Tooltip isAnimationActive={false} content={<CustomTooltip onHoverData={onHoverData} visible={activeChart === 'wheel'} />} />
+              <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'wheel'} />} />
               <Line type="linear" dataKey="wheel_angle" stroke="var(--text-main)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
               <Line type="linear" dataKey="ref_wheel_angle" stroke="gray" strokeWidth={1.5} dot={false} isAnimationActive={false} />
             </LineChart>
@@ -263,7 +271,7 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
                 minTickGap={30}
               />
               <YAxis domain={['auto', 'auto']} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
-              <Tooltip isAnimationActive={false} content={<CustomTooltip onHoverData={onHoverData} visible={activeChart === 'slip'} />} />
+              <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'slip'} />} />
               <Area type="linear" dataKey="slip_angle" stroke="var(--accent-blue)" fill="var(--accent-blue)" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
               <Line type="linear" dataKey="ref_slip_angle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
             </AreaChart>
@@ -274,4 +282,4 @@ export function TelemetryChart({ lapData, referenceData, onHoverData, onHoverSta
       </div>
     </div>
   );
-}
+});

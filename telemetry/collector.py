@@ -13,6 +13,7 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
     lap = 1
     lap_dist = 0
     lap_current_lap_time = 0
+    last_lap_dist_pct = 0.0
 
     try:
         player = db.query(Player).filter_by(name=player_name).first()
@@ -32,21 +33,21 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
 
         while True:
             data = reader.read()
-            lap_current_lap_time += 0.5
-            lap_dist += data["speed"] / 3.6 * 0.5 
-            lap_dist_pct = lap_dist / track_length
-            if hasattr(reader, 'set_lap_dist_pct'):
-                reader.set_lap_dist_pct(lap_dist_pct)
+            if data is None:
+                break
 
-            if lap_dist >= track_length:
+            lap_current_lap_time += 0.016
+
+            if last_lap_dist_pct > 0.8 and data["lap_dist_pct"] < 0.2:
                 current_lap.lap_time = lap_current_lap_time
                 db.commit()
-                lap_dist = 0
                 lap_current_lap_time = 0
                 lap += 1
                 current_lap = RacingLap(session_id=current_session.id, lap_number=lap, lap_time=0.0)
                 db.add(current_lap)
                 db.commit()
+            
+            last_lap_dist_pct = data["lap_dist_pct"]
 
             live_data = {
                 "speed": data["speed"],
@@ -56,7 +57,7 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
                 "brake": data["brake"],
                 "wheel_angle": data["wheel_angle"],
                 "session_time": lap_current_lap_time,
-                "lap_dist_pct": lap_dist_pct,
+                "lap_dist_pct": data.get("lap_dist_pct"),
                 "lat": data.get("lat"),
                 "lon": data.get("lon"),
                 "lat_accel": data.get("lat_accel"),
@@ -85,7 +86,7 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
                 throttle=data["throttle"],
                 brake=data["brake"],
                 wheel_angle=data["wheel_angle"],
-                lap_dist_pct=lap_dist_pct,
+                lap_dist_pct=data.get("lap_dist_pct"),
                 lat=data.get("lat"),
                 lon=data.get("lon"),
                 lat_accel=data.get("lat_accel"),
@@ -105,7 +106,7 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
             db.add(new_data)
             db.commit()
 
-            time.sleep(0.5)
+            time.sleep(0.016)
 
     except KeyboardInterrupt:
         print("Exiting...")

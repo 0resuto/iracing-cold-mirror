@@ -22,9 +22,17 @@ body {
   background-color: var(--bg-color);
   color: var(--text-main);
   min-height: 100vh;
+  width: 100vw;
   display: flex;
   overflow: hidden;
 }
+
+#root {
+  flex: 1;
+  display: flex;
+  width: 100%;
+}
+
 
 .panel {
   background: var(--card-bg);
