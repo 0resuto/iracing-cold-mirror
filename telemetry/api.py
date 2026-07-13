@@ -1,6 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from sqlalchemy.orm import sessionmaker, joinedload
-from telemetry.database import engine, Telemetry, Session, Lap, Player
+from telemetry.database import engine, Telemetry, Session, Lap, Player, Sector
 from pydantic import BaseModel
 import redis
 import json
@@ -61,11 +61,21 @@ class TelemetryResponse(BaseModel):
         from_attributes = True
 
 
+class SectorResponse(BaseModel):
+    id: int
+    sector_number: int
+    sector_time: float
+    
+    class Config:
+        from_attributes = True
+
+
 class LapResponse(BaseModel):
     id: int
     lap_number: int
     lap_time: float
-    
+    sectors: list[SectorResponse] = []
+
     class Config:
         from_attributes = True
 
@@ -140,5 +150,5 @@ async def websocket_telemetry(websocket: WebSocket):
 
 @app.get("/api/history", response_model=list[PlayerResponse])
 def get_history(db = Depends(get_db)):
-    players = db.query(Player).options(joinedload(Player.sessions).joinedload(Session.laps)).all()
+    players = db.query(Player).options(joinedload(Player.sessions).joinedload(Session.laps).joinedload(Lap.sectors)).all()
     return players

@@ -91,12 +91,12 @@ export const TrackMap = React.memo(function TrackMap() {
     });
 
     const scaledBase = refGpsPoints ? refGpsPoints.map(p => projectToScreen(p.lon, p.lat)) : [];
-    const basePath = scaledBase.length > 0 ? scaledBase.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') : null;
+    const basePath = scaledBase.length > 0 ? scaledBase.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z' : null;
 
     let lapPath = null;
     if (lapGpsPoints) {
       const scaledLap = lapGpsPoints.map(p => projectToScreen(p.lon, p.lat));
-      lapPath = scaledLap.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+      lapPath = scaledLap.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
     }
 
     return { 
@@ -114,17 +114,104 @@ export const TrackMap = React.memo(function TrackMap() {
     };
   }, [refGpsPoints, lapGpsPoints]);
 
-  const dotPos = useMemo(() => {
-    if (!svgData) return { x: 0, y: 0 };
+  const carState = useMemo(() => {
+    if (!svgData) return { x: 0, y: 0, travelAngle: 0, headingAngle: 0, isValid: false };
+    
+    let currentData = null;
+    let prevData = null;
+
     if (hoveredData && hoveredData.lat !== null && hoveredData.lon !== null) {
-      const px = hoveredData.lon * svgData.lonScale;
-      const py = hoveredData.lat;
-      const x = (px - svgData.minX) * svgData.scale + svgData.xOffset;
-      const y = svgData.vbHeight - ((py - svgData.minY) * svgData.scale + svgData.yOffset);
-      return { x, y };
+      currentData = hoveredData;
+      if (lapData) {
+        for (let i = 0; i < lapData.length; i++) {
+          if (lapData[i].session_time === hoveredData.session_time) {
+            if (i > 0) prevData = lapData[i - 1];
+            break;
+          }
+        }
+      }
+    } else if (lapData && lapData.length > 0) {
+      currentData = lapData[0];
     }
-    return svgData.points.length > 0 ? svgData.points[0] : { x: 0, y: 0 };
-  }, [svgData, hoveredData]);
+
+    if (!currentData || currentData.lat === null || currentData.lon === null) {
+      return { x: 0, y: 0, travelAngle: 0, headingAngle: 0, isValid: false };
+    }
+
+    const px = currentData.lon * svgData.lonScale;
+    const py = currentData.lat;
+    const x = (px - svgData.minX) * svgData.scale + svgData.xOffset;
+    const y = svgData.vbHeight - ((py - svgData.minY) * svgData.scale + svgData.yOffset);
+
+    let travelAngle = 0;
+
+    if (prevData && prevData.lat !== null && prevData.lon !== null) {
+      const pxPrev = prevData.lon * svgData.lonScale;
+      const pyPrev = prevData.lat;
+      const xPrev = (pxPrev - svgData.minX) * svgData.scale + svgData.xOffset;
+      const yPrev = svgData.vbHeight - ((pyPrev - svgData.minY) * svgData.scale + svgData.yOffset);
+      
+      const dx = x - xPrev;
+      const dy = y - yPrev;
+      
+      if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
+        travelAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+      }
+    }
+
+    // slip_angle is already in degrees from the backend
+    const slipAngleDeg = currentData.slip_angle || 0;
+    
+    // Depending on iRacing sign convention, we might need to add or subtract.
+    // Plus seems to correct the nose direction
+    const headingAngle = travelAngle + slipAngleDeg;
+
+    return { 
+      x, 
+      y, 
+      travelAngle, 
+      headingAngle,
+      speed: currentData.speed || 0,
+      isValid: true 
+    };
+  }, [svgData, hoveredData, lapData]);
+
+  const sectorBoundaries = useMemo(() => {
+    if (!selectedLap || !selectedLap.sectors || selectedLap.sectors.length === 0 || !lapData || lapData.length === 0 || !svgData) return [];
+    
+    const lapStartTime = Math.min(...lapData.map(p => p.session_time));
+    const boundaries = [];
+    let cumulativeTime = 0;
+    
+    const sortedSectors = [...selectedLap.sectors].sort((a, b) => a.sector_number - b.sector_number);
+    
+    for (let i = 0; i < sortedSectors.length - 1; i++) {
+      cumulativeTime += sortedSectors[i].sector_time;
+      
+      let closestPoint = null;
+      let minDiff = Infinity;
+      
+      for (const point of lapData) {
+        if (point.lat === null || point.lon === null) continue;
+        const elapsed = point.session_time - lapStartTime;
+        const diff = Math.abs(elapsed - cumulativeTime);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestPoint = point;
+        }
+      }
+      
+      if (closestPoint) {
+        const px = closestPoint.lon * svgData.lonScale;
+        const py = closestPoint.lat;
+        const x = (px - svgData.minX) * svgData.scale + svgData.xOffset;
+        const y = svgData.vbHeight - ((py - svgData.minY) * svgData.scale + svgData.yOffset);
+        boundaries.push({ x, y, sector_number: sortedSectors[i].sector_number });
+      }
+    }
+    
+    return boundaries;
+  }, [selectedLap, lapData, svgData]);
 
   const svgRef = useRef(null);
   const gRef = useRef(null);
@@ -153,9 +240,11 @@ export const TrackMap = React.memo(function TrackMap() {
 
         d3Selection.select(gRef.current).selectAll('.adaptive-path')
           .attr('stroke-width', svgStrokeWidth);
-        d3Selection.select(gRef.current).select('.adaptive-circle')
+        d3Selection.select(gRef.current).selectAll('.adaptive-circle')
           .attr('stroke-width', (visualThickness / 2) / transform.k)
           .attr('r', svgRadius);
+        d3Selection.select(gRef.current).select('.car-scale')
+          .attr('transform', `scale(${1 / transform.k})`);
       });
 
     const svg = d3Selection.select(svgRef.current);
@@ -205,8 +294,47 @@ export const TrackMap = React.memo(function TrackMap() {
                   strokeLinejoin="round" 
                 />
                 
-                {/* Car Position */}
-                <circle className="adaptive-circle" cx={dotPos.x} cy={dotPos.y} r="8" fill="var(--accent-red)" stroke="white" strokeWidth="2" />
+                {/* Sector Boundaries */}
+                {sectorBoundaries.map((boundary, i) => (
+                  <circle 
+                    key={`sector-${i}`}
+                    className="adaptive-circle" 
+                    cx={boundary.x} 
+                    cy={boundary.y} 
+                    r="5" 
+                    fill="var(--card-bg)" 
+                    stroke="var(--accent-blue)" 
+                    strokeWidth="3" 
+                  />
+                ))}
+
+                {/* Car Position and Vectors */}
+                {carState.isValid && (
+                  <g transform={`translate(${carState.x}, ${carState.y})`}>
+                    <g className="car-scale">
+                      {/* Velocity Vector (shows true direction of travel) */}
+                      {carState.speed > 5 && (
+                        <g transform={`rotate(${carState.travelAngle})`}>
+                          <line x1="0" y1="0" x2="40" y2="0" stroke="var(--accent-blue)" strokeWidth="3" strokeDasharray="4 4" />
+                          <polygon points="40,-4 48,0 40,4" fill="var(--accent-blue)" />
+                        </g>
+                      )}
+
+                      {/* Car Body (rotated by heading) */}
+                      <g transform={`rotate(${carState.headingAngle})`}>
+                        {/* Car shape */}
+                        <path 
+                          d="M -12 -7 L 6 -7 L 12 -2 L 12 2 L 6 7 L -12 7 Z" 
+                          fill="var(--accent-red)" 
+                          stroke="white" 
+                          strokeWidth="2" 
+                        />
+                        {/* Windshield to indicate front clearly */}
+                        <path d="M 0 -5 L 4 -4 L 4 4 L 0 5 Z" fill="rgba(255,255,255,0.5)" />
+                      </g>
+                    </g>
+                  </g>
+                )}
               </g>
             </svg>
           </div>

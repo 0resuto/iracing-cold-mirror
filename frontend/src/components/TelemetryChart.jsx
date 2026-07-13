@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
 } from 'recharts';
 import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
@@ -61,55 +61,111 @@ const CustomTooltip = ({ active, payload, visible }) => {
 export const TelemetryChart = React.memo(function TelemetryChart() {
   const [activeChart, setActiveChart] = useState('speed');
   const setIsUserHovering = useAppStore(state => state.setIsUserHovering);
-  const { lapData, referenceData } = useTelemetryData();
+  const { lapData, referenceData, selectedLap } = useTelemetryData();
+
+  const processLap = (data) => {
+    if (!data || data.length === 0) return { data: [], lapTime: 0 };
+    
+    let unwrapped = [];
+    let baseOffset = data[0].lap_dist_pct > 0.5 ? -1.0 : 0.0;
+    let lastPct = data[0].lap_dist_pct;
+    let offset = baseOffset;
+    for (let p of data) {
+      let pct = p.lap_dist_pct;
+      if (pct < lastPct - 0.5) offset += 1.0;
+      else if (pct > lastPct + 0.5) offset -= 1.0;
+      
+      unwrapped.push({ ...p, lap_dist_pct: pct + offset });
+      lastPct = pct;
+    }
+
+    let totalDist = unwrapped[unwrapped.length-1].lap_dist_pct - unwrapped[0].lap_dist_pct;
+    let totalTime = unwrapped[unwrapped.length-1].session_time - unwrapped[0].session_time;
+    let lapTime = totalDist > 0 ? totalTime / totalDist : 0;
+
+    let p0 = unwrapped[0];
+    let trueStartTime = p0.session_time - (p0.lap_dist_pct * lapTime);
+
+    let normalized = unwrapped.map(p => ({
+      ...p,
+      elapsed_time: p.session_time - trueStartTime
+    }));
+    
+    return { data: normalized, lapTime };
+  };
+
+  const processedLapResult = useMemo(() => processLap(lapData), [lapData]);
+  const processedRefResult = useMemo(() => processLap(referenceData), [referenceData]);
+  
+  const processedLap = processedLapResult.data;
+  const processedRef = processedRefResult.data;
+  const refLapTime = processedRefResult.lapTime;
+
+  const sectorBoundaries = useMemo(() => {
+    if (!selectedLap || !selectedLap.sectors || selectedLap.sectors.length === 0 || !processedLap || processedLap.length === 0) return [];
+    
+    const boundaries = [];
+    let cumulativeTime = 0;
+    const sortedSectors = [...selectedLap.sectors].sort((a, b) => a.sector_number - b.sector_number);
+    
+    for (let i = 0; i < sortedSectors.length - 1; i++) {
+      cumulativeTime += sortedSectors[i].sector_time;
+      let closestPoint = processedLap[0];
+      let minDiff = Infinity;
+      
+      for (const point of processedLap) {
+        const diff = Math.abs(point.elapsed_time - cumulativeTime);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestPoint = point;
+        }
+      }
+      boundaries.push(closestPoint.lap_dist_pct);
+    }
+    return boundaries;
+  }, [selectedLap, processedLap]);
 
   const mergedData = useMemo(() => {
-    if (!lapData || lapData.length === 0) return [];
+    if (!processedLap || processedLap.length === 0) return [];
 
-    const lapStartTime = Math.min(...lapData.map(p => p.session_time));
-    const sortedLap = [...lapData].sort((a, b) => a.lap_dist_pct - b.lap_dist_pct);
+    let extendedRef = [];
+    if (processedRef.length > 0) {
+      extendedRef = [
+        ...processedRef.map(p => ({ ...p, lap_dist_pct: p.lap_dist_pct - 1.0, elapsed_time: p.elapsed_time - refLapTime })),
+        ...processedRef,
+        ...processedRef.map(p => ({ ...p, lap_dist_pct: p.lap_dist_pct + 1.0, elapsed_time: p.elapsed_time + refLapTime }))
+      ];
+    }
 
-    const refStartTime = referenceData && referenceData.length > 0 ? Math.min(...referenceData.map(p => p.session_time)) : 0;
-    const sortedRef = referenceData && referenceData.length > 0 
-      ? [...referenceData].sort((a, b) => a.lap_dist_pct - b.lap_dist_pct)
-      : [];
-
-    // DOWNSAMPLING using LTTB: Limit to ~400 points
     const maxPoints = 400;
-    const sampledLap = lttb(sortedLap, maxPoints);
+    const sampledLap = lttb(processedLap, maxPoints);
 
     let refIdx = 0;
     return sampledLap.map(point => {
       let refPoint = null;
-      if (sortedRef.length > 0) {
+      if (extendedRef.length > 0) {
         const targetPct = point.lap_dist_pct;
-        while (refIdx < sortedRef.length - 1) {
-          const currentDiff = Math.abs(sortedRef[refIdx].lap_dist_pct - targetPct);
-          const nextDiff = Math.abs(sortedRef[refIdx + 1].lap_dist_pct - targetPct);
-          if (nextDiff <= currentDiff) {
-            refIdx++;
-          } else {
-            break;
-          }
+        while (refIdx < extendedRef.length - 1 && extendedRef[refIdx + 1].lap_dist_pct < targetPct) {
+          refIdx++;
         }
-        refPoint = sortedRef[refIdx];
+        
+        const currentDiff = Math.abs(extendedRef[refIdx].lap_dist_pct - targetPct);
+        const nextDiff = refIdx + 1 < extendedRef.length ? Math.abs(extendedRef[refIdx + 1].lap_dist_pct - targetPct) : Infinity;
+        
+        refPoint = nextDiff < currentDiff ? extendedRef[refIdx + 1] : extendedRef[refIdx];
       }
-
-      const elapsed = point.session_time - lapStartTime;
-      const ref_elapsed = refPoint ? (refPoint.session_time - refStartTime) : null;
 
       return {
         ...point,
-        elapsed_time: elapsed,
         ref_speed: refPoint ? refPoint.speed : null,
         ref_throttle: refPoint ? refPoint.throttle : null,
         ref_brake: refPoint ? refPoint.brake : null,
         ref_wheel_angle: refPoint ? refPoint.wheel_angle : null,
         ref_slip_angle: refPoint ? refPoint.slip_angle : null,
-        ref_elapsed_time: ref_elapsed
+        ref_elapsed_time: refPoint ? refPoint.elapsed_time : null
       };
     });
-  }, [lapData, referenceData]);
+  }, [processedLap, processedRef]);
 
   if (!lapData || lapData.length === 0) {
     return (
@@ -165,6 +221,9 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'speed'} />} />
               <Line type="linear" dataKey="speed" stroke="var(--accent-red)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
               <Line type="linear" dataKey="ref_speed" stroke="gray" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+              {sectorBoundaries.map((pct, i) => (
+                <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
+              ))}
             </LineChart>
           </ResponsiveContainer>
           </div>
@@ -191,6 +250,9 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               <Line type="linear" dataKey="ref_throttle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
               {/* TC Flag as an area */}
               <Area type="step" dataKey="tc_active" stroke="none" fill="#eab308" fillOpacity={0.3} isAnimationActive={false} />
+              {sectorBoundaries.map((pct, i) => (
+                <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
+              ))}
             </AreaChart>
           </ResponsiveContainer>
           </div>
@@ -218,6 +280,9 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               {/* ABS and Lock Flags */}
               <Area type="step" dataKey="abs_active" stroke="none" fill="var(--accent-blue)" fillOpacity={0.3} isAnimationActive={false} />
               <Area type="step" dataKey="wheel_lock" stroke="none" fill="var(--accent-red)" fillOpacity={0.5} isAnimationActive={false} />
+              {sectorBoundaries.map((pct, i) => (
+                <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
+              ))}
             </AreaChart>
           </ResponsiveContainer>
           </div>
@@ -242,6 +307,9 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'wheel'} />} />
               <Line type="linear" dataKey="wheel_angle" stroke="var(--text-main)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
               <Line type="linear" dataKey="ref_wheel_angle" stroke="gray" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+              {sectorBoundaries.map((pct, i) => (
+                <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
+              ))}
             </LineChart>
           </ResponsiveContainer>
           </div>
@@ -274,6 +342,9 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'slip'} />} />
               <Area type="linear" dataKey="slip_angle" stroke="var(--accent-blue)" fill="var(--accent-blue)" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
               <Line type="linear" dataKey="ref_slip_angle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
+              {sectorBoundaries.map((pct, i) => (
+                <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
+              ))}
             </AreaChart>
           </ResponsiveContainer>
           </div>

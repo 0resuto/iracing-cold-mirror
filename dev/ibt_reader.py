@@ -34,6 +34,10 @@ class IBTReader:
                 if d.get('CarIdx') == driver_info.get('DriverCarIdx'):
                     self.player_name = d.get('UserName', 'Unknown Player')
                     break
+                    
+            split_info = session_info.get('SplitTimeInfo', {})
+            self.sectors = split_info.get('Sectors', [])
+            # sectors will look like: [{"SectorNum": 0, "SectorStartPct": 0.0}, ...]
         except Exception as e:
             print(f"Warning: Could not parse session info YAML: {e}")
 

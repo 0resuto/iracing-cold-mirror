@@ -11,8 +11,8 @@ export function useLiveTelemetryWS(selectedLap) {
   const clearLiveData = useLiveStore((state) => state.clearLiveData);
 
   useEffect(() => {
-    // If no lap is selected or the lap is already completed (lap_time > 0), don't connect to WS
-    if (!selectedLap || selectedLap.lap_time > 0) {
+    // If no lap is selected or the lap is already completed (lap_time !== 0), don't connect to WS
+    if (!selectedLap || selectedLap.lap_time !== 0) {
       clearLiveData();
       return;
     }
@@ -34,6 +34,9 @@ export function useLiveTelemetryWS(selectedLap) {
           try {
             const newData = JSON.parse(event.data);
             if (newData.status === 'waiting for data') return;
+            
+            // Only process live data for the currently selected lap!
+            if (newData.lap_number !== selectedLap.lap_number) return;
             
             appendLiveData(newData);
 

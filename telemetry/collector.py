@@ -1,5 +1,5 @@
 from sqlalchemy.orm import sessionmaker
-from telemetry.database import engine, Session as RacingSession, Lap as RacingLap, Telemetry, Player
+from telemetry.database import engine, Session as RacingSession, Lap as RacingLap, Telemetry, Player, Sector
 import redis
 import time
 import json
@@ -11,9 +11,12 @@ redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=T
 def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unknown Player"):
     db = DBSession()
     lap = 1
-    lap_dist = 0
     lap_current_lap_time = 0
     last_lap_dist_pct = 0.0
+    lap_last_lap_time = 0.0
+    sectors = getattr(reader, 'sectors', [])
+    current_sector_id = 0
+    sector_start_time = 0.0
 
     try:
         player = db.query(Player).filter_by(name=player_name).first()
@@ -36,20 +39,55 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
             if data is None:
                 break
 
-            lap_current_lap_time += 0.016
+            lap_current_lap_time = data.get("session_time", 0.0)
 
             if last_lap_dist_pct > 0.8 and data["lap_dist_pct"] < 0.2:
-                current_lap.lap_time = lap_current_lap_time
+                if lap_last_lap_time == 0.0:
+                    current_lap.lap_time = -1.0  # Outlap
+                else:
+                    current_lap.lap_time = lap_last_lap_time
                 db.commit()
-                lap_current_lap_time = 0
+                
+                current_sector_time = lap_current_lap_time - sector_start_time
+                
+                new_sector = Sector(
+                    lap_id=current_lap.id,
+                    sector_number=current_sector_id,
+                    sector_time=current_sector_time
+                )
+                db.add(new_sector)
+                db.commit()
+                
+                current_sector_id = 0
+                sector_start_time = 0.0
                 lap += 1
                 current_lap = RacingLap(session_id=current_session.id, lap_number=lap, lap_time=0.0)
                 db.add(current_lap)
                 db.commit()
+
+            next_sector_id = current_sector_id + 1
+
+            if len(sectors) > 1 and next_sector_id < len(sectors):
+                next_sector_start_time = sectors[next_sector_id]["SectorStartPct"]
+                if data["lap_dist_pct"] >= next_sector_start_time:
+                    current_sector_time = lap_current_lap_time - sector_start_time
+                    
+                    new_sector = Sector(
+                        lap_id=current_lap.id,
+                        sector_number=current_sector_id,
+                        sector_time=current_sector_time
+                    )
+                    db.add(new_sector)
+                    db.commit()
+                        
+                    current_sector_id = next_sector_id
+                    sector_start_time = lap_current_lap_time
             
             last_lap_dist_pct = data["lap_dist_pct"]
+            lap_last_lap_time = lap_current_lap_time
 
             live_data = {
+                "lap_number": lap,
                 "speed": data["speed"],
                 "rpm": data["rpm"],
                 "gear": data["gear"],

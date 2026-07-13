@@ -37,6 +37,18 @@ class Lap(Base):
 
     session = relationship("Session", back_populates="laps")
     telemetry_data = relationship("Telemetry", back_populates="lap")
+    sectors = relationship("Sector", back_populates="lap")
+
+
+class Sector(Base):
+    __tablename__ = 'sectors'
+
+    id = Column(Integer, primary_key=True)
+    lap_id = Column(Integer, ForeignKey('laps.id'))
+    sector_number = Column(Integer)
+    sector_time = Column(Float)
+
+    lap = relationship("Lap", back_populates="sectors")
 
 
 class Telemetry(Base):
