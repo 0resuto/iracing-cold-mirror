@@ -1,10 +1,11 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import * as d3Selection from 'd3-selection';
 import { zoom as d3Zoom, zoomIdentity } from 'd3-zoom';
 import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
 
 export const TrackMap = React.memo(function TrackMap() {
+  const [showSpeedColor, setShowSpeedColor] = useState(false);
   const hoveredData = useAppStore((state) => state.hoveredData);
   const { lapData, referenceData, selectedLap } = useTelemetryData();
   const lapTime = selectedLap ? selectedLap.lap_time : null;
@@ -213,8 +214,49 @@ export const TrackMap = React.memo(function TrackMap() {
     return boundaries;
   }, [selectedLap, lapData, svgData]);
 
+  const lapSegments = useMemo(() => {
+    if (!lapGpsPoints || lapGpsPoints.length < 2 || !svgData) return null;
+    
+    let minSpeed = Infinity, maxSpeed = -Infinity;
+    lapGpsPoints.forEach(p => {
+      const s = p.speed || 0;
+      if (s < minSpeed) minSpeed = s;
+      if (s > maxSpeed) maxSpeed = s;
+    });
+
+    const getColor = (speed) => {
+      const t = maxSpeed > minSpeed ? (speed - minSpeed) / (maxSpeed - minSpeed) : 0.5;
+      const hue = t * 120; // 0 is Red (slow), 120 is Green (fast)
+      return `hsl(${hue}, 100%, 45%)`;
+    };
+
+    const segments = [];
+    for (let i = 0; i < lapGpsPoints.length - 1; i++) {
+      const p1 = lapGpsPoints[i];
+      const p2 = lapGpsPoints[i+1];
+      
+      const px1 = p1.lon * svgData.lonScale;
+      const py1 = p1.lat;
+      const x1 = (px1 - svgData.minX) * svgData.scale + svgData.xOffset;
+      const y1 = svgData.vbHeight - ((py1 - svgData.minY) * svgData.scale + svgData.yOffset);
+
+      const px2 = p2.lon * svgData.lonScale;
+      const py2 = p2.lat;
+      const x2 = (px2 - svgData.minX) * svgData.scale + svgData.xOffset;
+      const y2 = svgData.vbHeight - ((py2 - svgData.minY) * svgData.scale + svgData.yOffset);
+
+      segments.push({
+        x1, y1, x2, y2,
+        color: getColor((p1.speed + p2.speed) / 2 || 0)
+      });
+    }
+    
+    return segments;
+  }, [lapGpsPoints, svgData]);
+
   const svgRef = useRef(null);
   const gRef = useRef(null);
+  const zoomKRef = useRef(1);
 
   useEffect(() => {
     if (!svgRef.current || !gRef.current || !svgData) return;
@@ -229,6 +271,7 @@ export const TrackMap = React.memo(function TrackMap() {
       })
       .on('zoom', (event) => {
         const { transform } = event;
+        zoomKRef.current = transform.k;
         d3Selection.select(gRef.current).attr('transform', transform);
         
         // Чем больше зум (transform.k), тем тоньше визуальная линия:
@@ -254,10 +297,27 @@ export const TrackMap = React.memo(function TrackMap() {
     svg.call(zoomBehavior.transform, zoomIdentity);
   }, [svgData]);
 
+  const getStrokeWidth = () => {
+    const BASE_THICKNESS = 4;
+    const k = zoomKRef.current;
+    const visualThickness = BASE_THICKNESS / Math.sqrt(k);
+    return visualThickness / k;
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
-      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 className="panel-title" style={{ margin: 0 }}>Track Position (Scroll to Zoom)</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+            <input 
+              type="checkbox" 
+              checked={showSpeedColor}
+              onChange={(e) => setShowSpeedColor(e.target.checked)}
+            />
+            Speed Color
+          </label>
+        </div>
       </div>
       
       <div style={{ flex: 1, width: '100%', position: 'relative', overflow: 'hidden', backgroundColor: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--card-border)', marginTop: '8px' }}>
@@ -284,15 +344,30 @@ export const TrackMap = React.memo(function TrackMap() {
                 />
                 
                 {/* Current Lap Trajectory */}
-                <path 
-                  className="adaptive-path"
-                  d={svgData.lapPath} 
-                  fill="none" 
-                  stroke="var(--accent-red)" 
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round" 
-                />
+                {showSpeedColor && lapSegments ? (
+                  <g>
+                    {lapSegments.map((seg, i) => (
+                      <line 
+                        key={`seg-${i}`}
+                        className="adaptive-path"
+                        x1={seg.x1} y1={seg.y1} x2={seg.x2} y2={seg.y2}
+                        stroke={seg.color}
+                        strokeWidth={getStrokeWidth()}
+                        strokeLinecap="round"
+                      />
+                    ))}
+                  </g>
+                ) : (
+                  <path 
+                    className="adaptive-path"
+                    d={svgData.lapPath} 
+                    fill="none" 
+                    stroke="var(--accent-red)" 
+                    strokeWidth={getStrokeWidth()}
+                    strokeLinecap="round"
+                    strokeLinejoin="round" 
+                  />
+                )}
                 
                 {/* Sector Boundaries */}
                 {sectorBoundaries.map((boundary, i) => (

@@ -3,10 +3,36 @@ from telemetry.database import engine, Session as RacingSession, Lap as RacingLa
 import redis
 import time
 import json
+from queue import Queue, Empty
+import threading
 
 
 DBSession = sessionmaker(bind=engine)
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+
+
+def db_worker(q, db_session_factory):
+    db = db_session_factory()
+    batch = []
+    while True:
+        try:
+            data = q.get(timeout=1.0)
+            if data is None:
+                break
+            batch.append(data)
+        except Empty:
+            pass
+        
+        if len(batch) >= 100 or (len(batch) > 0 and q.empty()):
+            try:
+                db.bulk_save_objects(batch)
+                db.commit()
+            except Exception as e:
+                print(f"DB Worker error: {e}")
+                db.rollback()
+            finally:
+                batch.clear()
+
 
 def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unknown Player"):
     db = DBSession()
@@ -33,6 +59,10 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
         current_lap = RacingLap(session_id=current_session.id, lap_number=lap, lap_time=0.0)
         db.add(current_lap)
         db.commit()
+
+        telemetry_queue = Queue()
+        worker_thread = threading.Thread(target=db_worker, args=(telemetry_queue, DBSession))
+        worker_thread.start()
 
         while True:
             data = reader.read()
@@ -141,10 +171,12 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
                 tc_active=data.get("tc_active"),
                 wheel_lock=data.get("wheel_lock"),
             )
-            db.add(new_data)
-            db.commit()
+
+            telemetry_queue.put(new_data)
 
             time.sleep(0.016)
 
     except KeyboardInterrupt:
         print("Exiting...")
+        telemetry_queue.put(None)
+        worker_thread.join()

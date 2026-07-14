@@ -84,12 +84,25 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
     let lapTime = totalDist > 0 ? totalTime / totalDist : 0;
 
     let p0 = unwrapped[0];
-    let trueStartTime = p0.session_time - (p0.lap_dist_pct * lapTime);
+    let p5 = unwrapped[Math.min(5, unwrapped.length - 1)];
+    let localSpeed = 0;
+    
+    if (p5 && p0 && p5.session_time !== p0.session_time) {
+      localSpeed = (p5.lap_dist_pct - p0.lap_dist_pct) / (p5.session_time - p0.session_time);
+    }
+    
+    if (!localSpeed || localSpeed <= 0) {
+      localSpeed = totalDist > 0 ? totalDist / totalTime : 1;
+    }
 
-    let normalized = unwrapped.map(p => ({
-      ...p,
-      elapsed_time: p.session_time - trueStartTime
-    }));
+    let trueStartTime = p0.session_time - (p0.lap_dist_pct / localSpeed);
+
+    let normalized = unwrapped
+      .filter(p => p.lap_dist_pct >= 0.0 && p.lap_dist_pct <= 1.0)
+      .map(p => ({
+        ...p,
+        elapsed_time: p.session_time - trueStartTime
+      }));
     
     return { data: normalized, lapTime };
   };
@@ -216,7 +229,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               onMouseLeave={handleMouseLeave}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
-              <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
+              <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
               <YAxis domain={[0, 350]} stroke="var(--text-muted)" fontSize={11} tickCount={5} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'speed'} />} />
               <Line type="linear" dataKey="speed" stroke="var(--accent-red)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
@@ -243,7 +256,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               onMouseLeave={handleMouseLeave}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
-              <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
+              <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
               <YAxis domain={[0, 1]} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'throttle'} />} />
               <Area type="linear" dataKey="throttle" stroke="#22c55e" fill="#22c55e" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
@@ -272,7 +285,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               onMouseLeave={handleMouseLeave}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
-              <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
+              <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
               <YAxis domain={[0, 1]} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'brake'} />} />
               <Area type="linear" dataKey="brake" stroke="var(--accent-red)" fill="var(--accent-red)" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
@@ -302,7 +315,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               onMouseLeave={handleMouseLeave}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
-              <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
+              <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
               <YAxis domain={['auto', 'auto']} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'wheel'} />} />
               <Line type="linear" dataKey="wheel_angle" stroke="var(--text-main)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
@@ -333,7 +346,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 dataKey="lap_dist_pct" 
                 stroke="var(--text-muted)" 
                 type="number"
-                domain={['dataMin', 'dataMax']}
+                domain={[0, 1]}
                 tickFormatter={(val) => (val * 100).toFixed(0) + '%'}
                 fontSize={11}
                 minTickGap={30}
