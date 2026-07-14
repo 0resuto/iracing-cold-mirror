@@ -27,27 +27,31 @@ export function useLapTelemetryQuery(lapId, isLive) {
   });
 }
 
-export function useReferenceTelemetryQuery(playerId, trackName, skip) {
+export function useLapDeltaQuery(lapId, referenceLapId) {
   return useQuery({
-    queryKey: ['bestLapTelemetry', playerId, trackName],
+    queryKey: ['delta', lapId, referenceLapId],
     queryFn: async () => {
-      if (!playerId || !trackName) return [];
-      
-      // 1. Get best lap metadata
-      const bestLapRes = await fetch(`${API_BASE}/players/${playerId}/best_lap?track_name=${encodeURIComponent(trackName)}`);
-      if (!bestLapRes.ok) {
-          if (bestLapRes.status === 404) return []; // No best lap yet
-          throw new Error('Failed to fetch best lap metadata');
-      }
-      const bestLap = await bestLapRes.json();
-      
-      if (!bestLap || !bestLap.id) return [];
-
-      // 2. Fetch the actual telemetry
-      const telemetryRes = await fetch(`${API_BASE}/laps/${bestLap.id}/telemetry`);
-      if (!telemetryRes.ok) throw new Error('Failed to fetch reference telemetry');
-      return telemetryRes.json();
+      if (!lapId || !referenceLapId) return [];
+      const res = await fetch(`${API_BASE}/laps/${lapId}/delta?reference_lap_id=${referenceLapId}`);
+      if (!res.ok) throw new Error('Failed to fetch lap delta');
+      return res.json();
     },
-    enabled: !!playerId && !!trackName && !skip,
+    enabled: !!lapId && !!referenceLapId,
+  });
+}
+
+export function useIdealLapQuery(playerId, trackName) {
+  return useQuery({
+    queryKey: ['idealLap', playerId, trackName],
+    queryFn: async () => {
+      if (!playerId || !trackName) return null;
+      const res = await fetch(`${API_BASE}/players/${playerId}/ideal_lap?track_name=${encodeURIComponent(trackName)}`);
+      if (!res.ok) {
+        if (res.status === 404) return null;
+        throw new Error('Failed to fetch ideal lap');
+      }
+      return res.json();
+    },
+    enabled: !!playerId && !!trackName,
   });
 }

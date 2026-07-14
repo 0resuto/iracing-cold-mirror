@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { useHistoryQuery } from '../api/queries';
+import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
 
 export const Sidebar = React.memo(function Sidebar() {
   const selectedLap = useAppStore(state => state.selectedLap);
@@ -14,6 +14,7 @@ export const Sidebar = React.memo(function Sidebar() {
   const [sectorSortBy, setSectorSortBy] = useState('order');
 
   const { data: players = [], isLoading, isError } = useHistoryQuery();
+  const { data: idealLap } = useIdealLapQuery(selectedLap?.player_id, selectedLap?.track_name);
 
   const displaySectors = React.useMemo(() => {
     if (!selectedLap || !selectedLap.sectors || selectedLap.sectors.length === 0) return [];
@@ -197,6 +198,16 @@ export const Sidebar = React.memo(function Sidebar() {
         </div>
       )}
       </div>
+
+      {/* Ideal Lap Section */}
+      {idealLap && (
+          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.1)' }}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="panel-title" style={{ margin: 0, fontSize: '13px' }}>Theoretical Best</h3>
+                <span className="digital-number" style={{ color: 'var(--accent-blue)', fontSize: '16px' }}>{idealLap.ideal_lap_time.toFixed(2)}s</span>
+             </div>
+          </div>
+      )}
 
       {/* Sectors Section */}
       {selectedLap && selectedLap.sectors && selectedLap.sectors.length > 0 && (

@@ -5,9 +5,9 @@ import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
 
 export const TrackMap = React.memo(function TrackMap() {
-  const [showSpeedColor, setShowSpeedColor] = useState(false);
+  const [colorMode, setColorMode] = useState('default');
   const hoveredData = useAppStore((state) => state.hoveredData);
-  const { lapData, referenceData, selectedLap } = useTelemetryData();
+  const { lapData, referenceData, deltaData, selectedLap } = useTelemetryData();
   const lapTime = selectedLap ? selectedLap.lap_time : null;
 
   let progress = 0;
@@ -215,19 +215,51 @@ export const TrackMap = React.memo(function TrackMap() {
   }, [selectedLap, lapData, svgData]);
 
   const lapSegments = useMemo(() => {
-    if (!lapGpsPoints || lapGpsPoints.length < 2 || !svgData) return null;
+    if (colorMode === 'default' || !lapGpsPoints || lapGpsPoints.length < 2 || !svgData) return null;
     
-    let minSpeed = Infinity, maxSpeed = -Infinity;
-    lapGpsPoints.forEach(p => {
-      const s = p.speed || 0;
-      if (s < minSpeed) minSpeed = s;
-      if (s > maxSpeed) maxSpeed = s;
-    });
+    let minVal = Infinity, maxVal = -Infinity;
+    
+    if (colorMode === 'speed') {
+      lapGpsPoints.forEach(p => {
+        const s = p.speed || 0;
+        if (s < minVal) minVal = s;
+        if (s > maxVal) maxVal = s;
+      });
+    } else if (colorMode === 'delta' && deltaData) {
+      deltaData.forEach(d => {
+        if (d.delta < minVal) minVal = d.delta;
+        if (d.delta > maxVal) maxVal = d.delta;
+      });
+    }
 
-    const getColor = (speed) => {
-      const t = maxSpeed > minSpeed ? (speed - minSpeed) / (maxSpeed - minSpeed) : 0.5;
-      const hue = t * 120; // 0 is Red (slow), 120 is Green (fast)
-      return `hsl(${hue}, 100%, 45%)`;
+    const absMaxDelta = Math.max(Math.abs(minVal === Infinity ? 0 : minVal), Math.abs(maxVal === -Infinity ? 0 : maxVal), 0.1);
+
+    const getColor = (p1, p2) => {
+      if (colorMode === 'speed') {
+        const speed = (p1.speed + p2.speed) / 2 || 0;
+        const t = maxVal > minVal ? (speed - minVal) / (maxVal - minVal) : 0.5;
+        const hue = t * 120; // 0 is Red (slow), 120 is Green (fast)
+        return `hsl(${hue}, 100%, 45%)`;
+      } else {
+        // Delta mode
+        if (!deltaData || deltaData.length === 0) return 'gray';
+        const pct = (p1.lap_dist_pct + p2.lap_dist_pct) / 2;
+        
+        // Binary search for closest delta
+        let low = 0, high = deltaData.length - 1;
+        while (low < high) {
+          const mid = Math.floor((low + high) / 2);
+          if (deltaData[mid].lap_dist_pct < pct) low = mid + 1;
+          else high = mid;
+        }
+        
+        const delta = deltaData[low]?.delta || 0;
+        const normalized = Math.max(-1, Math.min(1, delta / absMaxDelta));
+        // delta > 0 (slower) -> Red (hue 0). delta < 0 (faster) -> Green (hue 120)
+        const t = (1 - normalized) / 2;
+        const hue = t * 120;
+        return `hsl(${hue}, 100%, 45%)`;
+      }
     };
 
     const segments = [];
@@ -247,12 +279,12 @@ export const TrackMap = React.memo(function TrackMap() {
 
       segments.push({
         x1, y1, x2, y2,
-        color: getColor((p1.speed + p2.speed) / 2 || 0)
+        color: getColor(p1, p2)
       });
     }
     
     return segments;
-  }, [lapGpsPoints, svgData]);
+  }, [lapGpsPoints, svgData, colorMode, deltaData]);
 
   const svgRef = useRef(null);
   const gRef = useRef(null);
@@ -309,14 +341,15 @@ export const TrackMap = React.memo(function TrackMap() {
       <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 className="panel-title" style={{ margin: 0 }}>Track Position (Scroll to Zoom)</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-            <input 
-              type="checkbox" 
-              checked={showSpeedColor}
-              onChange={(e) => setShowSpeedColor(e.target.checked)}
-            />
-            Speed Color
-          </label>
+          <select 
+            value={colorMode}
+            onChange={(e) => setColorMode(e.target.value)}
+            style={{ background: 'var(--card-bg)', color: 'var(--text-main)', border: '1px solid var(--card-border)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', outline: 'none' }}
+          >
+            <option value="default">Default</option>
+            <option value="speed">Speed</option>
+            <option value="delta">Delta</option>
+          </select>
         </div>
       </div>
       
@@ -344,7 +377,7 @@ export const TrackMap = React.memo(function TrackMap() {
                 />
                 
                 {/* Current Lap Trajectory */}
-                {showSpeedColor && lapSegments ? (
+                {colorMode !== 'default' && lapSegments ? (
                   <g>
                     {lapSegments.map((seg, i) => (
                       <line 

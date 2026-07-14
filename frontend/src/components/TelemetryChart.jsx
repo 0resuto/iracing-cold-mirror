@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload, visible }) => {
 
   const data = payload[0].payload;
   const hasRef = data.ref_elapsed_time !== null && data.ref_elapsed_time !== undefined;
-  const timeDelta = hasRef ? (data.elapsed_time - data.ref_elapsed_time) : 0;
+  const timeDelta = data.delta !== null && data.delta !== undefined ? data.delta : (hasRef ? (data.elapsed_time - data.ref_elapsed_time) : 0);
   
   return (
     <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', padding: '8px', fontSize: '12px', zIndex: 100 }}>
@@ -61,7 +61,21 @@ const CustomTooltip = ({ active, payload, visible }) => {
 export const TelemetryChart = React.memo(function TelemetryChart() {
   const [activeChart, setActiveChart] = useState('speed');
   const setIsUserHovering = useAppStore(state => state.setIsUserHovering);
-  const { lapData, referenceData, selectedLap } = useTelemetryData();
+  const setReferenceLapId = useAppStore(state => state.setReferenceLapId);
+  const { lapData, referenceData, deltaData, selectedLap, activeRefId, players } = useTelemetryData();
+
+  const availableLaps = useMemo(() => {
+      if (!selectedLap || !players) return [];
+      const player = players.find(p => p.id === selectedLap.player_id);
+      if (!player) return [];
+      const laps = [];
+      player.sessions.forEach(s => {
+          if (s.track_name === selectedLap.track_name) {
+              laps.push(...s.laps);
+          }
+      });
+      return laps.filter(l => l.lap_time > 0).sort((a,b) => a.lap_number - b.lap_number);
+  }, [selectedLap, players]);
 
   const processLap = (data) => {
     if (!data || data.length === 0) return { data: [], lapTime: 0 };
@@ -154,6 +168,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
     const sampledLap = lttb(processedLap, maxPoints);
 
     let refIdx = 0;
+    let dIdx = 0;
     return sampledLap.map(point => {
       let refPoint = null;
       if (extendedRef.length > 0) {
@@ -168,6 +183,15 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         refPoint = nextDiff < currentDiff ? extendedRef[refIdx + 1] : extendedRef[refIdx];
       }
 
+      let delta = null;
+      if (deltaData && deltaData.length > 0) {
+        const targetPct = point.lap_dist_pct;
+        while (dIdx < deltaData.length - 1 && deltaData[dIdx + 1].lap_dist_pct < targetPct) {
+          dIdx++;
+        }
+        delta = deltaData[dIdx].delta;
+      }
+
       return {
         ...point,
         ref_speed: refPoint ? refPoint.speed : null,
@@ -175,10 +199,11 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         ref_brake: refPoint ? refPoint.brake : null,
         ref_wheel_angle: refPoint ? refPoint.wheel_angle : null,
         ref_slip_angle: refPoint ? refPoint.slip_angle : null,
-        ref_elapsed_time: refPoint ? refPoint.elapsed_time : null
+        ref_elapsed_time: refPoint ? refPoint.elapsed_time : null,
+        delta: delta
       };
     });
-  }, [processedLap, processedRef]);
+  }, [processedLap, processedRef, deltaData]);
 
   if (!lapData || lapData.length === 0) {
     return (
@@ -203,18 +228,67 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <h2 className="panel-title" style={{ margin: '0 0 16px 0', display: 'flex', justifyContent: 'space-between' }}>
-        Telemetry Analysis
+      <h2 className="panel-title" style={{ margin: '0 0 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <span>Telemetry Analysis</span>
+            {availableLaps.length > 0 && (
+                <select 
+                    value={activeRefId || ''} 
+                    onChange={e => setReferenceLapId(parseInt(e.target.value))}
+                    style={{ background: 'var(--card-bg)', color: 'var(--text-main)', border: '1px solid var(--card-border)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', outline: 'none' }}
+                >
+                    {availableLaps.map(l => (
+                        <option key={l.id} value={l.id}>Ref: Lap {l.lap_number} ({l.lap_time.toFixed(2)}s)</option>
+                    ))}
+                </select>
+            )}
+        </div>
         {referenceData && referenceData.length > 0 && (
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             <span style={{ color: 'var(--accent-blue)' }}>── Current</span> &nbsp;
-            <span style={{ color: 'gray' }}>- - - Best Lap</span>
+            <span style={{ color: 'gray' }}>- - - Reference</span>
           </span>
         )}
       </h2>
       
       <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', paddingRight: '8px' }}>
         
+        {/* Delta Chart */}
+        {deltaData && deltaData.length > 0 && (
+          <div style={{ flex: '0 0 80px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', marginLeft: '40px', marginBottom: '-8px', position: 'relative', zIndex: 10 }}>DELTA</div>
+            <div style={{ flex: 1 }}>
+              <ResponsiveContainer width="100%" height="100%">
+              <AreaChart 
+                data={mergedData} 
+                syncId="telemetry"
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                onMouseEnter={() => handleMouseEnter('delta')}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
+                <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
+                <YAxis domain={['auto', 'auto']} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
+                <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'delta'} />} />
+                <ReferenceLine y={0} stroke="var(--text-muted)" opacity={0.5} />
+                <Area 
+                  type="linear" 
+                  dataKey="delta" 
+                  stroke="var(--text-main)" 
+                  fillOpacity={0} 
+                  strokeWidth={1.5} 
+                  isAnimationActive={false} 
+                />
+                {sectorBoundaries.map((pct, i) => (
+                  <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
         {/* Speed Chart */}
         <div style={{ flex: 1, minHeight: '120px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '1px', marginLeft: '40px', marginBottom: '-8px', position: 'relative', zIndex: 10 }}>SPEED</div>
