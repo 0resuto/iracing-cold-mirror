@@ -5,10 +5,11 @@ import time
 import json
 from queue import Queue, Empty
 import threading
+from telemetry.config import settings
 
 
 DBSession = sessionmaker(bind=engine)
-redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+redis_client = redis.Redis(host=settings.redis_host, port=settings.redis_port, db=0, decode_responses=True)
 
 
 def db_worker(q, db_session_factory):

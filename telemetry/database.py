@@ -1,10 +1,9 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship
+from telemetry.config import settings
 
 
-DATABASE_URL = "postgresql://iracing:iracing_local@localhost:5432/telemetry"
-
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(settings.database_url)
 Base = declarative_base()
 
 
