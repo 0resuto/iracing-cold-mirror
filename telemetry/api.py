@@ -2,13 +2,22 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker, joinedload
 from telemetry.database import engine, Telemetry, Session, Lap, Player, Sector
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 import redis
 import json
 from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 from telemetry.config import settings
+import logging
+
+
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 DBSession = sessionmaker(bind=engine)
@@ -59,8 +68,7 @@ class TelemetryResponse(BaseModel):
     tc_active: float | None = None
     wheel_lock: float | None = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SectorResponse(BaseModel):
@@ -68,8 +76,7 @@ class SectorResponse(BaseModel):
     sector_number: int
     sector_time: float
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class IdealSectorResponse(BaseModel):
@@ -86,8 +93,7 @@ class DeltaPointResponse(BaseModel):
     lap_dist_pct: float
     delta: float
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LapResponse(BaseModel):
@@ -96,8 +102,7 @@ class LapResponse(BaseModel):
     lap_time: float
     sectors: list[SectorResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SessionResponse(BaseModel):
@@ -105,8 +110,7 @@ class SessionResponse(BaseModel):
     track_name: str
     laps: list[LapResponse] = []
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PlayerResponse(BaseModel):
@@ -114,8 +118,7 @@ class PlayerResponse(BaseModel):
     name: str
     sessions: list[SessionResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 def get_exact_start_time(telemetry):
@@ -257,7 +260,7 @@ async def websocket_telemetry(websocket: WebSocket):
             await asyncio.sleep(0.5)
 
     except WebSocketDisconnect:
-        print("Client disconnected")
+        logger.info("Client disconnected")
 
 
 @app.get("/api/history", response_model=list[PlayerResponse])

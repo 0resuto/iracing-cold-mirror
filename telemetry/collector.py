@@ -8,6 +8,15 @@ import threading
 from telemetry.config import settings
 from telemetry.database import DBSession
 from telemetry.redis_client import redis_client
+import logging
+
+
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 def db_worker(q, db_session_factory):
@@ -27,7 +36,7 @@ def db_worker(q, db_session_factory):
                 db.bulk_save_objects(batch)
                 db.commit()
             except Exception as e:
-                print(f"DB Worker error: {e}")
+                logger.error(f"DB Worker error: {e}")
                 db.rollback()
             finally:
                 batch.clear()
@@ -176,11 +185,11 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
             time.sleep(0.016)
 
     except KeyboardInterrupt:
-        print("Stopped by user")
+        logger.info("Stopped by user")
     except Exception as e:
-        print(f"Unexpected error in collector: {e}")
+        logger.error(f"Unexpected error in collector: {e}")
     finally:
-        print("Exiting...")
+        logger.info("Exiting...")
         telemetry_queue.put(None)
         
         if 'worker_thread' in locals() and worker_thread.is_alive():
