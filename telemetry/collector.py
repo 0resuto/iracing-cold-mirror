@@ -6,10 +6,8 @@ import json
 from queue import Queue, Empty
 import threading
 from telemetry.config import settings
-
-
-DBSession = sessionmaker(bind=engine)
-redis_client = redis.Redis(host=settings.redis_host, port=settings.redis_port, db=0, decode_responses=True)
+from telemetry.database import DBSession
+from telemetry.redis_client import redis_client
 
 
 def db_worker(q, db_session_factory):
@@ -129,11 +127,11 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
                 "lap_dist_pct": data.get("lap_dist_pct"),
                 "lat": data.get("lat"),
                 "lon": data.get("lon"),
-                "lat_accel": data.get("lat_accel"),
-                "long_accel": data.get("long_accel"),
+                "lat_accel": data.get("g_lat"),
+                "long_accel": data.get("g_lon"),
                 "yaw_rate": data.get("yaw_rate"),
-                "velocity_x": data.get("velocity_x"),
-                "velocity_z": data.get("velocity_z"),
+                "velocity_x": data.get("vx"),
+                "velocity_z": data.get("vz"),
                 "slip_angle": data.get("slip_angle"),
                 "lf_speed": data.get("lf_speed"),
                 "rf_speed": data.get("rf_speed"),
@@ -158,11 +156,11 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
                 lap_dist_pct=data.get("lap_dist_pct"),
                 lat=data.get("lat"),
                 lon=data.get("lon"),
-                lat_accel=data.get("lat_accel"),
-                long_accel=data.get("long_accel"),
+                lat_accel=data.get("g_lat"),
+                long_accel=data.get("g_lon"),
                 yaw_rate=data.get("yaw_rate"),
-                velocity_x=data.get("velocity_x"),
-                velocity_z=data.get("velocity_z"),
+                velocity_x=data.get("vx"),
+                velocity_z=data.get("vz"),
                 slip_angle=data.get("slip_angle"),
                 lf_speed=data.get("lf_speed"),
                 rf_speed=data.get("rf_speed"),
@@ -178,6 +176,14 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
             time.sleep(0.016)
 
     except KeyboardInterrupt:
+        print("Stopped by user")
+    except Exception as e:
+        print(f"Unexpected error in collector: {e}")
+    finally:
         print("Exiting...")
         telemetry_queue.put(None)
-        worker_thread.join()
+        
+        if 'worker_thread' in locals() and worker_thread.is_alive():
+            worker_thread.join()
+            
+        db.close()

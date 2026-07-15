@@ -1,9 +1,10 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from telemetry.config import settings
 
 
 engine = create_engine(settings.database_url)
+DBSession = sessionmaker(bind=engine)
 Base = declarative_base()
 
 
