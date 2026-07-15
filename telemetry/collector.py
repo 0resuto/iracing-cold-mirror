@@ -32,14 +32,21 @@ def db_worker(q, db_session_factory):
             pass
         
         if len(batch) >= 100 or (len(batch) > 0 and q.empty()):
-            try:
-                db.bulk_save_objects(batch)
-                db.commit()
-            except Exception as e:
-                logger.error(f"DB Worker error: {e}")
-                db.rollback()
-            finally:
-                batch.clear()
+            for atempt in range(3):
+                try:
+                    db.bulk_save_objects(batch)
+                    db.commit()
+                    break
+                except Exception as e:
+                    db.rollback()
+                    if attempt == 2:
+                        logger.error(f"Failed to save batch after 3 attempts: {e}")
+                    else:
+                        sleep_time = 2 ** atempt    
+                        logger.error(f"DB Worker error: {e}")
+                        logger.warning(f"DB Error: {e}. Retrying in {sleep_time}s...")
+                        time.sleep(sleep_time)
+            batch.clear()
 
 
 def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unknown Player"):

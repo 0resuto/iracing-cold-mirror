@@ -1,14 +1,14 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request, Depends
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func
-from sqlalchemy.orm import sessionmaker, joinedload
+from sqlalchemy.orm import sessionmaker, selectinload
 from telemetry.database import engine, Telemetry, Session, Lap, Player, Sector
+from telemetry.config import settings
 from pydantic import BaseModel, ConfigDict
 import redis
 import json
-from fastapi import Depends
-from fastapi.middleware.cors import CORSMiddleware
 import asyncio
-from telemetry.config import settings
 import logging
 
 
@@ -176,6 +176,21 @@ def calculate_delta(cur_telemetry, ref_telemetry):
     return deltas
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global exception at {request.url.path}: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": 500,
+                "message": "Internal Server Error",
+                "details": str(exc)
+            }
+        }
+    )
+
+
 @app.get("/api/status")
 def get_status():
     return {"status": "ok", "message": "API is running"}
@@ -264,6 +279,10 @@ async def websocket_telemetry(websocket: WebSocket):
 
 
 @app.get("/api/history", response_model=list[PlayerResponse])
-def get_history(db = Depends(get_db)):
-    players = db.query(Player).options(joinedload(Player.sessions).joinedload(Session.laps).joinedload(Lap.sectors)).all()
+def get_history(skip: int = 0, limit: int = 10, db = Depends(get_db)):
+    players = db.query(Player).options(
+        selectinload(Player.sessions).
+        selectinload(Session.laps).
+        selectinload(Lap.sectors)
+    ).offset(skip).limit(limit).all()
     return players
