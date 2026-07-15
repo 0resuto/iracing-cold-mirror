@@ -161,26 +161,39 @@ export const Sidebar = React.memo(function Sidebar() {
                       {/* Laps List */}
                       {expandedSession === session.id && (
                         <div style={{ padding: '4px 8px 4px 24px', background: 'rgba(0,0,0,0.2)' }}>
-                          {session.laps.map(lap => (
-                            <div 
-                              key={lap.id}
-                              style={{
-                                padding: '6px 10px',
-                                margin: '2px 0',
-                                cursor: 'pointer',
-                                borderLeft: selectedLapId === lap.id ? '2px solid var(--accent-blue)' : '2px solid transparent',
-                                background: selectedLapId === lap.id ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
-                                color: selectedLapId === lap.id ? 'var(--text-main)' : 'var(--text-muted)',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                fontSize: '12px'
-                              }}
-                              onClick={() => setSelectedLap({ ...lap, player_id: player.id, track_name: session.track_name })}
-                            >
-                              <span>Lap {lap.lap_number}</span>
-                              <span className="digital-number">{lap.lap_time > 0 ? lap.lap_time.toFixed(1) + 's' : (lap.lap_time < 0 ? 'Outlap' : 'Live')}</span>
-                            </div>
-                          ))}
+                          {(() => {
+                            let bestLapId = null;
+                            let bestTime = Infinity;
+                            session.laps.forEach(l => {
+                              if (l.lap_time > 0 && l.lap_time < bestTime) {
+                                bestTime = l.lap_time;
+                                bestLapId = l.id;
+                              }
+                            });
+                            
+                            return session.laps.map(lap => (
+                              <div 
+                                key={lap.id}
+                                style={{
+                                  padding: '6px 10px',
+                                  margin: '2px 0',
+                                  cursor: 'pointer',
+                                  borderLeft: selectedLapId === lap.id ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                                  background: selectedLapId === lap.id ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
+                                  color: selectedLapId === lap.id ? 'var(--text-main)' : 'var(--text-muted)',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  fontSize: '12px'
+                                }}
+                                onClick={() => setSelectedLap({ ...lap, player_id: player.id, track_name: session.track_name })}
+                              >
+                                <span>Lap {lap.lap_number}</span>
+                                <span className="digital-number" style={{ color: lap.id === bestLapId ? 'var(--accent-purple)' : 'inherit' }}>
+                                  {lap.lap_time > 0 ? lap.lap_time.toFixed(1) + 's' : (lap.lap_time < 0 ? 'Outlap' : 'Live')}
+                                </span>
+                              </div>
+                            ));
+                          })()}
                           {session.laps.length === 0 && (
                             <div style={{ padding: '8px 10px', fontSize: '11px', color: 'var(--text-muted)' }}>No laps recorded yet.</div>
                           )}

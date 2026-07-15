@@ -231,17 +231,36 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       <h2 className="panel-title" style={{ margin: '0 0 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <span>Telemetry Analysis</span>
-            {availableLaps.length > 0 && (
-                <select 
-                    value={activeRefId || ''} 
-                    onChange={e => setReferenceLapId(parseInt(e.target.value))}
-                    style={{ background: 'var(--card-bg)', color: 'var(--text-main)', border: '1px solid var(--card-border)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', outline: 'none' }}
-                >
-                    {availableLaps.map(l => (
-                        <option key={l.id} value={l.id}>Ref: Lap {l.lap_number} ({l.lap_time.toFixed(2)}s)</option>
-                    ))}
-                </select>
-            )}
+            {availableLaps.length > 0 && (() => {
+                let bestLapId = null;
+                let bestTime = Infinity;
+                availableLaps.forEach(l => {
+                    if (l.lap_time > 0 && l.lap_time < bestTime) {
+                        bestTime = l.lap_time;
+                        bestLapId = l.id;
+                    }
+                });
+                return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Ref</span>
+                        <select 
+                            value={activeRefId || ''} 
+                            onChange={e => setReferenceLapId(parseInt(e.target.value))}
+                            style={{ background: 'var(--card-bg)', color: 'var(--text-main)', border: '1px solid var(--card-border)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', outline: 'none' }}
+                        >
+                            {availableLaps.map(l => (
+                                <option 
+                                    key={l.id} 
+                                    value={l.id}
+                                    style={{ color: l.id === bestLapId ? 'var(--accent-purple)' : 'inherit' }}
+                                >
+                                    Lap {l.lap_number} ({l.lap_time.toFixed(2)}s)
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                );
+            })()}
         </div>
         {referenceData && referenceData.length > 0 && (
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>

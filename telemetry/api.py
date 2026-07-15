@@ -117,12 +117,31 @@ class PlayerResponse(BaseModel):
         from_attributes = True
 
 
+def get_exact_start_time(telemetry):
+    if len(telemetry) < 2:
+        return telemetry[0].session_time if telemetry else 0.0
+        
+    p1 = telemetry[0]
+    p2 = telemetry[1]
+    
+    dist_diff = p2.lap_dist_pct - p1.lap_dist_pct
+    if dist_diff <= 0:
+        return p1.session_time
+        
+    time_diff = p2.session_time - p1.session_time
+    time_per_pct = time_diff / dist_diff
+    
+    exact_start_time = p1.session_time - (p1.lap_dist_pct * time_per_pct)
+    
+    return exact_start_time
+
+
 def calculate_delta(cur_telemetry, ref_telemetry):
     if not cur_telemetry or not ref_telemetry:
         return []
         
-    cur_start_time = cur_telemetry[0].session_time
-    ref_start_time = ref_telemetry[0].session_time
+    cur_start_time = get_exact_start_time(cur_telemetry)
+    ref_start_time = get_exact_start_time(ref_telemetry)
     
     deltas = []
     j = 0
