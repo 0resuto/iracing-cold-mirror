@@ -46,13 +46,13 @@ function App() {
             </div>
             
             {/* Right Column: Track & Stats */}
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '24px', overflow: 'hidden', minHeight: '600px' }}>
-                <div className="panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '350px' }}>
+          <div style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '24px', overflowY: 'auto', minHeight: '600px', paddingRight: '8px' }}>
+              <div className="panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '350px' }}>
                   <TrackMap />
                 </div>
-                <div className="panel" style={{ flex: '0 0 auto', padding: '0', overflow: 'hidden' }}>
-                  <StatsWidget />
-                </div>
+                <div className="panel" style={{ flex: '0 0 auto', padding: '0', overflow: 'visible' }}>
+                <StatsWidget />
+              </div>
             </div>
         </div>
 
