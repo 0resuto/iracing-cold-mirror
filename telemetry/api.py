@@ -5,7 +5,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker, selectinload
 from telemetry.database import engine, Telemetry, Session, Lap, Player, Sector
 from telemetry.config import settings
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 import redis
 import json
 import asyncio
@@ -40,86 +40,86 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET"],
     allow_headers=["*"],
 )
 
 
 class TelemetryResponse(BaseModel):
-    id: int
-    speed: float
-    rpm: int
-    gear: int
-    throttle: float
-    brake: float
-    wheel_angle: float
-    session_time: float
-    lap_dist_pct: float
-    lat: float | None = None
-    lon: float | None = None
-    lat_accel: float | None = None
-    long_accel: float | None = None
-    yaw_rate: float | None = None
-    velocity_x: float | None = None
-    velocity_z: float | None = None
-    slip_angle: float | None = None
-    lf_speed: float | None = None
-    rf_speed: float | None = None
-    lr_speed: float | None = None
-    rr_speed: float | None = None
-    abs_active: float | None = None
-    tc_active: float | None = None
-    wheel_lock: float | None = None
+    id: int = Field(..., description="Unique identifier for the telemetry record")
+    speed: float = Field(..., description="Speed (km/h)")
+    rpm: int = Field(..., description="Engine revolutions per minute")
+    gear: int = Field(..., description="Current gear")
+    throttle: float = Field(..., description="Throttle pedal input (from 0.0 to 1.0)")
+    brake: float = Field(..., description="Brake pedal input (from 0.0 to 1.0)")
+    wheel_angle: float = Field(..., description="Steering wheel angle (rad)")
+    session_time: float = Field(..., description="Session time")
+    lap_dist_pct: float = Field(..., description="Percentage of lap distance completed (from 0.0 to 1.0)")
+    lat: float | None = Field(None, description="GPS Latitude")
+    lon: float | None = Field(None, description="GPS Longitude")
+    lat_accel: float | None = Field(None, description="Lateral acceleration (G)")
+    long_accel: float | None = Field(None, description="Longitudinal acceleration (G)")
+    yaw_rate: float | None = Field(None, description="Yaw rate (rad/s)")
+    velocity_x: float | None = Field(None, description="Longitudinal velocity in the car's coordinate system (m/s)")
+    velocity_z: float | None = Field(None, description="Lateral velocity in the car's coordinate system (m/s)")
+    slip_angle: float | None = Field(None, description="Slip angle")
+    lf_speed: float | None = Field(None, description="Left front wheel speed (m/s)")
+    rf_speed: float | None = Field(None, description="Right front wheel speed (m/s)")
+    lr_speed: float | None = Field(None, description="Left rear wheel speed (m/s)")
+    rr_speed: float | None = Field(None, description="Right rear wheel speed (m/s)")
+    abs_active: float | None = Field(None, description="ABS active flag (0.0 or 1.0)")
+    tc_active: float | None = Field(None, description="Traction Control active flag (0.0 or 1.0)")
+    wheel_lock: float | None = Field(None, description="Wheel lock flag (0.0 or 1.0)")
     
     model_config = ConfigDict(from_attributes=True)
 
 
 class SectorResponse(BaseModel):
-    id: int
-    sector_number: int
-    sector_time: float
+    id: int = Field(..., description="Unique identifier for the sector")
+    sector_number: int = Field(..., description="Sector number")
+    sector_time: float = Field(..., description="Sector completion time")
     
     model_config = ConfigDict(from_attributes=True)
 
 
 class IdealSectorResponse(BaseModel):
-    sector_number: int
-    best_time: float
+    sector_number: int = Field(..., description="Sector number")
+    best_time: float = Field(..., description="Best sector time")
 
 
 class IdealLapResponse(BaseModel):
-    ideal_lap_time: float
-    sectors: list[IdealSectorResponse]
+    ideal_lap_time: float = Field(..., description="Ideal lap time (sum of best sectors)")
+    sectors: list[IdealSectorResponse] = Field(..., description="List of best sectors")
 
 
 class DeltaPointResponse(BaseModel):
-    lap_dist_pct: float
-    delta: float
+    lap_dist_pct: float = Field(..., description="Percentage of lap distance completed")
+    delta: float = Field(..., description="Time difference (delta) compared to the reference lap")
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class LapResponse(BaseModel):
-    id: int
-    lap_number: int
-    lap_time: float
-    sectors: list[SectorResponse] = []
+    id: int = Field(..., description="Unique identifier for the lap")
+    lap_number: int = Field(..., description="Lap number")
+    lap_time: float = Field(..., description="Lap time")
+    sectors: list[SectorResponse] = Field([], description="List of sectors for this lap")
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class SessionResponse(BaseModel):
-    id: int
-    track_name: str
-    laps: list[LapResponse] = []
+    id: int = Field(..., description="Unique identifier for the session")
+    track_name: str = Field(..., description="Name of the track")
+    laps: list[LapResponse] = Field([], description="List of laps in the session")
     
     model_config = ConfigDict(from_attributes=True)
 
 
 class PlayerResponse(BaseModel):
-    id: int
-    name: str
-    sessions: list[SessionResponse] = []
+    id: int = Field(..., description="Unique identifier for the player")
+    name: str = Field(..., description="Name of the player")
+    sessions: list[SessionResponse] = Field([], description="List of sessions for the player")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -199,19 +199,19 @@ def get_status():
     return {"status": "ok", "message": "API is running"}
 
 
-@app.get("/api/telemetry/latest", response_model=list[TelemetryResponse])
+@app.get("/api/telemetry/latest", response_model=list[TelemetryResponse], tags=["live telemetry"], summary="Get latest 10 points of telemetry")
 def get_latest_telemetry(db = Depends(get_db)):
     data_objects = db.query(Telemetry).order_by(Telemetry.id.desc()).limit(10).all()
     return data_objects
 
 
-@app.get("/api/laps/{lap_id}/telemetry", response_model=list[TelemetryResponse])
+@app.get("/api/laps/{lap_id}/telemetry", response_model=list[TelemetryResponse], tags=["telemetry"], summary="Get lap telemetry")
 def get_lap_telemetry(lap_id: int, db = Depends(get_db)):
     data_objects = db.query(Telemetry).filter(Telemetry.lap_id == lap_id).order_by(Telemetry.session_time.asc()).all()
     return data_objects
 
 
-@app.get("/api/players/{player_id}/best_lap", response_model=LapResponse)
+@app.get("/api/players/{player_id}/best_lap", response_model=LapResponse, tags=["best lap"], summary="Get best lap")
 def get_best_lap(player_id: int, track_name: str, db = Depends(get_db)):
     best_lap = db.query(Lap).join(Session).filter(
         Session.player_id == player_id,
@@ -225,7 +225,7 @@ def get_best_lap(player_id: int, track_name: str, db = Depends(get_db)):
     return best_lap
 
 
-@app.get("/api/players/{player_id}/ideal_lap", response_model=IdealLapResponse)
+@app.get("/api/players/{player_id}/ideal_lap", response_model=IdealLapResponse, tags=["ideal lap"], summary="Get ideal lap")
 def get_ideal_lap(player_id: int, track_name: str, db = Depends(get_db)):
     best_sectors = db.query(
         Sector.sector_number, 
@@ -249,7 +249,7 @@ def get_ideal_lap(player_id: int, track_name: str, db = Depends(get_db)):
     return {"ideal_lap_time": ideal_time, "sectors": sectors_list}
 
 
-@app.get("/api/laps/{lap_id}/delta", response_model=list[DeltaPointResponse])
+@app.get("/api/laps/{lap_id}/delta", response_model=list[DeltaPointResponse], tags=["delta"], summary="Get delta between two laps")
 def get_lap_delta(lap_id: int, reference_lap_id: int, db = Depends(get_db)):
     cur_data = db.query(Telemetry.lap_dist_pct, Telemetry.session_time).filter(Telemetry.lap_id == lap_id).order_by(Telemetry.session_time.asc()).all()
     ref_data = db.query(Telemetry.lap_dist_pct, Telemetry.session_time).filter(Telemetry.lap_id == reference_lap_id).order_by(Telemetry.session_time.asc()).all()
@@ -281,7 +281,7 @@ async def websocket_telemetry(websocket: WebSocket):
         logger.info("Client disconnected")
 
 
-@app.get("/api/history", response_model=list[PlayerResponse])
+@app.get("/api/history", response_model=list[PlayerResponse], tags=["history"], summary="Get all players history")
 def get_history(skip: int = 0, limit: int = 10, db = Depends(get_db)):
     players = db.query(Player).options(
         selectinload(Player.sessions).

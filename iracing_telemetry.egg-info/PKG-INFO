@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: iracing-telemetry
+Version: 0.1.0
+Summary: iRacing Live Telemetry and History API
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: sqlalchemy
+Requires-Dist: redis
+Requires-Dist: psycopg2-binary
+Requires-Dist: pydantic-settings
+Requires-Dist: alembic

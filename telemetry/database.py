@@ -55,8 +55,8 @@ class Telemetry(Base):
     __tablename__ = 'telemetry'
 
     id = Column(Integer, primary_key=True)
-    lap_id = Column(Integer, ForeignKey('laps.id'))
-    session_time = Column(Float)
+    lap_id = Column(Integer, ForeignKey('laps.id'), index=True)
+    session_time = Column(Float, index=True)
     speed = Column(Float)                       # Speed (km/h)
     rpm = Column(Integer)                       # Engine RPM
     gear = Column(Integer)                      # Current gear
