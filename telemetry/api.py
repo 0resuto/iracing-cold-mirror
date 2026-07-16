@@ -31,7 +31,10 @@ def get_db():
     finally:
         db.close()
 
-app = FastAPI()
+app = FastAPI(
+    title="iRacing Telemetry API",
+    description="Live telemetry streaming and history storage for iRacing."
+)
 
 app.add_middleware(
     CORSMiddleware,
