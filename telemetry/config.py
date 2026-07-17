@@ -11,6 +11,6 @@ class Settings(BaseSettings):
     redis_host: str = "localhost"
     redis_port: int = 6379
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()

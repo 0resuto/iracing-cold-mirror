@@ -2,9 +2,10 @@ import irsdk
 import math
 
 class IBTReader:
-    def __init__(self, file_path="dev/telemetry.ibt"):
+    def __init__(self, file_path="dev/telemetry.ibt", loop=True):
         self.ibt = irsdk.IBT()
         self.ibt.open(file_path)
+        self.loop = loop
         
         # Calculate total samples
         session_time = self.ibt.get_all('SessionTime')
@@ -46,8 +47,10 @@ class IBTReader:
             return None
             
         if self.current_idx >= self.num_samples:
-            # Loop the replay
-            self.current_idx = 0
+            if self.loop == False:
+                return None
+            else: 
+                self.current_idx = 0
             
         idx = self.current_idx
         data = {}
