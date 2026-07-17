@@ -6,3 +6,17 @@ __pycache__/
 .vscode/
 .agents/
 *.json
+*.yaml
+
+# Python packaging
+*.egg-info/
+build/
+dist/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# iRacing Telemetry local dumps
+*.ibt
