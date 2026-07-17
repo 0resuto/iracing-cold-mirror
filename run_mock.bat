@@ -1,5 +1,5 @@
 @echo off
 echo Starting iRacing Mock Telemetry...
 call venv\Scripts\activate.bat
-python -m dev.run_mock
+python -m scripts.run_mock
 pause

@@ -1,7 +1,7 @@
 import logging
 
 from telemetry.collector.live_reader import IRacingLiveReader
-from telemetry.collector import run
+from telemetry.collector.service import run
 
 
 logging.basicConfig(
