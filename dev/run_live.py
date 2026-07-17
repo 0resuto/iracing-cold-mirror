@@ -1,6 +1,6 @@
 import logging
 
-from dev.live_reader import IRacingLiveReader
+from telemetry.collector.live_reader import IRacingLiveReader
 from telemetry.collector import run
 
 

@@ -1,5 +1,5 @@
 from collections import namedtuple
-from telemetry.api import get_exact_start_time
+from telemetry.services.delta import get_exact_start_time
 
 
 MockPoint = namedtuple('MockPoint', ['lap_dist_pct', 'session_time'])

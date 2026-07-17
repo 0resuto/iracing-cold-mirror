@@ -1,13 +1,12 @@
 from sqlalchemy.orm import sessionmaker
 from telemetry.database import engine, Session as RacingSession, Lap as RacingLap, Telemetry, Player, Sector
-import redis
 import time
 import json
 from queue import Queue, Empty
 import threading
 from telemetry.config import settings
 from telemetry.database import DBSession
-from telemetry.redis_client import redis_client
+from telemetry.redis import redis_client
 import logging
 
 

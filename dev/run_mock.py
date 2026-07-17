@@ -1,4 +1,4 @@
-from dev.ibt_reader import IBTReader
+from telemetry.collector.ibt_reader import IBTReader
 from telemetry.collector import run
 
 reader = IBTReader(file_path="dev/telemetry.ibt")
