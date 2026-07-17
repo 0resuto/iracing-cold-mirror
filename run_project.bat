@@ -94,6 +94,14 @@ if exist "docker-compose.yml" (
     )
 )
 
+echo Checking database schema...
+python -c "exec('from sqlalchemy import inspect, text\nfrom telemetry.database import Base, engine\nlegacy_revisions = {\"cf97760bcb70\"}\ncurrent_revision = None\nwith engine.connect() as conn:\n    tables = set(inspect(conn).get_table_names())\n    if \"alembic_version\" in tables:\n        row = conn.execute(text(\"select version_num from alembic_version\")).first()\n        current_revision = row[0] if row else None\nif current_revision in legacy_revisions:\n    print(f\"Found legacy Alembic revision {current_revision}. Repairing schema stamp...\")\n    Base.metadata.create_all(engine)\n    with engine.begin() as conn:\n        conn.execute(text(\"update alembic_version set version_num = :version\"), {\"version\": \"473a33105f2e\"})\nelse:\n    Base.metadata.create_all(engine)')"
+if errorlevel 1 (
+    echo ERROR: Failed to check or repair database schema.
+    pause
+    exit /b 1
+)
+
 if exist "alembic.ini" (
     echo Applying database migrations...
     alembic upgrade head
