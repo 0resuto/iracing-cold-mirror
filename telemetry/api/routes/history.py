@@ -12,9 +12,12 @@ from telemetry.api.schemas import (
 router = APIRouter()
 
 @router.get("/laps/{lap_id}/telemetry", response_model=list[TelemetryResponse], tags=["telemetry"], summary="Get lap telemetry")
-def get_lap_telemetry(lap_id: int, db = Depends(get_db), limit: int = 5000):
-    data_objects = db.query(Telemetry).filter(Telemetry.lap_id == lap_id).order_by(Telemetry.session_time.asc()).limit(limit)
-    return data_objects
+def get_lap_telemetry(lap_id: int, db = Depends(get_db), max_points: int = 2000):
+    data_objects = db.query(Telemetry).filter(Telemetry.lap_id == lap_id).order_by(Telemetry.session_time.asc()).limit(100000).all()
+
+    step = max(1, len(data_objects) // max_points)
+
+    return data_objects[::step]
 
 
 @router.get("/players/{player_id}/best_lap", response_model=LapResponse, tags=["best lap"], summary="Get best lap")

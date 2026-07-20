@@ -6,6 +6,12 @@ import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
 import { lttb } from '../utils/lttb';
 
+const FastDot = (props) => {
+  const { cx, cy, stroke, fill } = props;
+  if (cx === undefined || cy === undefined) return null;
+  return <circle cx={cx} cy={cy} r={4} fill={stroke || fill || '#fff'} stroke="none" style={{ pointerEvents: 'none' }} />;
+};
+
 const CustomTooltip = ({ active, payload, visible }) => {
   const setHoveredData = useAppStore(state => state.setHoveredData);
 
@@ -164,7 +170,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       ];
     }
 
-    const maxPoints = 400;
+    const maxPoints = 1500;
     const sampledLap = lttb(processedLap, maxPoints);
 
     let refIdx = 0;
@@ -297,7 +303,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                   stroke="var(--text-main)" 
                   fillOpacity={0} 
                   strokeWidth={1.5} 
-                  isAnimationActive={false} 
+                  isAnimationActive={false} activeDot={<FastDot />}
                 />
                 {sectorBoundaries.map((pct, i) => (
                   <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
@@ -325,8 +331,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
               <YAxis domain={[0, 350]} stroke="var(--text-muted)" fontSize={11} tickCount={5} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'speed'} />} />
-              <Line type="linear" dataKey="speed" stroke="var(--accent-red)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-              <Line type="linear" dataKey="ref_speed" stroke="gray" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+              <Line type="linear" dataKey="speed" stroke="var(--accent-red)" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={<FastDot />} />
+              <Line type="linear" dataKey="ref_speed" stroke="gray" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />
               {sectorBoundaries.map((pct, i) => (
                 <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
               ))}
@@ -352,10 +358,10 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
               <YAxis domain={[0, 1]} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'throttle'} />} />
-              <Area type="linear" dataKey="throttle" stroke="#22c55e" fill="#22c55e" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
-              <Line type="linear" dataKey="ref_throttle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
+              <Area type="linear" dataKey="throttle" stroke="#22c55e" fill="#22c55e" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} activeDot={<FastDot />} />
+              <Line type="linear" dataKey="ref_throttle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
               {/* TC Flag as an area */}
-              <Area type="step" dataKey="tc_active" stroke="none" fill="#eab308" fillOpacity={0.3} isAnimationActive={false} />
+              <Area type="step" dataKey="tc_active" stroke="none" fill="#eab308" fillOpacity={0.3} isAnimationActive={false} activeDot={false} />
               {sectorBoundaries.map((pct, i) => (
                 <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
               ))}
@@ -381,11 +387,11 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
               <YAxis domain={[0, 1]} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'brake'} />} />
-              <Area type="linear" dataKey="brake" stroke="var(--accent-red)" fill="var(--accent-red)" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
-              <Line type="linear" dataKey="ref_brake" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
+              <Area type="linear" dataKey="brake" stroke="var(--accent-red)" fill="var(--accent-red)" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} activeDot={<FastDot />} />
+              <Line type="linear" dataKey="ref_brake" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
               {/* ABS and Lock Flags */}
-              <Area type="step" dataKey="abs_active" stroke="none" fill="var(--accent-blue)" fillOpacity={0.3} isAnimationActive={false} />
-              <Area type="step" dataKey="wheel_lock" stroke="none" fill="var(--accent-red)" fillOpacity={0.5} isAnimationActive={false} />
+              <Area type="step" dataKey="abs_active" stroke="none" fill="var(--accent-blue)" fillOpacity={0.3} isAnimationActive={false} activeDot={false} />
+              <Area type="step" dataKey="wheel_lock" stroke="none" fill="var(--accent-red)" fillOpacity={0.5} isAnimationActive={false} activeDot={false} />
               {sectorBoundaries.map((pct, i) => (
                 <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
               ))}
@@ -411,8 +417,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
               <YAxis domain={['auto', 'auto']} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'wheel'} />} />
-              <Line type="linear" dataKey="wheel_angle" stroke="var(--text-main)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-              <Line type="linear" dataKey="ref_wheel_angle" stroke="gray" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+              <Line type="linear" dataKey="wheel_angle" stroke="var(--text-main)" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={<FastDot />} />
+              <Line type="linear" dataKey="ref_wheel_angle" stroke="gray" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />
               {sectorBoundaries.map((pct, i) => (
                 <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
               ))}
@@ -446,8 +452,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               />
               <YAxis domain={['auto', 'auto']} stroke="var(--text-muted)" fontSize={11} tickCount={3} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip visible={activeChart === 'slip'} />} />
-              <Area type="linear" dataKey="slip_angle" stroke="var(--accent-blue)" fill="var(--accent-blue)" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} />
-              <Line type="linear" dataKey="ref_slip_angle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} />
+              <Area type="linear" dataKey="slip_angle" stroke="var(--accent-blue)" fill="var(--accent-blue)" fillOpacity={0.2} strokeWidth={1} isAnimationActive={false} activeDot={<FastDot />} />
+              <Line type="linear" dataKey="ref_slip_angle" stroke="gray" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
               {sectorBoundaries.map((pct, i) => (
                 <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--text-muted)" strokeDasharray="3 3" opacity={0.5} />
               ))}
