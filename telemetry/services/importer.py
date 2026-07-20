@@ -157,6 +157,7 @@ def import_ibt_to_db(file_path: str, db_session_factory):
                     db.rollback()
                     if attempt == 2:
                         logger.error(f"Failed to save batch after 3 attempts: {e}")
+                        raise
                     else:
                         sleep_time = 2 ** attempt    
                         logger.error(f"DB Worker error: {e}")

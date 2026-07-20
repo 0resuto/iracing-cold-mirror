@@ -18,16 +18,13 @@ def scan_existing_files():
 class TelemetryFileHandler(FileSystemEventHandler):
     def on_created(self, event):
         if event.src_path.endswith(".ibt"):
-            time.sleep(1)
-            import_ibt_to_db(event.src_path, DBSession)
-        
-        return
-    
-    def on_modified(self, event):
-        if event.src_path.endswith(".ibt"):
-            time.sleep(1)
-            import_ibt_to_db(event.src_path, DBSession)
-
+            time.sleep(4)
+            try:
+                with open(event.src_path, 'ab') as file:
+                    pass
+                import_ibt_to_db(event.src_path, DBSession)
+            except IOError:
+                return 
         return
     
 

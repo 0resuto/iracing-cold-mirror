@@ -10,7 +10,8 @@ dependencies = [
     "psycopg2-binary",
     "pydantic-settings",
     "alembic",
-    "watchdog"
+    "watchdog",
+    "pyyaml"
 ]
 
 [build-system]

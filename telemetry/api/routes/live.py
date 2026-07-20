@@ -2,9 +2,10 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from telemetry.redis import redis_client
 import json
 import asyncio
+import logging
 
 
-
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.websocket("/ws/telemetry/live")
