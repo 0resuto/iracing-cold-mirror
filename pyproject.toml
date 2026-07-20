@@ -9,7 +9,8 @@ dependencies = [
     "redis",
     "psycopg2-binary",
     "pydantic-settings",
-    "alembic"
+    "alembic",
+    "watchdog"
 ]
 
 [build-system]

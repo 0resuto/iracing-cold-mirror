@@ -1,23 +1,23 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 from telemetry.api.deps import get_db
-from telemetry.db.models import Telemetry, Session, Lap, Sector
+from telemetry.db.models import Telemetry, Session, Lap, Sector, Player
+from telemetry.services.delta import calculate_delta
 from telemetry.api.schemas import (
     TelemetryResponse, SectorResponse, IdealSectorResponse, 
     IdealLapResponse, DeltaPointResponse, LapResponse, 
     SessionResponse, PlayerResponse
 )
-from fastapi import HTTPException
-
-
 router = APIRouter()
 
-@router.get("/api/laps/{lap_id}/telemetry", response_model=list[TelemetryResponse], tags=["telemetry"], summary="Get lap telemetry")
+@router.get("/laps/{lap_id}/telemetry", response_model=list[TelemetryResponse], tags=["telemetry"], summary="Get lap telemetry")
 def get_lap_telemetry(lap_id: int, db = Depends(get_db)):
     data_objects = db.query(Telemetry).filter(Telemetry.lap_id == lap_id).order_by(Telemetry.session_time.asc()).all()
     return data_objects
 
 
-@router.get("/api/players/{player_id}/best_lap", response_model=LapResponse, tags=["best lap"], summary="Get best lap")
+@router.get("/players/{player_id}/best_lap", response_model=LapResponse, tags=["best lap"], summary="Get best lap")
 def get_best_lap(player_id: int, track_name: str, db = Depends(get_db)):
     best_lap = db.query(Lap).join(Session).filter(
         Session.player_id == player_id,
@@ -31,7 +31,7 @@ def get_best_lap(player_id: int, track_name: str, db = Depends(get_db)):
     return best_lap
 
 
-@router.get("/api/players/{player_id}/ideal_lap", response_model=IdealLapResponse, tags=["ideal lap"], summary="Get ideal lap")
+@router.get("/players/{player_id}/ideal_lap", response_model=IdealLapResponse, tags=["ideal lap"], summary="Get ideal lap")
 def get_ideal_lap(player_id: int, track_name: str, db = Depends(get_db)):
     best_sectors = db.query(
         Sector.sector_number, 
@@ -55,7 +55,7 @@ def get_ideal_lap(player_id: int, track_name: str, db = Depends(get_db)):
     return {"ideal_lap_time": ideal_time, "sectors": sectors_list}
 
 
-@router.get("/api/laps/{lap_id}/delta", response_model=list[DeltaPointResponse], tags=["delta"], summary="Get delta between two laps")
+@router.get("/laps/{lap_id}/delta", response_model=list[DeltaPointResponse], tags=["delta"], summary="Get delta between two laps")
 def get_lap_delta(lap_id: int, reference_lap_id: int, db = Depends(get_db)):
     cur_data = db.query(Telemetry.lap_dist_pct, Telemetry.session_time).filter(Telemetry.lap_id == lap_id).order_by(Telemetry.session_time.asc()).all()
     ref_data = db.query(Telemetry.lap_dist_pct, Telemetry.session_time).filter(Telemetry.lap_id == reference_lap_id).order_by(Telemetry.session_time.asc()).all()
@@ -68,7 +68,7 @@ def get_lap_delta(lap_id: int, reference_lap_id: int, db = Depends(get_db)):
     return deltas
 
 
-@router.get("/api/history", response_model=list[PlayerResponse], tags=["history"], summary="Get all players history")
+@router.get("/history", response_model=list[PlayerResponse], tags=["history"], summary="Get all players history")
 def get_history(skip: int = 0, limit: int = 10, db = Depends(get_db)):
     players = db.query(Player).options(
         selectinload(Player.sessions).

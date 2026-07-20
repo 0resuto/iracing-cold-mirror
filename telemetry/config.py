@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
 
 
 class Settings(BaseSettings):
@@ -10,6 +11,8 @@ class Settings(BaseSettings):
 
     redis_host: str = "localhost"
     redis_port: int = 6379
+
+    iracing_telemetry_dir: str = os.path.expanduser(r"~\Documents\iRacing\telemetry")
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

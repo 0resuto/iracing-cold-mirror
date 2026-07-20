@@ -139,6 +139,7 @@ popd
 
 echo Starting backend and frontend...
 start /MIN "Backend" cmd /k "cd /d ""%CD%"" && call venv\Scripts\activate.bat && uvicorn telemetry.api.app:app --reload"
+start /MIN "Telemetry Agent" cmd /k "cd /d ""%CD%"" && call venv\Scripts\activate.bat && python -m scripts.agent"
 start /MIN "Frontend" cmd /k "cd /d ""%CD%\frontend"" && npm run dev"
 
 endlocal

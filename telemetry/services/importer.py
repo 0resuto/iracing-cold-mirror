@@ -3,6 +3,16 @@ from telemetry.db.models import Session as RacingSession, Lap as RacingLap, Tele
 import time
 from telemetry.db import SessionLocal as DBSession
 import logging
+import hashlib
+import os
+
+
+def get_file_hash(file_path: str) -> str:
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
 
 
 logging.basicConfig(
@@ -15,6 +25,13 @@ logger = logging.getLogger(__name__)
 def import_ibt_to_db(file_path: str, db_session_factory):
     reader = IBTReader(file_path=file_path, loop=False)
     db =  db_session_factory()
+
+    file_hash = get_file_hash(file_path)
+    existing_session = db.query(RacingSession).filter_by(file_hash=file_hash).first()
+    if existing_session:
+        logger.info(f"Skipping {file_path} - already imported (Hash: {file_hash})")
+        db.close()
+        return False
 
     batch = []
 
@@ -37,7 +54,11 @@ def import_ibt_to_db(file_path: str, db_session_factory):
         db.add(player)
         db.commit()
 
-    current_session = RacingSession(track_name=track_name, player_id=player.id)
+    current_session = RacingSession(
+        track_name=track_name,
+        player_id=player.id,
+        file_hash=file_hash
+    )
     db.add(current_session)
     db.commit()
 

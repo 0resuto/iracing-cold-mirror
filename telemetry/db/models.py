@@ -13,6 +13,7 @@ class Player(Base):
 class Session(Base):
     __tablename__ = 'sessions'
 
+    file_hash = Column(String, unique=True, index=True, nullable=True)
     id = Column(Integer, primary_key=True, index=True)
     player_id = Column(Integer, ForeignKey('players.id'))
     player = relationship("Player", back_populates="sessions")
