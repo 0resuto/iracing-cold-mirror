@@ -6,7 +6,7 @@ export function useHistoryQuery() {
   return useQuery({
     queryKey: ['history'],
     queryFn: async () => {
-      const res = await fetch(`${API_BASE}/history`);
+      const res = await fetch(`${API_BASE}/players_history`);
       if (!res.ok) throw new Error('Failed to fetch history');
       return res.json();
     },

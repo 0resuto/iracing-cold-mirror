@@ -24,65 +24,68 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
 
     try:
         while True:
-            data = reader.read()
-            if data is None:
-                break
+            try:
+                data = reader.read()
+                if data is None:
+                    break
 
-            lap_current_lap_time = data.get("session_time", 0.0)
+                lap_current_lap_time = data.get("session_time", 0.0)
 
-            if last_lap_dist_pct > 0.8 and data["lap_dist_pct"] < 0.2:
-                current_sector_time = lap_current_lap_time - sector_start_time
-                current_sector_id = 0
-                sector_start_time = 0.0
-                lap += 1
-
-            next_sector_id = current_sector_id + 1
-
-            if len(sectors) > 1 and next_sector_id < len(sectors):
-                next_sector_start_time = sectors[next_sector_id]["SectorStartPct"]
-                if data["lap_dist_pct"] >= next_sector_start_time:
+                if last_lap_dist_pct > 0.8 and data["lap_dist_pct"] < 0.2:
                     current_sector_time = lap_current_lap_time - sector_start_time
-                    current_sector_id = next_sector_id
-                    sector_start_time = lap_current_lap_time
-            
-            last_lap_dist_pct = data["lap_dist_pct"]
-            lap_last_lap_time = lap_current_lap_time
+                    current_sector_id = 0
+                    sector_start_time = 0.0
+                    lap += 1
 
-            live_data = {
-                "lap_number": lap,
-                "speed": data["speed"],
-                "rpm": data["rpm"],
-                "gear": data["gear"],
-                "throttle": data["throttle"],
-                "brake": data["brake"],
-                "wheel_angle": data["wheel_angle"],
-                "session_time": lap_current_lap_time,
-                "lap_dist_pct": data.get("lap_dist_pct"),
-                "lat": data.get("lat"),
-                "lon": data.get("lon"),
-                "lat_accel": data.get("g_lat"),
-                "long_accel": data.get("g_lon"),
-                "yaw_rate": data.get("yaw_rate"),
-                "velocity_x": data.get("vx"),
-                "velocity_z": data.get("vz"),
-                "slip_angle": data.get("slip_angle"),
-                "lf_speed": data.get("lf_speed"),
-                "rf_speed": data.get("rf_speed"),
-                "lr_speed": data.get("lr_speed"),
-                "rr_speed": data.get("rr_speed"),
-                "abs_active": data.get("abs_active"),
-                "tc_active": data.get("tc_active"),
-                "wheel_lock": data.get("wheel_lock"),
-            }
+                next_sector_id = current_sector_id + 1
 
-            redis_client.set("telemetry:latest", json.dumps(live_data))
+                if len(sectors) > 1 and next_sector_id < len(sectors):
+                    next_sector_start_time = sectors[next_sector_id]["SectorStartPct"]
+                    if data["lap_dist_pct"] >= next_sector_start_time:
+                        current_sector_time = lap_current_lap_time - sector_start_time
+                        current_sector_id = next_sector_id
+                        sector_start_time = lap_current_lap_time
+                
+                last_lap_dist_pct = data["lap_dist_pct"]
+                lap_last_lap_time = lap_current_lap_time
 
-            time.sleep(0.016)
+                live_data = {
+                    "lap_number": lap,
+                    "speed": data["speed"],
+                    "rpm": data["rpm"],
+                    "gear": data["gear"],
+                    "throttle": data["throttle"],
+                    "brake": data["brake"],
+                    "wheel_angle": data["wheel_angle"],
+                    "session_time": lap_current_lap_time,
+                    "lap_dist_pct": data.get("lap_dist_pct"),
+                    "lat": data.get("lat"),
+                    "lon": data.get("lon"),
+                    "lat_accel": data.get("g_lat"),
+                    "long_accel": data.get("g_lon"),
+                    "yaw_rate": data.get("yaw_rate"),
+                    "velocity_x": data.get("vx"),
+                    "velocity_z": data.get("vz"),
+                    "slip_angle": data.get("slip_angle"),
+                    "lf_speed": data.get("lf_speed"),
+                    "rf_speed": data.get("rf_speed"),
+                    "lr_speed": data.get("lr_speed"),
+                    "rr_speed": data.get("rr_speed"),
+                    "abs_active": data.get("abs_active"),
+                    "tc_active": data.get("tc_active"),
+                    "wheel_lock": data.get("wheel_lock"),
+                }
+
+                redis_client.set("telemetry:latest", json.dumps(live_data))
+
+                time.sleep(0.016)
+                
+            except Exception as e:
+                logger.error(f"Unexpected error in collector iteration: {e}")
+                continue
 
     except KeyboardInterrupt:
         logger.info("Stopped by user")
-    except Exception as e:
-        logger.error(f"Unexpected error in collector: {e}")
     finally:
         logger.info("Exiting...")
         

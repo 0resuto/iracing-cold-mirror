@@ -68,12 +68,10 @@ def get_lap_delta(lap_id: int, reference_lap_id: int, db = Depends(get_db)):
     return deltas
 
 
-@router.get("/history", response_model=list[PlayerResponse], tags=["history"], summary="Get all players history")
+@router.get("/players_history", response_model=list[PlayerResponse], tags=["players_history"], summary="Get all players history")
 def get_history(skip: int = 0, limit: int = 10, db = Depends(get_db)):
     players = db.query(Player).options(
-        selectinload(Player.sessions).
-        selectinload(Session.laps).
-        selectinload(Lap.sectors)
+        selectinload(Player.sessions)
     ).offset(skip).limit(limit).all()
     return players
 
