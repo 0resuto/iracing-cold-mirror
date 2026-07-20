@@ -138,7 +138,7 @@ if not exist "node_modules" (
 popd
 
 echo Starting backend and frontend...
-start /MIN "Backend" cmd /k "cd /d ""%CD%"" && call venv\Scripts\activate.bat && uvicorn telemetry.api:app --reload"
+start /MIN "Backend" cmd /k "cd /d ""%CD%"" && call venv\Scripts\activate.bat && uvicorn telemetry.api.app:app --reload"
 start /MIN "Frontend" cmd /k "cd /d ""%CD%\frontend"" && npm run dev"
 
 endlocal
