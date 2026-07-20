@@ -6,8 +6,8 @@ from sqlalchemy import pool
 from alembic import context
 
 from telemetry.config import settings
-from telemetry.database import Base
-
+from telemetry.db import Base
+from telemetry.db.models import Player, Session, Lap, Sector, Telemetry
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

@@ -1,13 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
-from telemetry.config import settings
-
-
-engine = create_engine(settings.database_url)
-DBSession = sessionmaker(bind=engine)
-Base = declarative_base()
-
-
+from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy.orm import relationship
+from telemetry.db import Base, engine
 class Player(Base):
     __tablename__ = 'players'
 
@@ -85,7 +78,6 @@ class Telemetry(Base):
     wheel_lock = Column(Float, nullable=True)   # Any wheel locked flag (0.0 or 1.0)
     
     lap = relationship("Lap", back_populates="telemetry_data")
-
 
 
 if __name__ == "__main__":

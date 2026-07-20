@@ -3,7 +3,8 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker, selectinload
-from telemetry.database import engine, Telemetry, Session, Lap, Player, Sector
+from telemetry.db import engine
+from telemetry.db.models import Telemetry, Session, Lap, Player, Sector
 from telemetry.config import settings
 from telemetry.services.delta import calculate_delta
 from telemetry.redis import redis_client

@@ -1,5 +1,5 @@
 import sys
-from telemetry.database import DBSession
+from telemetry.db import SessionLocal as DBSession
 from telemetry.services.importer import import_ibt_to_db
 
 if __name__ == "__main__":

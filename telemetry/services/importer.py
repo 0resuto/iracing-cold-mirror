@@ -1,7 +1,7 @@
 from telemetry.collector.ibt_reader import IBTReader
-from telemetry.database import Session as RacingSession, Lap as RacingLap, Telemetry, Player, Sector
+from telemetry.db.models import Session as RacingSession, Lap as RacingLap, Telemetry, Player, Sector
 import time
-from telemetry.database import DBSession
+from telemetry.db import SessionLocal as DBSession
 import logging
 
 
