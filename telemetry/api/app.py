@@ -1,19 +1,20 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 import logging
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
 from telemetry.api.routes import history, live
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
 app = FastAPI(
     title="iRacing Telemetry API",
-    description="Live telemetry streaming and history storage for iRacing."
+    description="Live telemetry streaming and history storage for iRacing.",
 )
 
 
@@ -39,13 +40,12 @@ async def global_exception_handler(request: Request, exc: Exception):
             "error": {
                 "code": 500,
                 "message": "Internal Server Error",
-                "details": "An unexpected error occurred"
+                "details": "An unexpected error occurred",
             }
-        }
+        },
     )
 
 
 @app.get("/api/status")
 def get_status():
     return {"status": "ok", "message": "API is running"}
-

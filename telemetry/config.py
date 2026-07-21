@@ -1,10 +1,11 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     database_url: str = "postgresql://iracing:iracing_local@localhost:5432/telemetry"
-    
+
     postgres_user: str = "iracing"
     postgres_password: str = "iracing_local"
     postgres_db: str = "telemetry"
@@ -15,5 +16,6 @@ class Settings(BaseSettings):
     iracing_telemetry_dir: str = os.path.expanduser(r"~\Documents\iRacing\telemetry")
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
 
 settings = Settings()

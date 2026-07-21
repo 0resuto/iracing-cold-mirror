@@ -21,3 +21,14 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["telemetry*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"] # E=стиль, F=логические ошибки, I=сортировка импортов
+ignore = ["E501"]        # Игнорируем слишком длинные строки, если их сложно разбить
+
+[tool.ruff.format]
+quote-style = "double"

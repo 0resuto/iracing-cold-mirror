@@ -4,7 +4,6 @@ import time
 
 import irsdk
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -110,17 +109,27 @@ class IRacingLiveReader:
             "tc_active": 0,
         }
 
-        data["slip_angle"] = math.degrees(math.atan2(velocity_y, velocity_x)) if speed_ms > 2.0 else 0.0
+        data["slip_angle"] = (
+            math.degrees(math.atan2(velocity_y, velocity_x)) if speed_ms > 2.0 else 0.0
+        )
 
         if data["brake"] > 0.1 and data["speed"] > 20.0:
-            min_wheel_speed = min(data["lf_speed"], data["rf_speed"], data["lr_speed"], data["rr_speed"])
-            data["abs_active"] = 1 if (data["speed"] - min_wheel_speed) / data["speed"] > 0.15 else 0
+            min_wheel_speed = min(
+                data["lf_speed"], data["rf_speed"], data["lr_speed"], data["rr_speed"]
+            )
+            data["abs_active"] = (
+                1 if (data["speed"] - min_wheel_speed) / data["speed"] > 0.15 else 0
+            )
 
         if data["throttle"] > 0.1 and data["speed"] > 10.0:
-            max_wheel_speed = max(data["lf_speed"], data["rf_speed"], data["lr_speed"], data["rr_speed"])
+            max_wheel_speed = max(
+                data["lf_speed"], data["rf_speed"], data["lr_speed"], data["rr_speed"]
+            )
             data["tc_active"] = 1 if (max_wheel_speed - data["speed"]) / data["speed"] > 0.15 else 0
 
-        data["wheel_lock"] = 1 if data["brake"] > 0.5 and data["lf_speed"] < 5.0 and data["speed"] > 10.0 else 0
+        data["wheel_lock"] = (
+            1 if data["brake"] > 0.5 and data["lf_speed"] < 5.0 and data["speed"] > 10.0 else 0
+        )
 
         return data
 

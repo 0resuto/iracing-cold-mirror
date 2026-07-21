@@ -1,4 +1,5 @@
 import sys
+
 from telemetry.db import SessionLocal as DBSession
 from telemetry.services.importer import import_ibt_to_db
 

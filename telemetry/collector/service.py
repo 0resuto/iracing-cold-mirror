@@ -1,33 +1,29 @@
-import time
 import json
-from telemetry.config import settings
-from telemetry.redis import redis_client
 import logging
+import time
 
+from telemetry.redis import redis_client
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
-def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unknown Player"):
+def run(reader):
     """
     Continuously reads live telemetry from the reader and streams it to Redis.
-    
-    Tracks the current lap and sector progress based on the car's lap distance 
-    percentage, formats the telemetry snapshot, and publishes it to the 
+
+    Tracks the current lap and sector progress based on the car's lap distance
+    percentage, formats the telemetry snapshot, and publishes it to the
     'telemetry:latest' Redis key at approximately 60Hz.
     """
 
     lap = 1
     lap_current_lap_time = 0
     last_lap_dist_pct = 0.0
-    lap_last_lap_time = 0.0
-    sectors = getattr(reader, 'sectors', [])
+    sectors = getattr(reader, "sectors", [])
     current_sector_id = 0
-    sector_start_time = 0.0
 
     try:
         while True:
@@ -39,9 +35,7 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
                 lap_current_lap_time = data.get("session_time", 0.0)
 
                 if last_lap_dist_pct > 0.8 and data["lap_dist_pct"] < 0.2:
-                    current_sector_time = lap_current_lap_time - sector_start_time
                     current_sector_id = 0
-                    sector_start_time = 0.0
                     lap += 1
 
                 next_sector_id = current_sector_id + 1
@@ -49,12 +43,9 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
                 if len(sectors) > 1 and next_sector_id < len(sectors):
                     next_sector_start_time = sectors[next_sector_id]["SectorStartPct"]
                     if data["lap_dist_pct"] >= next_sector_start_time:
-                        current_sector_time = lap_current_lap_time - sector_start_time
                         current_sector_id = next_sector_id
-                        sector_start_time = lap_current_lap_time
-                
+
                 last_lap_dist_pct = data["lap_dist_pct"]
-                lap_last_lap_time = lap_current_lap_time
 
                 live_data = {
                     "lap_number": lap,
@@ -86,7 +77,7 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
                 redis_client.set("telemetry:latest", json.dumps(live_data))
 
                 time.sleep(0.016)
-                
+
             except Exception as e:
                 logger.error(f"Unexpected error in collector iteration: {e}")
                 continue
@@ -95,4 +86,3 @@ def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unkn
         logger.info("Stopped by user")
     finally:
         logger.info("Exiting...")
-        
