@@ -28,5 +28,25 @@ services:
     ports:
       - "6379:6379"
 
+  api:
+    build: .
+    container_name: iracing-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-iracing}:${POSTGRES_PASSWORD:-iracing_local}@postgres:5432/${POSTGRES_DB:-telemetry}
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+
+  frontend:
+    build: ./frontend
+    container_name: iracing-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
 volumes:
   pgdata:

@@ -52,16 +52,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if exist "requirements.txt" (
-    echo Installing backend dependencies...
-    python -m pip install -r requirements.txt
-    if errorlevel 1 (
-        echo ERROR: Failed to install backend dependencies.
-        pause
-        exit /b 1
-    )
-) else (
-    echo WARNING: requirements.txt was not found. Skipping backend dependencies.
+echo Installing backend dependencies from pyproject.toml...
+python -m pip install -e .
+if errorlevel 1 (
+    echo ERROR: Failed to install backend dependencies.
+    pause
+    exit /b 1
 )
 
 set "DOCKER_COMPOSE_AVAILABLE=0"
