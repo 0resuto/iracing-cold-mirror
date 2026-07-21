@@ -5,11 +5,10 @@
 ![React](https://img.shields.io/badge/React-19-61dafb.svg)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791.svg)
 
-<!-- TODO: Insert a high-quality GIF or screenshot of the telemetry dashboard here -->
-<!-- Example: ![Dashboard Preview](docs/dashboard_preview.gif) -->
+![Dashboard Preview](https://cloud.markyarovikov.ru/apps/files_sharing/publicpreview/2jj8CnzrMBNK8SM?file=/&fileId=29787&x=1680&y=1050&a=true&etag=df020ca8587e59d837d65e37015a43ce)
 
-A comprehensive, high-performance telemetry analytics platform for iRacing. 
-This project collects live telemetry data directly from iRacing, stores historic sessions, and provides a modern web interface for lap analysis, delta comparisons, and sector breakdowns.
+A telemetry analytics platform for iRacing. 
+This project collects live telemetry data directly from iRacing, stores historic sessions, and provides a web interface for lap analysis, delta comparisons, and sector breakdowns.
 
 ## Features
 - **Live Telemetry Streaming**: Connects directly to the iRacing simulator memory (via `irsdk`) to stream live car telemetry at 60Hz.
@@ -19,7 +18,7 @@ This project collects live telemetry data directly from iRacing, stores historic
 
 ## System Architecture
 
-The project is built with a modern, decoupled microservices architecture:
+The project is built with a decoupled architecture:
 
 ```mermaid
 graph TD
