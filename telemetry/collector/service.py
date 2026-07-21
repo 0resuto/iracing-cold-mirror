@@ -13,6 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 def run(reader, track_name="Unknown Track", track_length=5150, player_name="Unknown Player"):
+    """
+    Continuously reads live telemetry from the reader and streams it to Redis.
+    
+    Tracks the current lap and sector progress based on the car's lap distance 
+    percentage, formats the telemetry snapshot, and publishes it to the 
+    'telemetry:latest' Redis key at approximately 60Hz.
+    """
 
     lap = 1
     lap_current_lap_time = 0

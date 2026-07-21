@@ -23,6 +23,13 @@ logger = logging.getLogger(__name__)
 
 
 def import_ibt_to_db(file_path: str, db_session_factory):
+    """
+    Parses an iRacing .ibt telemetry file and imports its data into PostgreSQL.
+    
+    Reads historical telemetry data frame by frame, grouping it into sessions, 
+    laps, and sectors. Uses file hashing to prevent duplicate imports and 
+    inserts data in batches to optimize database performance.
+    """
     reader = IBTReader(file_path=file_path, loop=False)
     db =  db_session_factory()
 

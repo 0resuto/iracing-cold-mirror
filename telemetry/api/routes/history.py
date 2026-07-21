@@ -60,6 +60,13 @@ def get_ideal_lap(player_id: int, track_name: str, db = Depends(get_db)):
 
 @router.get("/laps/{lap_id}/delta", response_model=list[DeltaPointResponse], tags=["delta"], summary="Get delta between two laps")
 def get_lap_delta(lap_id: int, reference_lap_id: int, db = Depends(get_db)):
+    """
+    Calculates the time delta between a given lap and a reference lap.
+    
+    Fetches the lap distance percentages and session times for both laps, and 
+    computes the time difference (delta) at aligned distance points. A positive 
+    delta indicates the current lap is slower than the reference.
+    """
     cur_data = db.query(Telemetry.lap_dist_pct, Telemetry.session_time).filter(Telemetry.lap_id == lap_id).order_by(Telemetry.session_time.asc()).all()
     ref_data = db.query(Telemetry.lap_dist_pct, Telemetry.session_time).filter(Telemetry.lap_id == reference_lap_id).order_by(Telemetry.session_time.asc()).all()
     
