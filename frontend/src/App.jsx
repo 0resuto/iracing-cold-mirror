@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TelemetryChart } from './components/TelemetryChart';
 import { TrackMap } from './components/TrackMap';
@@ -14,43 +14,41 @@ function App() {
   useLiveTelemetryWS(selectedLap);
 
   return (
-    <div style={{ width: '100%', height: '100vh', display: 'flex', overflow: 'hidden' }}>
+    <div className="w-full h-screen flex overflow-hidden bg-zinc-950 text-zinc-100">
       
       {/* Left Sidebar */}
-      <div style={{ 
-        width: isSidebarOpen ? '320px' : '64px', 
-        transition: 'width 0.3s ease',
-        flexShrink: 0,
-        overflow: 'hidden'
-      }}>
+      <div 
+        className="flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-zinc-800"
+        style={{ width: isSidebarOpen ? '320px' : '64px' }}
+      >
         <Sidebar />
       </div>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '24px', gap: '24px' }}>
+      <div className="flex-1 flex flex-col h-full overflow-hidden p-6 gap-6 bg-zinc-950">
         
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="flex items-center gap-4 flex-none">
           <div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' }}>
+            <div className="text-zinc-400 text-sm mt-1 font-medium tracking-wide">
               {selectedLap ? `Viewing Lap ${selectedLap.lap_number} (${selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Live'})` : 'Select a lap to begin'}
             </div>
           </div>
         </div>
 
         {/* Two-Column Layout */}
-        <div style={{ display: 'flex', flex: 1, gap: '24px', minHeight: 0, width: '100%' }}>
+        <div className="flex flex-1 gap-6 min-h-0 w-full overflow-hidden">
             {/* Left Column: Charts */}
-            <div className="panel" style={{ flex: 2, minWidth: 0, display: 'flex', padding: '16px' }}>
+            <div className="flex-[2] min-w-0 flex flex-col h-full">
               <TelemetryChart />
             </div>
             
             {/* Right Column: Track & Stats */}
-          <div style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '24px', overflowY: 'auto', minHeight: '600px', paddingRight: '8px' }}>
-              <div className="panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '350px' }}>
+          <div className="flex-1 min-w-[380px] flex flex-col gap-6 overflow-y-auto [scrollbar-gutter:stable] h-full pr-2 custom-scrollbar">
+              <div className="flex-1 flex flex-col min-h-[350px] bg-zinc-900 rounded-lg border border-zinc-800 shadow-xl overflow-hidden relative">
                   <TrackMap />
                 </div>
-                <div className="panel" style={{ flex: '0 0 auto', padding: '0', overflow: 'visible' }}>
+                <div className="flex-none p-0 overflow-visible">
                 <StatsWidget />
               </div>
             </div>

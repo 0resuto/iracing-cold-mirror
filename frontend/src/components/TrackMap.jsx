@@ -262,7 +262,7 @@ export const TrackMap = React.memo(function TrackMap() {
       }
     };
 
-    const segments = [];
+    const pathsByColor = {};
     for (let i = 0; i < lapGpsPoints.length - 1; i++) {
       const p1 = lapGpsPoints[i];
       const p2 = lapGpsPoints[i+1];
@@ -277,13 +277,15 @@ export const TrackMap = React.memo(function TrackMap() {
       const x2 = (px2 - svgData.minX) * svgData.scale + svgData.xOffset;
       const y2 = svgData.vbHeight - ((py2 - svgData.minY) * svgData.scale + svgData.yOffset);
 
-      segments.push({
-        x1, y1, x2, y2,
-        color: getColor(p1, p2)
-      });
+      const color = getColor(p1, p2);
+      if (!pathsByColor[color]) {
+        pathsByColor[color] = `M ${x1} ${y1} L ${x2} ${y2}`;
+      } else {
+        pathsByColor[color] += ` M ${x1} ${y1} L ${x2} ${y2}`;
+      }
     }
     
-    return segments;
+    return Object.entries(pathsByColor).map(([color, d]) => ({ color, d }));
   }, [lapGpsPoints, svgData, colorMode, deltaData]);
 
   const svgRef = useRef(null);
@@ -380,13 +382,15 @@ export const TrackMap = React.memo(function TrackMap() {
                 {colorMode !== 'default' && lapSegments ? (
                   <g>
                     {lapSegments.map((seg, i) => (
-                      <line 
+                      <path 
                         key={`seg-${i}`}
                         className="adaptive-path"
-                        x1={seg.x1} y1={seg.y1} x2={seg.x2} y2={seg.y2}
+                        d={seg.d}
                         stroke={seg.color}
                         strokeWidth={getStrokeWidth()}
+                        fill="none"
                         strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     ))}
                   </g>

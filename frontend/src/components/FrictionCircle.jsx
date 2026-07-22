@@ -39,7 +39,7 @@ export function FrictionCircle({ latAccel = 0, longAccel = 0, maxG = 2 }) {
         )}
         
         {/* The G-Force dot */}
-        <circle cx={dotX} cy={dotY} r="5" fill="var(--accent-red)" style={{ transition: 'cx 0.1s linear, cy 0.1s linear' }} />
+        <circle cx={dotX} cy={dotY} r="5" fill="var(--accent-red)" />
       </svg>
       <div className="digital-number" style={{ fontSize: '12px', marginTop: '8px', color: 'var(--text-muted)' }}>
         {Math.abs(renderLat).toFixed(2)}G | {Math.abs(renderLong).toFixed(2)}G

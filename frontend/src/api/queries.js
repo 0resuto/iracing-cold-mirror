@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
-const API_BASE = 'http://localhost:8000/api';
+const HOST = import.meta.env.VITE_API_HOST || 'localhost:8000';
+const API_BASE = `http://${HOST}/api`;
 
 export function useHistoryQuery() {
   return useQuery({
@@ -10,7 +11,7 @@ export function useHistoryQuery() {
       if (!res.ok) throw new Error('Failed to fetch history');
       return res.json();
     },
-    refetchInterval: 5000, // keep history somewhat fresh, optional
+    refetchInterval: 5000, // keep history fresh for live updates
   });
 }
 
@@ -23,7 +24,8 @@ export function useLapTelemetryQuery(lapId, isLive) {
       if (!res.ok) throw new Error('Failed to fetch lap telemetry');
       return res.json();
     },
-    enabled: !!lapId && !isLive, // don't fetch static data if it's a live lap
+    enabled: !!lapId && !isLive,
+    staleTime: 1000 * 60 * 60, // Completed historical lap data is immutable
   });
 }
 
@@ -37,6 +39,7 @@ export function useLapDeltaQuery(lapId, referenceLapId) {
       return res.json();
     },
     enabled: !!lapId && !!referenceLapId,
+    staleTime: 1000 * 60 * 60, // Historical delta calculation is immutable
   });
 }
 
@@ -53,5 +56,6 @@ export function useIdealLapQuery(playerId, trackName) {
       return res.json();
     },
     enabled: !!playerId && !!trackName,
+    staleTime: 1000 * 60 * 5, // Ideal lap refreshes every 5 mins
   });
 }

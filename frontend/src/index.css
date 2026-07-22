@@ -1,4 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Roboto+Mono:wght@400;600;700&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Roboto', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+}
 
 :root {
   --bg-color: #09090B;
@@ -19,7 +26,7 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Roboto', sans-serif;
   background-color: var(--bg-color);
   color: var(--text-main);
   min-height: 100vh;
@@ -34,26 +41,7 @@ body {
   width: 100%;
 }
 
-
-.panel {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  display: flex;
-  flex-direction: column;
-}
-
-.panel-title {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-  font-weight: 600;
-}
-
-/* Typography specifics */
 .digital-number {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto Mono', monospace;
   font-weight: 700;
 }
-

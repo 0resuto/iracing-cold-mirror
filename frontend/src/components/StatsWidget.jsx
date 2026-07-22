@@ -64,136 +64,122 @@ export function StatsWidget() {
   };
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', width: '100%', gap: '24px', padding: '16px', justifyContent: 'center', alignItems: 'center' }}>
+    <div className="flex flex-wrap w-full gap-6 p-4 justify-center items-center">
       
       {/* Gear & Speed Block */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div className="flex-1 flex flex-col justify-between min-w-[120px]">
+        <div className="flex justify-between items-start">
           <div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Gear</div>
-            <div className="digital-number" style={{ fontSize: '48px', lineHeight: '1', color: 'var(--accent-blue)', minWidth: '40px' }}>
+            <div className="text-zinc-500 text-xs uppercase tracking-widest font-semibold">Gear</div>
+            <div className="font-mono text-[48px] leading-none text-sky-400 min-w-[40px] font-bold">
               {formatGear(data.gear)}
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Speed</div>
-            <div className="digital-number" style={{ fontSize: '32px', lineHeight: '1', display: 'flex', alignItems: 'baseline', justifyContent: 'flex-end' }}>
-              <span style={{ width: '3ch', textAlign: 'right', display: 'inline-block' }}>{Math.round(data.speed)}</span>
-              <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '8px' }}>km/h</span>
+          <div className="text-right">
+            <div className="text-zinc-500 text-xs uppercase tracking-widest font-semibold">Speed</div>
+            <div className="font-mono text-[32px] leading-none flex items-baseline justify-end font-bold">
+              <span className="w-[3ch] text-right inline-block text-zinc-100">{Math.round(data.speed)}</span>
+              <span className="text-sm text-zinc-500 ml-1.5 font-sans font-normal">km/h</span>
             </div>
           </div>
         </div>
 
         {/* RPM Bar */}
-        <div style={{ marginTop: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>RPM</span>
-            <span className="digital-number" style={{ fontSize: '14px' }}>{Math.round(data.rpm)}</span>
+        <div className="mt-4">
+          <div className="flex justify-between mb-1.5">
+            <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">RPM</span>
+            <span className="font-mono text-sm font-bold text-zinc-300">{Math.round(data.rpm)}</span>
           </div>
-          <div style={{ height: '8px', background: 'var(--card-border)', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{ 
-              height: '100%', 
-              width: `${rpmPct}%`, 
-              background: rpmPct > 90 ? 'var(--accent-red)' : 'var(--text-main)',
-              transition: 'width 0.1s linear, background 0.1s'
-            }}></div>
+          <div className="h-2 bg-zinc-800 rounded-sm overflow-hidden">
+            <div 
+              className="h-full transition-all duration-100 ease-linear"
+              style={{ 
+                width: `${rpmPct}%`, 
+                backgroundColor: rpmPct > 90 ? '#ef4444' : '#f4f4f5'
+              }}
+            ></div>
           </div>
         </div>
       </div>
 
       {/* Delta Block */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '130px' }}>
-        <div style={{ color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', marginBottom: '8px' }}>Delta</div>
-        <div className="digital-number" style={{ 
-          fontSize: '32px', 
-          color: currentDelta === null ? 'var(--text-muted)' : (currentDelta <= 0 ? '#22c55e' : 'var(--accent-red)')
-        }}>
+      <div className="flex flex-col justify-center min-w-[130px]">
+        <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1">Delta</div>
+        <div className={`font-mono text-[32px] font-bold ${
+          currentDelta === null ? 'text-zinc-600' : (currentDelta <= 0 ? 'text-green-500' : 'text-red-500')
+        }`}>
           {currentDelta !== null ? `${currentDelta > 0 ? '+' : ''}${currentDelta.toFixed(2)}s` : '---'}
         </div>
         
         {/* Simple Delta Bar */}
-        <div style={{ height: '8px', width: '100%', background: 'var(--bg-color)', border: '1px solid var(--card-border)', borderRadius: '2px', marginTop: '12px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: '1px', background: 'var(--text-muted)', zIndex: 2 }}></div>
+        <div className="h-2 w-full bg-zinc-950 border border-zinc-800 rounded-sm mt-3 relative overflow-hidden">
+            <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-zinc-600 z-10"></div>
             {currentDelta !== null && (
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    bottom: 0,
-                    left: currentDelta <= 0 ? `${Math.max(0, 50 - (Math.abs(currentDelta) / 2) * 50)}%` : '50%',
-                    right: currentDelta > 0 ? `${Math.max(0, 50 - (currentDelta / 2) * 50)}%` : '50%',
-                    background: currentDelta <= 0 ? '#22c55e' : 'var(--accent-red)',
-                    transition: 'all 0.1s linear'
-                }}></div>
+                <div 
+                    className="absolute top-0 bottom-0 transition-all duration-100 ease-linear"
+                    style={{
+                        left: currentDelta <= 0 ? `${Math.max(0, 50 - (Math.abs(currentDelta) / 2) * 50)}%` : '50%',
+                        right: currentDelta > 0 ? `${Math.max(0, 50 - (currentDelta / 2) * 50)}%` : '50%',
+                        backgroundColor: currentDelta <= 0 ? '#22c55e' : '#ef4444',
+                    }}
+                ></div>
             )}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+        <div className="flex justify-between text-[10px] text-zinc-500 mt-1.5 font-mono">
           <span>-2s</span>
           <span>+2s</span>
         </div>
       </div>
 
       {/* Inputs (Pedals) Block */}
-      <div style={{ display: 'flex', gap: '16px' }}>
+      <div className="flex gap-4">
         
         {/* Throttle */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ height: '100px', width: '24px', background: 'var(--bg-color)', border: '1px solid var(--card-border)', borderRadius: '2px', overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column-reverse' }}>
-            <div style={{ 
-              width: '100%', 
-              height: `${throttlePct}%`, 
-              background: '#22c55e', // Green for throttle
-              transition: 'height 0.1s linear'
-            }}></div>
+        <div className="flex flex-col items-center">
+          <div className="h-[100px] w-6 bg-zinc-950 border border-zinc-800 rounded-sm overflow-hidden relative flex flex-col-reverse">
+            <div 
+              className="w-full bg-green-500 transition-all duration-100 ease-linear"
+              style={{ height: `${throttlePct}%` }}
+            ></div>
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: '8px', textTransform: 'uppercase' }}>THR</div>
+          <div className="text-zinc-500 text-[10px] mt-2 uppercase font-bold tracking-widest">THR</div>
         </div>
 
         {/* Brake */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ height: '100px', width: '24px', background: 'var(--bg-color)', border: '1px solid var(--card-border)', borderRadius: '2px', overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column-reverse' }}>
-            <div style={{ 
-              width: '100%', 
-              height: `${brakePct}%`, 
-              background: 'var(--accent-red)',
-              transition: 'height 0.1s linear'
-            }}></div>
+        <div className="flex flex-col items-center">
+          <div className="h-[100px] w-6 bg-zinc-950 border border-zinc-800 rounded-sm overflow-hidden relative flex flex-col-reverse">
+            <div 
+              className="w-full bg-red-500 transition-all duration-100 ease-linear"
+              style={{ height: `${brakePct}%` }}
+            ></div>
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: '8px', textTransform: 'uppercase' }}>BRK</div>
+          <div className="text-zinc-500 text-[10px] mt-2 uppercase font-bold tracking-widest">BRK</div>
         </div>
       </div>
 
       {/* Steering Block */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '90px' }}>
-        <div style={{ color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', marginBottom: '8px' }}>Steering</div>
+      <div className="flex flex-col items-center justify-center min-w-[90px]">
+        <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-3">Steering</div>
         
         {/* Simple steering wheel visualizer */}
-        <div style={{ 
-          width: '50px', 
-          height: '50px', 
-          border: '2px solid var(--card-border)', 
-          borderRadius: '50%',
-          position: 'relative'
-        }}>
+        <div className="w-[50px] h-[50px] border-2 border-zinc-700 rounded-full relative bg-zinc-900/50">
           {/* Steering marker */}
-          <div style={{
-            position: 'absolute',
-            top: '2px',
-            left: 'calc(50% - 2px)',
-            width: '4px',
-            height: '10px',
-            background: 'var(--accent-blue)',
-            transformOrigin: '2px 21px', // 21 = 25 - 4 (radius - marker_y)
-            transform: `rotate(${steeringRotation}deg)`,
-            transition: 'transform 0.1s linear'
-          }}></div>
+          <div 
+            className="absolute top-[2px] w-1 h-2.5 bg-sky-400 rounded-sm transition-transform duration-100 ease-linear"
+            style={{
+              left: 'calc(50% - 2px)',
+              transformOrigin: '2px 21px',
+              transform: `rotate(${steeringRotation}deg)`
+            }}
+          ></div>
         </div>
-        <div className="digital-number" style={{ fontSize: '12px', marginTop: '8px', color: 'var(--text-muted)' }}>
+        <div className="font-mono text-xs mt-3 text-zinc-400 font-bold">
           {Math.round(steeringRotation)}°
         </div>
       </div>
 
       {/* G-Force Friction Circle */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="flex items-center justify-center">
         <FrictionCircle latAccel={data.lat_accel} longAccel={data.long_accel} maxG={2.5} />
       </div>
 
