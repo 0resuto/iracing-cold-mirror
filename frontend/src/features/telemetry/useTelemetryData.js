@@ -4,9 +4,11 @@ import { useLiveStore } from '../../store/useLiveStore';
 import { useLapTelemetryQuery, useLapDeltaQuery, useHistoryQuery } from '../../api/queries';
 
 export function useTelemetryData() {
+  const activeTab = useAppStore((state) => state.activeTab);
   const selectedLap = useAppStore((state) => state.selectedLap);
   const referenceLapId = useAppStore((state) => state.referenceLapId);
-  const isLive = selectedLap?.lap_time === 0 || selectedLap?.lap_time === -1;
+
+  const isLive = activeTab === 'live';
 
   const { data: playersData = [] } = useHistoryQuery();
   const players = playersData;
@@ -42,10 +44,10 @@ export function useTelemetryData() {
   const { data: staticLapData = [] } = useLapTelemetryQuery(selectedLap?.id, isLive);
   const liveLapData = useLiveStore((state) => state.liveLapData);
   
-  const { data: referenceData = [] } = useLapTelemetryQuery(activeRefId, false);
-  const { data: deltaData = [] } = useLapDeltaQuery(selectedLap?.id, activeRefId);
+  const { data: referenceData = [] } = useLapTelemetryQuery(activeRefId, isLive);
+  const { data: deltaData = [] } = useLapDeltaQuery(isLive ? null : selectedLap?.id, activeRefId);
 
   const lapData = isLive ? liveLapData : staticLapData;
 
-  return { lapData, referenceData, deltaData, selectedLap, activeRefId, players };
+  return { lapData, referenceData, deltaData, selectedLap, activeRefId, players, isLive };
 }

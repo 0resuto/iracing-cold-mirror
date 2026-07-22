@@ -4,26 +4,31 @@ import { useAppStore } from '../../store/useAppStore';
 
 const HOST = import.meta.env.VITE_API_HOST || 'localhost:8000';
 const WS_URL = `ws://${HOST}/ws/telemetry/live`;
-const API_BASE = `http://${HOST}/api`;
 
-export function useLiveTelemetryWS(selectedLap) {
+export function useLiveTelemetryWS(isLiveActive) {
   const setLiveLapData = useLiveStore((state) => state.setLiveLapData);
   const clearLiveData = useLiveStore((state) => state.clearLiveData);
   const bufferRef = useRef([]);
-
-  const lapId = selectedLap?.id;
-  const lapTime = selectedLap?.lap_time;
-  const lapNumber = selectedLap?.lap_number;
+  const lastSessionTimeRef = useRef(null);
+  const lastUpdateTimestampRef = useRef(Date.now());
 
   useEffect(() => {
-    // If no lap is selected or the lap is already completed (lapTime !== 0), don't connect to WS
-    if (!lapId || lapTime !== 0) {
+    if (!isLiveActive) {
       clearLiveData();
+      useLiveStore.setState({ isStreaming: false });
       return;
     }
 
-    let isMounted = true;
     let ws = null;
+    lastSessionTimeRef.current = null;
+    lastUpdateTimestampRef.current = Date.now();
+
+    // Periodically check if new telemetry points arrived recently (within 2.5s)
+    const statusCheckInterval = setInterval(() => {
+      const timeSinceLastUpdate = Date.now() - lastUpdateTimestampRef.current;
+      const isStreaming = timeSinceLastUpdate < 2500;
+      useLiveStore.setState({ isStreaming });
+    }, 1000);
 
     // Batch flush interval (flushes buffer every 50ms -> 20Hz update rate)
     const flushInterval = setInterval(() => {
@@ -37,51 +42,51 @@ export function useLiveTelemetryWS(selectedLap) {
       }
     }, 50);
 
-    // Fetch initial existing points for this live lap
-    fetch(`${API_BASE}/laps/${lapId}/telemetry`)
-      .then(res => res.json())
-      .then(initialData => {
-        if (!isMounted) return;
-        setLiveLapData(initialData);
+    ws = new WebSocket(WS_URL);
 
-        // Connect to WebSocket after initial data is loaded
-        ws = new WebSocket(WS_URL);
-        
-        ws.onmessage = (event) => {
-          try {
-            const newData = JSON.parse(event.data);
-            if (newData.status === 'waiting for data') return;
-            
-            // Only process live data for the currently selected lap!
-            if (newData.lap_number !== lapNumber) return;
-            
-            // Push to buffer instead of immediate 60Hz state dispatch
-            bufferRef.current.push(newData);
+    ws.onmessage = (event) => {
+      try {
+        const newData = JSON.parse(event.data);
+        if (newData.status === 'waiting for data') {
+          useLiveStore.setState({ isStreaming: false });
+          return;
+        }
 
-            // Automatically update hoveredData to the latest point if the user isn't actively hovering the chart
-            const { isUserHovering, setHoveredData } = useAppStore.getState();
-            if (!isUserHovering) {
-              setHoveredData(newData);
-            }
-          } catch (err) {
-            console.error('Live WS parse error:', err);
-          }
-        };
+        // Deduplication: Filter out duplicate stale Redis snapshots when iRacing isn't generating new data
+        if (newData.session_time !== undefined && newData.session_time === lastSessionTimeRef.current) {
+          return;
+        }
 
-        ws.onerror = (err) => {
-          console.error('Live WS error:', err);
-        };
-      })
-      .catch(err => {
-        console.error('Failed to preload live lap:', err);
-      });
+        lastSessionTimeRef.current = newData.session_time;
+        lastUpdateTimestampRef.current = Date.now();
+        useLiveStore.setState({ isStreaming: true });
+
+        // Push new unique telemetry frame into buffer
+        bufferRef.current.push(newData);
+
+        // Automatically update hoveredData if user isn't actively hovering chart
+        const { isUserHovering, setHoveredData } = useAppStore.getState();
+        if (!isUserHovering) {
+          setHoveredData(newData);
+        }
+      } catch (err) {
+        console.error('Live WS parse error:', err);
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.error('Live WS connection error:', err);
+      useLiveStore.setState({ isStreaming: false });
+    };
 
     return () => {
-      isMounted = false;
       clearInterval(flushInterval);
+      clearInterval(statusCheckInterval);
       if (ws) {
         ws.close();
       }
+      clearLiveData();
+      useLiveStore.setState({ isStreaming: false });
     };
-  }, [lapId, lapTime, lapNumber, setLiveLapData, clearLiveData]);
+  }, [isLiveActive, setLiveLapData, clearLiveData]);
 }

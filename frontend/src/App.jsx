@@ -7,11 +7,12 @@ import { useAppStore } from './store/useAppStore';
 import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
 
 function App() {
+  const activeTab = useAppStore(state => state.activeTab);
   const selectedLap = useAppStore(state => state.selectedLap);
   const isSidebarOpen = useAppStore(state => state.isSidebarOpen);
 
-  // Initialize live telemetry websocket if a live lap is selected
-  useLiveTelemetryWS(selectedLap);
+  // Initialize live telemetry websocket when activeTab is 'live'
+  useLiveTelemetryWS(activeTab === 'live');
 
   return (
     <div className="w-full h-screen flex overflow-hidden bg-zinc-950 text-zinc-100">
@@ -30,8 +31,17 @@ function App() {
         {/* Header */}
         <div className="flex items-center gap-4 flex-none">
           <div>
-            <div className="text-zinc-400 text-sm mt-1 font-medium tracking-wide">
-              {selectedLap ? `Viewing Lap ${selectedLap.lap_number} (${selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Live'})` : 'Select a lap to begin'}
+            <div className="text-zinc-400 text-sm mt-1 font-medium tracking-wide flex items-center gap-2">
+              {activeTab === 'live' ? (
+                <span className="flex items-center gap-2 text-red-400 font-semibold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping inline-block"></span>
+                  Streaming Live Telemetry
+                </span>
+              ) : selectedLap ? (
+                `Viewing Lap ${selectedLap.lap_number} (${selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Historical Lap'})`
+              ) : (
+                'Select a lap from history to begin'
+              )}
             </div>
           </div>
         </div>
