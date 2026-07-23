@@ -84,11 +84,59 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
   );
 };
 
+const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChartRef, setBrushRange }) => {
+  const hoveredData = useAppStore(state => state.hoveredData);
+  
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart 
+        data={mergedData} 
+        margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+        onMouseEnter={() => { activeChartRef.current = 'delta'; }}
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+        <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
+        <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={10} tickCount={3} tickFormatter={v => v.toFixed(1)} />
+        <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="delta" activeChartRef={activeChartRef} />} />
+        <ReferenceLine y={0} stroke="#a1a1aa" opacity={0.5} />
+        <Area type="linear" dataKey="delta" stroke="#f4f4f5" fillOpacity={0} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
+        
+        {/* Manual synchronized cursor from bottom charts */}
+        {hoveredData?.lap_dist_pct != null && (
+          <>
+            <ReferenceLine x={hoveredData.lap_dist_pct} stroke="#a1a1aa" opacity={0.5} strokeDasharray="3 3" />
+            {hoveredData.delta != null && (
+              <ReferenceDot x={hoveredData.lap_dist_pct} y={hoveredData.delta} r={4} fill="#fff" stroke="none" />
+            )}
+          </>
+        )}
+
+        {sectorBoundaries.map((pct, i) => (
+          <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
+        ))}
+        <Brush 
+          dataKey="lap_dist_pct" 
+          height={20} 
+          stroke="#52525b" 
+          fill="#18181b" 
+          tickFormatter={() => ''} 
+          onChange={(e) => {
+            if (e && typeof e.startIndex === 'number' && typeof e.endIndex === 'number') {
+              React.startTransition(() => {
+                setBrushRange([e.startIndex, e.endIndex]);
+              });
+            }
+          }} 
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+});
+
 export const TelemetryChart = React.memo(function TelemetryChart() {
   const activeChartRef = React.useRef('speed');
   const setIsUserHovering = useAppStore(state => state.setIsUserHovering);
   const setReferenceLapId = useAppStore(state => state.setReferenceLapId);
-  const hoveredData = useAppStore(state => state.hoveredData);
   const { lapData, referenceData, deltaData, selectedLap, activeRefId, players } = useTelemetryData();
 
   const availableLaps = useMemo(() => {
@@ -237,10 +285,35 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
 
   const zoomedData = useMemo(() => {
     if (!mergedData || mergedData.length === 0) return [];
-    if (brushRange && brushRange.length === 2) {
-      return mergedData.slice(brushRange[0], brushRange[1] + 1);
+    
+    let sliced = brushRange ? mergedData.slice(brushRange[0], brushRange[1] + 1) : mergedData;
+    
+    // PERFORMANCE FIX: 
+    // Recharts is extremely slow when rendering >500 points across 5 charts (14 data series).
+    // If the zoomed area has many points, we downsample it to ~300 points for rendering.
+    // When the user zooms in closer, the data naturally falls under 300 points and renders in full fidelity.
+    const MAX_POINTS = 300;
+    if (sliced.length > MAX_POINTS) {
+      const step = Math.ceil(sliced.length / MAX_POINTS);
+      const downsampled = [];
+      for (let i = 0; i < sliced.length; i += step) {
+        let chunk = sliced.slice(i, i + step);
+        // Take the first point as the base for continuous lines (speed, throttle, etc.)
+        let point = { ...chunk[0] };
+        
+        // Critically, we MUST NOT lose single-frame spike events (ABS, TC, Wheel Lock)
+        // So we take the logical OR (max) of these flags within the chunk.
+        for (let j = 1; j < chunk.length; j++) {
+          if (chunk[j].wheel_lock > point.wheel_lock) point.wheel_lock = chunk[j].wheel_lock;
+          if (chunk[j].abs_active > point.abs_active) point.abs_active = chunk[j].abs_active;
+          if (chunk[j].tc_active > point.tc_active) point.tc_active = chunk[j].tc_active;
+        }
+        downsampled.push(point);
+      }
+      sliced = downsampled;
     }
-    return mergedData;
+
+    return sliced;
   }, [mergedData, brushRange]);
 
   if (!lapData?.length) {
@@ -306,51 +379,17 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         onMouseEnter={() => setIsUserHovering(true)}
         onMouseLeave={() => setIsUserHovering(false)}
       >
-        
-        {/* Delta Chart */}
+                {/* Delta Chart */}
         {deltaData?.length > 0 && (
           <div className="flex-none h-32 flex flex-col relative group">
-            <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">DELTA (s)</div>            <div className="flex-1 mt-3">
-              <ResponsiveContainer width="100%" height="100%">
-              <AreaChart 
-                data={mergedData} 
-                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
-                onMouseEnter={() => { activeChartRef.current = 'delta'; }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
-                <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={10} tickCount={3} tickFormatter={v => v.toFixed(1)} />
-                <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="delta" activeChartRef={activeChartRef} />} />
-                <ReferenceLine y={0} stroke="#a1a1aa" opacity={0.5} />
-                <Area type="linear" dataKey="delta" stroke="#f4f4f5" fillOpacity={0} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
-                
-                {/* Manual synchronized cursor from bottom charts */}
-                {hoveredData?.lap_dist_pct != null && (
-                  <>
-                    <ReferenceLine x={hoveredData.lap_dist_pct} stroke="#a1a1aa" opacity={0.5} strokeDasharray="3 3" />
-                    {hoveredData.delta != null && (
-                      <ReferenceDot x={hoveredData.lap_dist_pct} y={hoveredData.delta} r={4} fill="#fff" stroke="none" />
-                    )}
-                  </>
-                )}
-
-                {sectorBoundaries.map((pct, i) => (
-                  <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
-                ))}
-                <Brush  
-                  dataKey="lap_dist_pct" 
-                  height={20} 
-                  stroke="#52525b" 
-                  fill="#18181b" 
-                  tickFormatter={() => ''} 
-                  onChange={(e) => {
-                    if (e && typeof e.startIndex === 'number' && typeof e.endIndex === 'number') {
-                      setBrushRange([e.startIndex, e.endIndex]);
-                    }
-                  }} 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">DELTA (s)</div>
+            <div className="flex-1 mt-3">
+              <DeltaMinimapChart 
+                mergedData={mergedData} 
+                sectorBoundaries={sectorBoundaries} 
+                activeChartRef={activeChartRef} 
+                setBrushRange={setBrushRange} 
+              />
             </div>
           </div>
         )}
