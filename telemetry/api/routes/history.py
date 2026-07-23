@@ -19,7 +19,7 @@ router = APIRouter()
 @router.get(
     "/laps/{lap_id}/telemetry",
     response_model=list[TelemetryResponse],
-    tags=["telemetry"],
+    tags=["Laps"],
     summary="Get lap telemetry",
 )
 def get_lap_telemetry(lap_id: int, db=Depends(get_db), max_points: int = 2000):
@@ -39,7 +39,7 @@ def get_lap_telemetry(lap_id: int, db=Depends(get_db), max_points: int = 2000):
 @router.get(
     "/players/{player_id}/best_lap",
     response_model=LapResponse,
-    tags=["best lap"],
+    tags=["Players"],
     summary="Get best lap",
 )
 def get_best_lap(player_id: int, track_name: str, db=Depends(get_db)):
@@ -60,7 +60,7 @@ def get_best_lap(player_id: int, track_name: str, db=Depends(get_db)):
 @router.get(
     "/players/{player_id}/ideal_lap",
     response_model=IdealLapResponse,
-    tags=["ideal lap"],
+    tags=["Players"],
     summary="Get ideal lap",
 )
 def get_ideal_lap(player_id: int, track_name: str, db=Depends(get_db)):
@@ -91,7 +91,7 @@ def get_ideal_lap(player_id: int, track_name: str, db=Depends(get_db)):
 @router.get(
     "/laps/{lap_id}/delta",
     response_model=list[DeltaPointResponse],
-    tags=["delta"],
+    tags=["Laps"],
     summary="Get delta between two laps",
 )
 def get_lap_delta(lap_id: int, reference_lap_id: int, db=Depends(get_db)):
@@ -126,7 +126,7 @@ def get_lap_delta(lap_id: int, reference_lap_id: int, db=Depends(get_db)):
 @router.get(
     "/players_history",
     response_model=list[PlayerResponse],
-    tags=["players_history"],
+    tags=["Players"],
     summary="Get all players history",
 )
 def get_history(skip: int = 0, limit: int = 10, db=Depends(get_db)):

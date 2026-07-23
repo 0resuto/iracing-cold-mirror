@@ -12,9 +12,38 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+description = """
+### Welcome to iRacing Telemetry API
+Here you will find all methods for interacting with simulator data:
+* **Live Telemetry** (WebSocket streaming)
+* **Lap History** and player sessions
+* **Delta Analysis** and optimal sectors
+
+Enjoy!
+"""
+
+tags_metadata = [
+    {
+        "name": "Laps",
+        "description": "Telemetry and delta analysis for specific laps.",
+    },
+    {
+        "name": "Players",
+        "description": "Player sessions, best laps, and ideal lap construction.",
+    },
+    {
+        "name": "System",
+        "description": "System status and health checks.",
+    },
+]
+
+
 app = FastAPI(
     title="iRacing Telemetry API",
-    description="Live telemetry streaming and history storage for iRacing.",
+    description=description,
+    version="0.2.0",
+    openapi_tags=tags_metadata,
+    swagger_ui_parameters={"syntaxHighlight.theme": "obsidian", "defaultModelsExpandDepth": -1},
 )
 
 
@@ -46,6 +75,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.get("/api/status")
+@app.get("/api/status", tags=["System"])
 def get_status():
     return {"status": "ok", "message": "API is running"}
