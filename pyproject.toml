@@ -11,7 +11,8 @@ dependencies = [
     "pydantic-settings",
     "alembic",
     "watchdog",
-    "pyyaml"
+    "pyyaml",
+    "httpx"
 ]
 
 [build-system]
