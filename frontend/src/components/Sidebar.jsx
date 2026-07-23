@@ -13,7 +13,7 @@ const LapItem = ({ lap, player, session, selectedLapId, bestLapId, setSelectedLa
   return (
     <div
       onClick={() => setSelectedLap({ ...lap, player_id: player.id, track_name: session.track_name })}
-      className={`flex justify-between items-center px-3 py-1.5 my-0.5 text-xs cursor-pointer border-l-2 transition-colors ${
+      className={`flex justify-between items-center px-3 py-1.5 my-0.5 text-xs cursor-pointer border-l-2  ${
         isSelected
           ? 'border-sky-400 bg-sky-400/10 text-zinc-100'
           : 'border-transparent hover:bg-white/5 text-zinc-400'
@@ -51,7 +51,7 @@ const SessionItem = ({ session, player, selectedLapId, setSelectedLap }) => {
     <div className="flex flex-col">
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3.5 py-2 pl-6 cursor-pointer border-t border-zinc-800 transition-colors ${
+        className={`flex justify-between items-center px-3.5 py-2 pl-6 cursor-pointer border-t border-zinc-800  ${
           isOpen ? 'bg-white/5' : 'hover:bg-white/5'
         }`}
       >
@@ -93,7 +93,7 @@ const PlayerItem = ({ player, selectedLapId, setSelectedLap }) => {
     <div className="flex flex-col bg-transparent border border-zinc-800 rounded-md overflow-hidden">
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3.5 py-2.5 cursor-pointer font-medium text-sm transition-colors ${
+        className={`flex justify-between items-center px-3.5 py-2.5 cursor-pointer font-medium text-sm  ${
           isOpen ? 'bg-zinc-800 text-zinc-100' : 'hover:bg-zinc-800/50 text-zinc-300'
         }`}
       >
@@ -294,7 +294,7 @@ export const Sidebar = React.memo(function Sidebar() {
       <div className="w-16 min-w-[64px] border-r border-zinc-800 flex flex-col items-center py-4 bg-zinc-950">
         <button 
           onClick={toggleSidebar} 
-          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-none cursor-pointer text-xs p-2 mb-8 rounded w-8 h-8 flex items-center justify-center transition-colors"
+          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-none cursor-pointer text-xs p-2 mb-8 rounded w-8 h-8 flex items-center justify-center "
         >
           {isOpen ? '◀' : '▶'}
         </button>
@@ -306,7 +306,7 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('history');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1 transition-colors ${
+            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1  ${
               activeTab === 'history' ? 'border-sky-400 text-sky-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >
@@ -320,7 +320,7 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('live');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1 transition-colors ${
+            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1  ${
               activeTab === 'live' ? 'border-red-500 text-red-500' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >

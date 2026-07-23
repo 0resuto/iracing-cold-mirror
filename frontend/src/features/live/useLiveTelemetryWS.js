@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLiveStore } from '../../store/useLiveStore';
 import { useAppStore } from '../../store/useAppStore';
+import toast from 'react-hot-toast';
 
 const HOST = import.meta.env.VITE_API_HOST || 'localhost:8000';
 const WS_URL = `ws://${HOST}/ws/telemetry/live`;
@@ -48,6 +49,9 @@ export function useLiveTelemetryWS(isLiveActive) {
       try {
         const newData = JSON.parse(event.data);
         if (newData.status === 'waiting for data') {
+          if (useLiveStore.getState().isStreaming) {
+            toast('iRacing is waiting for data...', { icon: '🟡' });
+          }
           useLiveStore.setState({ isStreaming: false });
           return;
         }
@@ -59,6 +63,10 @@ export function useLiveTelemetryWS(isLiveActive) {
 
         lastSessionTimeRef.current = newData.session_time;
         lastUpdateTimestampRef.current = Date.now();
+        if (!useLiveStore.getState().isStreaming) {
+          toast.success('Connected to iRacing Live Telemetry');
+        }
+        
         useLiveStore.setState({ isStreaming: true });
 
         // Push new unique telemetry frame into buffer
@@ -76,6 +84,16 @@ export function useLiveTelemetryWS(isLiveActive) {
 
     ws.onerror = (err) => {
       console.error('Live WS connection error:', err);
+      if (useLiveStore.getState().isStreaming) {
+         toast.error('Lost connection to Telemetry Server');
+      }
+      useLiveStore.setState({ isStreaming: false });
+    };
+
+    ws.onclose = () => {
+      if (useLiveStore.getState().isStreaming) {
+         toast.error('Connection closed');
+      }
       useLiveStore.setState({ isStreaming: false });
     };
 
