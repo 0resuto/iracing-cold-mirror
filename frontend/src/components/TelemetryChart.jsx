@@ -193,13 +193,6 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
     if (!processedLap || processedLap.length === 0) return [];
 
     let extendedRef = processedRef;
-    if (processedRef && processedRef.length > 0 && refLapTime > 0 && currentLapTime > 0) {
-      let timeRatio = currentLapTime / refLapTime;
-      extendedRef = processedRef.map(p => ({
-        ...p,
-        lap_dist_pct: p.lap_dist_pct * timeRatio
-      }));
-    }
 
     let rIdx = 0;
     let dIdx = 0;

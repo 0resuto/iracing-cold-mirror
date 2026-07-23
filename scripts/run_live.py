@@ -10,4 +10,4 @@ logging.basicConfig(
 
 
 reader = IRacingLiveReader()
-run(reader, track_name=reader.track_name, player_name=reader.player_name)
+run(reader)
