@@ -1,10 +1,9 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
+  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Brush, ReferenceDot
 } from 'recharts';
 import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
-import { lttb } from '../utils/lttb';
 
 const FastDot = (props) => {
   const { cx, cy, stroke, fill } = props;
@@ -89,6 +88,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
   const activeChartRef = React.useRef('speed');
   const setIsUserHovering = useAppStore(state => state.setIsUserHovering);
   const setReferenceLapId = useAppStore(state => state.setReferenceLapId);
+  const hoveredData = useAppStore(state => state.hoveredData);
   const { lapData, referenceData, deltaData, selectedLap, activeRefId, players } = useTelemetryData();
 
   const availableLaps = useMemo(() => {
@@ -131,43 +131,47 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       localSpeed = totalDist > 0 ? totalDist / totalTime : 1;
     }
 
-    let rawLttb = lttb(unwrapped, 1500);
-
+    // Resample uniformly by lap_dist_pct to ensure Brush (categorical index) perfectly aligns with XAxis (numerical value)
     let finalData = [];
-    for (let i = 0; i < rawLttb.length; i++) {
-      let cur = rawLttb[i];
-      finalData.push(cur);
-
-      if (i < rawLttb.length - 1) {
-        let nxt = rawLttb[i+1];
-        let gapDist = nxt.lap_dist_pct - cur.lap_dist_pct;
-        let gapTime = nxt.session_time - cur.session_time;
-        if (gapDist > 0.005 || gapTime > 0.3) {
-          let stepCount = Math.min(10, Math.floor(gapTime / 0.05));
-          for (let s = 1; s < stepCount; s++) {
-            let t = s / stepCount;
-            finalData.push({
-              session_time: cur.session_time + gapTime * t,
-              lap_dist_pct: cur.lap_dist_pct + gapDist * t,
-              speed: cur.speed + (nxt.speed - cur.speed) * t,
-              throttle: cur.throttle + (nxt.throttle - cur.throttle) * t,
-              brake: cur.brake + (nxt.brake - cur.brake) * t,
-              steering_angle: cur.steering_angle + (nxt.steering_angle - cur.steering_angle) * t,
-              wheel_angle: cur.wheel_angle + (nxt.wheel_angle - cur.wheel_angle) * t,
-              slip_angle: cur.slip_angle + (nxt.slip_angle - cur.slip_angle) * t,
-              tc_active: cur.tc_active,
-              abs_active: cur.abs_active,
-              wheel_lock: cur.wheel_lock,
-            });
-          }
-        }
+    const numPoints = 1500;
+    
+    // We want to generate exactly `numPoints` points from pct=0.0 to pct=1.0
+    let uIdx = 0;
+    for (let i = 0; i < numPoints; i++) {
+      let pct = i / (numPoints - 1);
+      
+      // Advance uIdx until unwrapped[uIdx + 1] is past our target pct, or we run out of points
+      while (uIdx < unwrapped.length - 2 && unwrapped[uIdx + 1].lap_dist_pct < pct) {
+        uIdx++;
       }
+      
+      let p1 = unwrapped[uIdx];
+      let p2 = unwrapped[uIdx + 1] || p1;
+      
+      let t = 0;
+      let distGap = p2.lap_dist_pct - p1.lap_dist_pct;
+      if (distGap > 0) {
+        t = (pct - p1.lap_dist_pct) / distGap;
+      }
+      t = Math.max(0, Math.min(1, t));
+      
+      finalData.push({
+        session_time: p1.session_time + (p2.session_time - p1.session_time) * t,
+        lap_dist_pct: pct,
+        speed: p1.speed + (p2.speed - p1.speed) * t,
+        throttle: p1.throttle + (p2.throttle - p1.throttle) * t,
+        brake: p1.brake + (p2.brake - p1.brake) * t,
+        steering_angle: p1.steering_angle + (p2.steering_angle - p1.steering_angle) * t,
+        wheel_angle: p1.wheel_angle + (p2.wheel_angle - p1.wheel_angle) * t,
+        slip_angle: p1.slip_angle + (p2.slip_angle - p1.slip_angle) * t,
+        tc_active: t < 0.5 ? p1.tc_active : p2.tc_active,
+        abs_active: t < 0.5 ? p1.abs_active : p2.abs_active,
+        wheel_lock: t < 0.5 ? p1.wheel_lock : p2.wheel_lock,
+      });
     }
 
     let trueStartTime = p0.session_time - (p0.lap_dist_pct / localSpeed);
-    let normalized = finalData
-      .filter(p => p.lap_dist_pct >= 0.0 && p.lap_dist_pct <= 1.0)
-      .map(p => ({ ...p, elapsed_time: p.session_time - trueStartTime }));
+    let normalized = finalData.map(p => ({ ...p, elapsed_time: p.session_time - trueStartTime }));
     
     return { data: normalized, lapTime, localSpeed };
   };
@@ -229,16 +233,26 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
     });
   }, [processedLap, processedRef, deltaData, refLapTime, currentLapTime]);
 
+  const [brushRange, setBrushRange] = useState(null);
+
+  const zoomedData = useMemo(() => {
+    if (!mergedData || mergedData.length === 0) return [];
+    if (brushRange && brushRange.length === 2) {
+      return mergedData.slice(brushRange[0], brushRange[1] + 1);
+    }
+    return mergedData;
+  }, [mergedData, brushRange]);
+
   if (!lapData?.length) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-zinc-500 text-sm">Select a lap from history to view telemetry</div>
+        <p className="text-zinc-500 font-mono text-sm tracking-widest">NO TELEMETRY DATA</p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full min-h-0 bg-zinc-900 rounded-lg p-4 border border-zinc-800 shadow-xl overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-zinc-950 p-4">
       <div className="flex justify-between items-center mb-4 pb-4 border-b border-zinc-800 flex-none">
         <div className="flex items-center gap-4">
             <h2 className="text-sm uppercase tracking-widest text-zinc-300 font-semibold m-0">Telemetry Analysis</h2>
@@ -295,13 +309,11 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         
         {/* Delta Chart */}
         {deltaData?.length > 0 && (
-          <div className="flex-none h-24 flex flex-col relative group">
-            <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">DELTA (s)</div>
-            <div className="flex-1 mt-3">
+          <div className="flex-none h-32 flex flex-col relative group">
+            <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">DELTA (s)</div>            <div className="flex-1 mt-3">
               <ResponsiveContainer width="100%" height="100%">
               <AreaChart 
                 data={mergedData} 
-                syncId="telemetry"
                 margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
                 onMouseEnter={() => { activeChartRef.current = 'delta'; }}
               >
@@ -311,9 +323,32 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="delta" activeChartRef={activeChartRef} />} />
                 <ReferenceLine y={0} stroke="#a1a1aa" opacity={0.5} />
                 <Area type="linear" dataKey="delta" stroke="#f4f4f5" fillOpacity={0} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
+                
+                {/* Manual synchronized cursor from bottom charts */}
+                {hoveredData?.lap_dist_pct != null && (
+                  <>
+                    <ReferenceLine x={hoveredData.lap_dist_pct} stroke="#a1a1aa" opacity={0.5} strokeDasharray="3 3" />
+                    {hoveredData.delta != null && (
+                      <ReferenceDot x={hoveredData.lap_dist_pct} y={hoveredData.delta} r={4} fill="#fff" stroke="none" />
+                    )}
+                  </>
+                )}
+
                 {sectorBoundaries.map((pct, i) => (
                   <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
                 ))}
+                <Brush  
+                  dataKey="lap_dist_pct" 
+                  height={20} 
+                  stroke="#52525b" 
+                  fill="#18181b" 
+                  tickFormatter={() => ''} 
+                  onChange={(e) => {
+                    if (e && typeof e.startIndex === 'number' && typeof e.endIndex === 'number') {
+                      setBrushRange([e.startIndex, e.endIndex]);
+                    }
+                  }} 
+                />
               </AreaChart>
             </ResponsiveContainer>
             </div>
@@ -326,13 +361,14 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
           <div className="flex-1 mt-3">
             <ResponsiveContainer width="100%" height="100%">
             <LineChart 
-              data={mergedData} 
+              data={zoomedData} 
               syncId="telemetry"
+              syncMethod="value"
               margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
               onMouseEnter={() => { activeChartRef.current = 'speed'; }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-              <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
+              <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
               <YAxis domain={[0, 350]} stroke="#a1a1aa" fontSize={10} tickCount={5} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="speed" activeChartRef={activeChartRef} />} />
               <Line type="linear" dataKey="speed" stroke="#ef4444" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={<FastDot />} />
@@ -351,13 +387,14 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
           <div className="flex-1 mt-3">
             <ResponsiveContainer width="100%" height="100%">
             <AreaChart 
-              data={mergedData} 
+              data={zoomedData} 
               syncId="telemetry"
+              syncMethod="value"
               margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
               onMouseEnter={() => { activeChartRef.current = 'throttle'; }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-              <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
+              <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
               <YAxis domain={[0, 1]} stroke="#a1a1aa" fontSize={10} tickCount={3} tickFormatter={v => (v*100).toFixed(0)} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="throttle" activeChartRef={activeChartRef} />} />
               <Area type="linear" dataKey="throttle" stroke="#22c55e" fill="#22c55e" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
@@ -377,13 +414,14 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
           <div className="flex-1 mt-3">
             <ResponsiveContainer width="100%" height="100%">
             <AreaChart 
-              data={mergedData} 
+              data={zoomedData} 
               syncId="telemetry"
+              syncMethod="value"
               margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
               onMouseEnter={() => { activeChartRef.current = 'brake'; }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-              <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
+              <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
               <YAxis domain={[0, 1]} stroke="#a1a1aa" fontSize={10} tickCount={3} tickFormatter={v => (v*100).toFixed(0)} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="brake" activeChartRef={activeChartRef} />} />
               <Area type="linear" dataKey="brake" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
@@ -404,13 +442,14 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
           <div className="flex-1 mt-3">
             <ResponsiveContainer width="100%" height="100%">
             <LineChart 
-              data={mergedData} 
+              data={zoomedData} 
               syncId="telemetry"
+              syncMethod="value"
               margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
               onMouseEnter={() => { activeChartRef.current = 'wheel'; }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-              <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
+              <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
               <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={10} tickCount={3} />
               <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="wheel" activeChartRef={activeChartRef} />} />
               <Line type="linear" dataKey="wheel_angle" stroke="#f4f4f5" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={<FastDot />} />
@@ -429,8 +468,9 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
           <div className="flex-1 mt-3">
             <ResponsiveContainer width="100%" height="100%">
             <AreaChart 
-              data={mergedData} 
+              data={zoomedData} 
               syncId="telemetry"
+              syncMethod="value"
               margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
               onMouseEnter={() => { activeChartRef.current = 'slip'; }}
             >
@@ -439,7 +479,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 dataKey="lap_dist_pct" 
                 stroke="#a1a1aa" 
                 type="number"
-                domain={[0, 1]}
+                domain={['dataMin', 'dataMax']}
                 tickFormatter={(val) => (val * 100).toFixed(0) + '%'}
                 fontSize={10}
                 minTickGap={30}
