@@ -29,7 +29,9 @@ services:
       - "6379:6379"
 
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
     container_name: iracing-api
     ports:
       - "8000:8000"
