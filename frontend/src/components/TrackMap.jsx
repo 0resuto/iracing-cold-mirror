@@ -362,6 +362,23 @@ export const TrackMap = React.memo(function TrackMap() {
           </div>
         ) : svgData ? (
           <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
+            {colorMode !== 'default' && (
+              <div className="absolute bottom-3 left-3 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 px-3 py-1.5 rounded-md text-[10px] text-zinc-300 flex items-center gap-2 font-mono shadow-md z-10 pointer-events-none">
+                {colorMode === 'speed' ? (
+                  <>
+                    <span className="text-red-400 font-bold">Slow</span>
+                    <div className="w-16 h-2 rounded bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
+                    <span className="text-green-400 font-bold">Fast</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-red-400 font-bold">+ Δ (Loss)</span>
+                    <div className="w-16 h-2 rounded bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
+                    <span className="text-green-400 font-bold">- Δ (Gain)</span>
+                  </>
+                )}
+              </div>
+            )}
             <svg ref={svgRef} width="100%" height="100%" style={{ minHeight: '300px', cursor: 'grab' }} viewBox={`0 0 ${svgData.vbWidth} ${svgData.vbHeight}`} preserveAspectRatio="xMidYMid meet">
               <g ref={gRef}>
                 {/* Background rect to catch pointer events for panning everywhere */}

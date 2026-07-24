@@ -38,18 +38,43 @@ function App() {
       <div className="flex-1 flex flex-col h-full overflow-hidden p-6 gap-6 bg-zinc-950">
         
         {/* Header */}
-        <div className="flex items-center gap-4 flex-none">
-          <div>
-            <div className="text-zinc-400 text-sm mt-1 font-medium tracking-wide flex items-center gap-2">
+        <div className="flex items-center justify-between flex-none pb-2 border-b border-zinc-800/80">
+          <div className="flex items-center gap-3">
+            {!isSidebarOpen && (
+              <button 
+                onClick={toggleSidebar}
+                className="p-1.5 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all text-xs flex items-center gap-1.5 cursor-pointer"
+                title="Open Sidebar"
+              >
+                <span>▶</span>
+              </button>
+            )}
+            <div>
               {activeTab === 'live' ? (
-                <span className="flex items-center gap-2 text-red-400 font-semibold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping inline-block"></span>
-                  Streaming Live Telemetry
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-2 text-red-400 font-semibold text-sm">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping inline-block"></span>
+                    Streaming Live Telemetry
+                  </span>
+                </div>
               ) : selectedLap ? (
-                `Viewing Lap ${selectedLap.lap_number} (${selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Historical Lap'})`
+                <div className="flex items-center gap-3">
+                  <span className="text-base font-semibold text-zinc-100">
+                    Lap {selectedLap.lap_number}
+                  </span>
+                  <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold">
+                    {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Incomplete Lap'}
+                  </span>
+                  {selectedLap.track_name && (
+                    <span className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md text-xs font-medium flex items-center gap-1.5">
+                      <span className="text-zinc-500">📍</span> {selectedLap.track_name}
+                    </span>
+                  )}
+                </div>
               ) : (
-                'Select a lap from history to begin'
+                <div className="text-zinc-400 text-sm font-medium tracking-wide">
+                  Select a lap from history to begin analysis
+                </div>
               )}
             </div>
           </div>
@@ -57,11 +82,24 @@ function App() {
 
         {/* Main Content or Empty State */}
         {(!selectedLap && activeTab !== 'live') ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 gap-4">
-            <svg className="w-16 h-16 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-            <p className="text-lg tracking-wide font-medium">Select a lap from history to begin analysis</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 gap-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 p-8">
+            <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+              <svg className="w-8 h-8 text-sky-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-lg tracking-wide font-medium text-zinc-200">No Lap Selected</p>
+              <p className="text-xs text-zinc-400 mt-1 max-w-sm">Choose a lap from the session history sidebar to view detailed telemetry curves and track position.</p>
+            </div>
+            <button 
+              onClick={() => {
+                if (!isSidebarOpen) toggleSidebar();
+              }}
+              className="mt-2 bg-sky-500 hover:bg-sky-400 text-zinc-950 font-semibold px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-sky-500/10 cursor-pointer flex items-center gap-2"
+            >
+              <span>⏱️</span> Open History Sidebar
+            </button>
           </div>
         ) : (
           <div className="flex flex-1 gap-6 min-h-0 w-full overflow-hidden">
