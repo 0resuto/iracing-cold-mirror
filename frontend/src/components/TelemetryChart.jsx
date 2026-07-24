@@ -211,6 +211,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         tc_active: t < 0.5 ? p1.tc_active : p2.tc_active,
         abs_active: t < 0.5 ? p1.abs_active : p2.abs_active,
         wheel_lock: t < 0.5 ? p1.wheel_lock : p2.wheel_lock,
+        lat: p1.lat != null && p2.lat != null ? p1.lat + (p2.lat - p1.lat) * t : (p1.lat ?? null),
+        lon: p1.lon != null && p2.lon != null ? p1.lon + (p2.lon - p1.lon) * t : (p1.lon ?? null),
       });
     }
 
@@ -293,35 +295,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
 
   const zoomedData = useMemo(() => {
     if (!mergedData || mergedData.length === 0) return [];
-    
-    let sliced = brushRange ? mergedData.slice(brushRange[0], brushRange[1] + 1) : mergedData;
-    
-    // PERFORMANCE FIX: 
-    // Recharts is extremely slow when rendering >500 points across 5 charts (14 data series).
-    // If the zoomed area has many points, we downsample it to ~300 points for rendering.
-    // When the user zooms in closer, the data naturally falls under 300 points and renders in full fidelity.
-    const MAX_POINTS = 300;
-    if (sliced.length > MAX_POINTS) {
-      const step = Math.ceil(sliced.length / MAX_POINTS);
-      const downsampled = [];
-      for (let i = 0; i < sliced.length; i += step) {
-        let chunk = sliced.slice(i, i + step);
-        // Take the first point as the base for continuous lines (speed, throttle, etc.)
-        let point = { ...chunk[0] };
-        
-        // Critically, we MUST NOT lose single-frame spike events (ABS, TC, Wheel Lock)
-        // So we take the logical OR (max) of these flags within the chunk.
-        for (let j = 1; j < chunk.length; j++) {
-          if (chunk[j].wheel_lock > point.wheel_lock) point.wheel_lock = chunk[j].wheel_lock;
-          if (chunk[j].abs_active > point.abs_active) point.abs_active = chunk[j].abs_active;
-          if (chunk[j].tc_active > point.tc_active) point.tc_active = chunk[j].tc_active;
-        }
-        downsampled.push(point);
-      }
-      sliced = downsampled;
-    }
-
-    return sliced;
+    return brushRange ? mergedData.slice(brushRange[0], brushRange[1] + 1) : mergedData;
   }, [mergedData, brushRange]);
 
   if (!lapData?.length) {

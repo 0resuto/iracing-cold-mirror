@@ -121,21 +121,33 @@ export const TrackMap = React.memo(function TrackMap() {
     let currentData = null;
     let prevData = null;
 
-    if (hoveredData && hoveredData.lat !== null && hoveredData.lon !== null) {
+    if (hoveredData && hoveredData.lat != null && hoveredData.lon != null) {
       currentData = hoveredData;
       if (lapData) {
         for (let i = 0; i < lapData.length; i++) {
-          if (lapData[i].session_time === hoveredData.session_time) {
+          if (lapData[i].session_time === hoveredData.session_time || Math.abs((lapData[i].lap_dist_pct || 0) - (hoveredData.lap_dist_pct || 0)) < 0.001) {
             if (i > 0) prevData = lapData[i - 1];
             break;
           }
+        }
+      }
+    } else if (hoveredData && hoveredData.lap_dist_pct != null && lapData && lapData.length > 0) {
+      const targetPct = hoveredData.lap_dist_pct;
+      let minDiff = Infinity;
+      for (let i = 0; i < lapData.length; i++) {
+        if (lapData[i].lat == null || lapData[i].lon == null) continue;
+        const diff = Math.abs((lapData[i].lap_dist_pct || 0) - targetPct);
+        if (diff < minDiff) {
+          minDiff = diff;
+          currentData = lapData[i];
+          if (i > 0) prevData = lapData[i - 1];
         }
       }
     } else if (lapData && lapData.length > 0) {
       currentData = lapData[0];
     }
 
-    if (!currentData || currentData.lat === null || currentData.lon === null) {
+    if (!currentData || currentData.lat == null || currentData.lon == null) {
       return { x: 0, y: 0, travelAngle: 0, headingAngle: 0, isValid: false };
     }
 
