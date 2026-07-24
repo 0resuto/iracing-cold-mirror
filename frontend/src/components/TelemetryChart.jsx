@@ -15,6 +15,7 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
   const setHoveredData = useAppStore(state => state.setHoveredData);
   const rafIdRef = React.useRef(null);
   const latestPayloadRef = React.useRef(null);
+  const lastSetTimeRef = React.useRef(null);
 
   const isVisible = activeChartRef?.current === chartId;
 
@@ -24,20 +25,25 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
       
       if (!rafIdRef.current) {
         rafIdRef.current = requestAnimationFrame(() => {
-          if (latestPayloadRef.current) {
-            setHoveredData(latestPayloadRef.current);
+          const item = latestPayloadRef.current;
+          if (item && item.session_time !== lastSetTimeRef.current) {
+            lastSetTimeRef.current = item.session_time;
+            setHoveredData(item);
           }
           rafIdRef.current = null;
         });
       }
     }
+  }, [active, payload, setHoveredData, isVisible]);
+
+  useEffect(() => {
     return () => {
       if (rafIdRef.current) {
         cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = null;
       }
     };
-  }, [active, payload, setHoveredData, isVisible]);
+  }, []);
 
   if (!isVisible || !active || !payload?.length) return null;
 
@@ -85,12 +91,12 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
 };
 
 const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChartRef, setBrushRange }) => {
-  const hoveredData = useAppStore(state => state.hoveredData);
-  
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart 
         data={mergedData} 
+        syncId="telemetry"
+        syncMethod="value"
         margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
         onMouseEnter={() => { activeChartRef.current = 'delta'; }}
       >
@@ -100,16 +106,6 @@ const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChar
         <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="delta" activeChartRef={activeChartRef} />} />
         <ReferenceLine y={0} stroke="#a1a1aa" opacity={0.5} />
         <Area type="linear" dataKey="delta" stroke="#f4f4f5" fillOpacity={0} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
-        
-        {/* Manual synchronized cursor from bottom charts */}
-        {hoveredData?.lap_dist_pct != null && (
-          <>
-            <ReferenceLine x={hoveredData.lap_dist_pct} stroke="#a1a1aa" opacity={0.5} strokeDasharray="3 3" />
-            {hoveredData.delta != null && (
-              <ReferenceDot x={hoveredData.lap_dist_pct} y={hoveredData.delta} r={4} fill="#fff" stroke="none" />
-            )}
-          </>
-        )}
 
         {sectorBoundaries.map((pct, i) => (
           <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />

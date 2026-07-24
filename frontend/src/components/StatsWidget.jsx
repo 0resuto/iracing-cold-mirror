@@ -3,7 +3,7 @@ import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
 import { FrictionCircle } from './FrictionCircle';
 
-export function StatsWidget() {
+export const StatsWidget = React.memo(function StatsWidget() {
   const hoveredData = useAppStore((state) => state.hoveredData);
   const { lapData, deltaData } = useTelemetryData();
 
@@ -185,4 +185,4 @@ export function StatsWidget() {
 
     </div>
   );
-}
+});
