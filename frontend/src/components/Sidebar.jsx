@@ -3,42 +3,47 @@ import { useAppStore } from '../store/useAppStore';
 import { useLiveStore } from '../store/useLiveStore';
 import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
 
-// --- Subcomponents for clarity ---
+// --- Subcomponents with React.memo for Performance ---
 
-const LapItem = ({ lap, player, session, selectedLapId, bestLapId, setSelectedLap }) => {
+const LapItem = React.memo(function LapItem({ lap, player, session, selectedLapId, bestLapId, setSelectedLap }) {
   const isSelected = selectedLapId === lap.id;
   const isBest = lap.id === bestLapId;
-  const timeText = lap.lap_time > 0 ? `${lap.lap_time.toFixed(1)}s` : 'Outlap';
+  const timeText = lap.lap_time > 0 ? `${lap.lap_time.toFixed(2)}s` : 'Outlap';
 
   return (
     <div
       onClick={() => setSelectedLap({ ...lap, player_id: player.id, track_name: session.track_name })}
-      className={`flex justify-between items-center px-3 py-1.5 my-0.5 text-xs cursor-pointer border-l-2  ${
+      className={`flex justify-between items-center px-3 py-1.5 my-0.5 text-xs cursor-pointer border-l-2 rounded-r transition-colors ${
         isSelected
-          ? 'border-sky-400 bg-sky-400/10 text-zinc-100'
+          ? 'border-sky-400 bg-sky-400/10 text-zinc-100 font-medium'
           : 'border-transparent hover:bg-white/5 text-zinc-400'
       }`}
     >
       <span>Lap {lap.lap_number}</span>
-      <span className={`font-mono font-bold ${isBest ? 'text-purple-500' : 'text-inherit'}`}>
+      <span className={`font-mono font-bold ${isBest ? 'text-purple-400' : 'text-inherit'}`}>
         {timeText}
       </span>
     </div>
   );
-};
+});
 
-const SessionItem = ({ session, player, selectedLapId, setSelectedLap }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const SessionItem = React.memo(function SessionItem({ session, player, selectedLapId, setSelectedLap }) {
+  const hasSelected = useMemo(() => {
+    return session.laps?.some(l => l.id === selectedLapId) ?? false;
+  }, [session.laps, selectedLapId]);
 
-  // Auto-expand if the selected lap is in this session
+  const [isOpen, setIsOpen] = useState(hasSelected);
+  const [showAllLaps, setShowAllLaps] = useState(false);
+
+  // Expand if user selects a lap in this session
   useEffect(() => {
-    if (session.laps.some(l => l.id === selectedLapId)) setIsOpen(true);
-  }, [selectedLapId, session.laps]);
+    if (hasSelected) setIsOpen(true);
+  }, [hasSelected]);
 
   const bestLapId = useMemo(() => {
     let best = null;
     let minTime = Infinity;
-    session.laps.forEach(l => {
+    (session.laps || []).forEach(l => {
       if (l.lap_time > 0 && l.lap_time < minTime) {
         minTime = l.lap_time;
         best = l.id;
@@ -47,63 +52,96 @@ const SessionItem = ({ session, player, selectedLapId, setSelectedLap }) => {
     return best;
   }, [session.laps]);
 
+  const laps = session.laps || [];
+  const visibleLaps = showAllLaps ? laps : laps.slice(0, 15);
+  const hiddenCount = laps.length - visibleLaps.length;
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col border-t border-zinc-800/80">
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3.5 py-2 pl-6 cursor-pointer border-t border-zinc-800  ${
-          isOpen ? 'bg-white/5' : 'hover:bg-white/5'
+        className={`flex justify-between items-center px-3.5 py-2 cursor-pointer transition-colors ${
+          isOpen ? 'bg-white/5 text-zinc-200' : 'hover:bg-white/5 text-zinc-400'
         }`}
       >
-        <span className="text-sm">🏁 {session.track_name}</span>
-        <span className="text-[10px] text-zinc-500">{isOpen ? '▼' : '▶'}</span>
+        <div className="flex items-center gap-2 truncate">
+          <span className="text-xs">🏁</span>
+          <span className="text-xs font-medium truncate">{session.track_name}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-none">
+          <span className="text-[10px] font-mono text-zinc-500">
+            {laps.length} {laps.length === 1 ? 'lap' : 'laps'}
+          </span>
+          <span className="text-[10px] text-zinc-500">{isOpen ? '▼' : '▶'}</span>
+        </div>
       </div>
 
       {isOpen && (
-        <div className="flex flex-col bg-black/20 py-1 pl-4">
-          {session.laps.length === 0 ? (
+        <div className="flex flex-col bg-black/20 py-1 pl-3 border-l border-zinc-800/50 my-0.5">
+          {laps.length === 0 ? (
             <div className="px-3 py-2 text-xs text-zinc-500">No laps recorded yet.</div>
           ) : (
-            session.laps.map(lap => (
-              <LapItem 
-                key={lap.id} 
-                lap={lap} 
-                player={player} 
-                session={session} 
-                selectedLapId={selectedLapId} 
-                bestLapId={bestLapId} 
-                setSelectedLap={setSelectedLap} 
-              />
-            ))
+            <>
+              {visibleLaps.map(lap => (
+                <LapItem 
+                  key={lap.id} 
+                  lap={lap} 
+                  player={player} 
+                  session={session} 
+                  selectedLapId={selectedLapId} 
+                  bestLapId={bestLapId} 
+                  setSelectedLap={setSelectedLap} 
+                />
+              ))}
+              {hiddenCount > 0 && (
+                <button
+                  onClick={() => setShowAllLaps(true)}
+                  className="mt-1 text-[11px] text-sky-400 hover:text-sky-300 font-mono py-1 px-3 text-left cursor-pointer transition-colors"
+                >
+                  + Show {hiddenCount} more laps
+                </button>
+              )}
+            </>
           )}
         </div>
       )}
     </div>
   );
-};
+});
 
-const PlayerItem = ({ player, selectedLapId, setSelectedLap }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSelectedLap }) {
+  const hasSelected = useMemo(() => {
+    return player.sessions?.some(s => s.laps?.some(l => l.id === selectedLapId)) ?? false;
+  }, [player.sessions, selectedLapId]);
+
+  const [isOpen, setIsOpen] = useState(hasSelected);
 
   useEffect(() => {
-    if (player.sessions.some(s => s.laps.some(l => l.id === selectedLapId))) setIsOpen(true);
-  }, [selectedLapId, player.sessions]);
+    if (hasSelected) setIsOpen(true);
+  }, [hasSelected]);
+
+  const sessionsCount = player.sessions?.length || 0;
 
   return (
-    <div className="flex flex-col bg-transparent border border-zinc-800 rounded-md overflow-hidden">
+    <div className="flex flex-col bg-zinc-950/60 border border-zinc-800/80 rounded-md overflow-hidden shadow-sm">
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3.5 py-2.5 cursor-pointer font-medium text-sm  ${
+        className={`flex justify-between items-center px-3.5 py-2 cursor-pointer font-medium text-xs transition-colors ${
           isOpen ? 'bg-zinc-800 text-zinc-100' : 'hover:bg-zinc-800/50 text-zinc-300'
         }`}
       >
-        <span>👤 {player.name}</span>
-        <span className="text-xs text-zinc-500">{isOpen ? '▼' : '▶'}</span>
+        <span className="flex items-center gap-2">
+          <span>👤</span> {player.name}
+        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono text-zinc-500">{sessionsCount} sess</span>
+          <span className="text-[10px] text-zinc-500">{isOpen ? '▼' : '▶'}</span>
+        </div>
       </div>
       
       {isOpen && (
         <div className="flex flex-col">
-          {player.sessions.length === 0 ? (
+          {sessionsCount === 0 ? (
             <div className="px-6 py-2 text-xs text-zinc-500 border-t border-zinc-800">No sessions yet.</div>
           ) : (
             player.sessions.map(session => (
@@ -120,9 +158,9 @@ const PlayerItem = ({ player, selectedLapId, setSelectedLap }) => {
       )}
     </div>
   );
-};
+});
 
-const SectorsWidget = ({ selectedLap, players }) => {
+const SectorsWidget = React.memo(function SectorsWidget({ selectedLap, players }) {
   const [sortBy, setSortBy] = useState('order');
 
   const displaySectors = useMemo(() => {
@@ -158,34 +196,34 @@ const SectorsWidget = ({ selectedLap, players }) => {
   if (!selectedLap?.sectors?.length) return null;
 
   return (
-    <div className="p-4 border-t border-zinc-800 bg-zinc-950 flex-1 flex flex-col">
-      <div className="flex justify-between items-center mb-3">
+    <div className="p-3 border-t border-zinc-800 bg-zinc-950 flex-none flex flex-col">
+      <div className="flex justify-between items-center mb-2">
         <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">Sectors</h3>
         <div className="flex gap-1 text-[10px]">
           <button 
             onClick={() => setSortBy('order')} 
-            className={`px-1.5 py-0.5 rounded ${sortBy === 'order' ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-500'}`}
+            className={`px-1.5 py-0.5 rounded cursor-pointer ${sortBy === 'order' ? 'bg-zinc-800 text-zinc-200 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             #
           </button>
           <button 
             onClick={() => setSortBy('time')} 
-            className={`px-1.5 py-0.5 rounded ${sortBy === 'time' ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-500'}`}
+            className={`px-1.5 py-0.5 rounded cursor-pointer ${sortBy === 'time' ? 'bg-zinc-800 text-zinc-200 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Time
           </button>
           <button 
             onClick={() => setSortBy('delta')} 
-            className={`px-1.5 py-0.5 rounded ${sortBy === 'delta' ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-500'}`}
+            className={`px-1.5 py-0.5 rounded cursor-pointer ${sortBy === 'delta' ? 'bg-zinc-800 text-zinc-200 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Δ
           </button>
         </div>
       </div>
       
-      <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[160px] custom-scrollbar pr-1">
+      <div className="flex flex-col gap-1 overflow-y-auto max-h-[140px] custom-scrollbar pr-1">
         {displaySectors.map(s => (
-          <div key={s.id || s.sector_number} className="flex justify-between items-center text-xs bg-zinc-900 px-2.5 py-1.5 rounded border border-zinc-800/80">
+          <div key={s.id || s.sector_number} className="flex justify-between items-center text-xs bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800/80">
             <span className="text-zinc-400 font-medium">Sector {s.sector_number}</span>
             <div className="flex items-center gap-3">
               <span className="font-mono text-zinc-200">{s.sector_time.toFixed(2)}s</span>
@@ -200,8 +238,7 @@ const SectorsWidget = ({ selectedLap, players }) => {
       </div>
     </div>
   );
-};
-
+});
 
 // --- Live Telemetry Panel ---
 
@@ -273,19 +310,99 @@ export const Sidebar = React.memo(function Sidebar() {
   const toggleSidebar = useAppStore(state => state.toggleSidebar);
   const selectedLapId = selectedLap?.id || null;
 
-  const { data: players = [], isLoading, isError } = useHistoryQuery();
+  // Filter & Sort State
+  const [filterPlayer, setFilterPlayer] = useState('all');
+  const [filterTrack, setFilterTrack] = useState('all');
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'fastest'
+
+  const { data: rawPlayers = [], isLoading, isError } = useHistoryQuery();
   const { data: idealLap } = useIdealLapQuery(selectedLap?.player_id, selectedLap?.track_name);
+
+  // Extract unique players and tracks
+  const { uniquePlayers, uniqueTracks } = useMemo(() => {
+    const playersList = [];
+    const tracksSet = new Set();
+
+    (rawPlayers || []).forEach(p => {
+      playersList.push({ id: p.id, name: p.name });
+      (p.sessions || []).forEach(s => {
+        if (s.track_name) tracksSet.add(s.track_name);
+      });
+    });
+
+    return {
+      uniquePlayers: playersList,
+      uniqueTracks: Array.from(tracksSet).sort()
+    };
+  }, [rawPlayers]);
+
+  // Filter and Sort Data
+  const processedPlayers = useMemo(() => {
+    if (!rawPlayers || rawPlayers.length === 0) return [];
+
+    let filtered = rawPlayers.map(p => {
+      // Filter by player
+      if (filterPlayer !== 'all' && String(p.id) !== String(filterPlayer)) {
+        return null;
+      }
+
+      // Filter sessions by track
+      let sessions = (p.sessions || []).filter(s => {
+        if (filterTrack !== 'all' && s.track_name !== filterTrack) return false;
+        return true;
+      });
+
+      if (sessions.length === 0 && filterTrack !== 'all') return null;
+
+      // Helper to compute best lap time of session
+      const getBestTime = (session) => {
+        let best = Infinity;
+        (session.laps || []).forEach(l => {
+          if (l.lap_time > 0 && l.lap_time < best) best = l.lap_time;
+        });
+        return best;
+      };
+
+      // Sort sessions
+      sessions = [...sessions].sort((a, b) => {
+        if (sortBy === 'fastest') {
+          return getBestTime(a) - getBestTime(b);
+        }
+        if (sortBy === 'oldest') {
+          return (a.id || 0) - (b.id || 0);
+        }
+        // Newest (default)
+        return (b.id || 0) - (a.id || 0);
+      });
+
+      return {
+        ...p,
+        sessions
+      };
+    }).filter(Boolean);
+
+    // Sort players if sorting by fastest
+    if (sortBy === 'fastest') {
+      filtered.sort((a, b) => {
+        const bestA = Math.min(...a.sessions.map(s => Math.min(...(s.laps || []).map(l => l.lap_time > 0 ? l.lap_time : Infinity))));
+        const bestB = Math.min(...b.sessions.map(s => Math.min(...(s.laps || []).map(l => l.lap_time > 0 ? l.lap_time : Infinity))));
+        return bestA - bestB;
+      });
+    }
+
+    return filtered;
+  }, [rawPlayers, filterPlayer, filterTrack, sortBy]);
 
   // Auto-select latest session on load
   useEffect(() => {
-    if (players.length > 0 && !selectedLapId) {
-      const latestPlayer = players[players.length - 1];
+    if (rawPlayers.length > 0 && !selectedLapId) {
+      const latestPlayer = rawPlayers[rawPlayers.length - 1];
       const latestSession = (latestPlayer.sessions || [])[latestPlayer.sessions?.length - 1];
       if (latestSession?.laps?.length > 0) {
         setSelectedLap({ ...latestSession.laps[0], player_id: latestPlayer.id, track_name: latestSession.track_name });
       }
     }
-  }, [players, selectedLapId, setSelectedLap]);
+  }, [rawPlayers, selectedLapId, setSelectedLap]);
 
   return (
     <div className="flex h-full w-full bg-zinc-900">
@@ -294,7 +411,7 @@ export const Sidebar = React.memo(function Sidebar() {
       <div className="w-16 min-w-[64px] border-r border-zinc-800 flex flex-col items-center py-4 bg-zinc-950">
         <button 
           onClick={toggleSidebar} 
-          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-none cursor-pointer text-xs p-2 mb-8 rounded w-8 h-8 flex items-center justify-center "
+          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-none cursor-pointer text-xs p-2 mb-8 rounded w-8 h-8 flex items-center justify-center transition-colors"
         >
           {isOpen ? '◀' : '▶'}
         </button>
@@ -306,7 +423,7 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('history');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1  ${
+            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1 transition-colors ${
               activeTab === 'history' ? 'border-sky-400 text-sky-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >
@@ -320,7 +437,7 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('live');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1  ${
+            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1 transition-colors ${
               activeTab === 'live' ? 'border-red-500 text-red-500' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >
@@ -334,21 +451,84 @@ export const Sidebar = React.memo(function Sidebar() {
         
         {activeTab === 'history' ? (
           <>
-            {/* History List */}
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">History Laps</h2>
+            {/* Filter & Sort Controls */}
+            <div className="p-3 bg-zinc-950 border-b border-zinc-800 flex-none flex flex-col gap-2">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">History</h2>
+                <span className="text-[10px] font-mono text-zinc-500">
+                  {processedPlayers.reduce((acc, p) => acc + (p.sessions?.length || 0), 0)} sessions
+                </span>
               </div>
-          
+
+              <div className="grid grid-cols-2 gap-1.5">
+                {/* Driver Filter */}
+                <select
+                  value={filterPlayer}
+                  onChange={(e) => setFilterPlayer(e.target.value)}
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[11px] rounded px-2 py-1 outline-none focus:border-sky-500 cursor-pointer"
+                >
+                  <option value="all">👤 All Drivers</option>
+                  {uniquePlayers.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+
+                {/* Track Filter */}
+                <select
+                  value={filterTrack}
+                  onChange={(e) => setFilterTrack(e.target.value)}
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[11px] rounded px-2 py-1 outline-none focus:border-sky-500 cursor-pointer"
+                >
+                  <option value="all">🏁 All Tracks</option>
+                  {uniqueTracks.map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sort Pills */}
+              <div className="flex items-center justify-between text-[10px] mt-0.5">
+                <span className="text-zinc-500 font-medium">Sort by:</span>
+                <div className="flex gap-1">
+                  <button 
+                    onClick={() => setSortBy('newest')} 
+                    className={`px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer ${
+                      sortBy === 'newest' ? 'bg-zinc-800 text-sky-400 font-bold border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    Newest
+                  </button>
+                  <button 
+                    onClick={() => setSortBy('oldest')} 
+                    className={`px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer ${
+                      sortBy === 'oldest' ? 'bg-zinc-800 text-sky-400 font-bold border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    Oldest
+                  </button>
+                  <button 
+                    onClick={() => setSortBy('fastest')} 
+                    className={`px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer ${
+                      sortBy === 'fastest' ? 'bg-zinc-800 text-purple-400 font-bold border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    Fastest
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* History List */}
+            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
               {isLoading ? (
                 <div className="text-xs text-zinc-500 animate-pulse">Loading history...</div>
               ) : isError ? (
                 <div className="text-xs text-red-500">Failed to load history</div>
-              ) : (players || []).length === 0 ? (
-                <div className="text-xs text-zinc-500">No history found</div>
+              ) : processedPlayers.length === 0 ? (
+                <div className="text-xs text-zinc-500 text-center py-4">No matching sessions found</div>
               ) : (
                 <div className="flex flex-col gap-2">
-                  {(players || []).map(player => (
+                  {processedPlayers.map(player => (
                     <PlayerItem 
                       key={player.id} 
                       player={player} 
@@ -362,7 +542,7 @@ export const Sidebar = React.memo(function Sidebar() {
 
             {/* Ideal Lap Section */}
             {idealLap && (
-              <div className="p-4 border-t border-zinc-800 bg-black/10">
+              <div className="p-3 border-t border-zinc-800 bg-black/10 flex-none">
                  <div className="flex justify-between items-center">
                     <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">Theoretical Best</h3>
                     <span className="font-mono font-bold text-sky-400 text-base">
@@ -373,7 +553,7 @@ export const Sidebar = React.memo(function Sidebar() {
             )}
 
             {/* Sectors Widget */}
-            <SectorsWidget selectedLap={selectedLap} players={players} />
+            <SectorsWidget selectedLap={selectedLap} players={rawPlayers} />
           </>
         ) : (
           <LiveStreamPanel />
