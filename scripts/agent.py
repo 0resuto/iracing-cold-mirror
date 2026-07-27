@@ -1,18 +1,32 @@
 import os
 import time
 
+import httpx
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from telemetry.config import settings
-from telemetry.db import SessionLocal as DBSession
-from telemetry.services.importer import import_ibt_to_db
+
+
+def send_file_to_server(file_path: str):
+    upload_url = f"{settings.server_url}/api/sessions/upload"
+    try:
+        with open(file_path, "rb") as f:
+            files = {"file": (os.path.basename(file_path), f, "application/octet-stream")}
+            response = httpx.post(upload_url, files=files, timeout=60)
+
+            if response.status_code == 200:
+                print(f"Successfully uploaded: {os.path.basename(file_path)}")
+            else:
+                print(f"Server error [{response.status_code}]: {response.text}")
+    except Exception as e:
+        print(f"Connection error while uploading {os.path.basename(file_path)}: {e}")
 
 
 def scan_existing_files():
     for file in os.listdir(settings.iracing_telemetry_dir):
         if file.endswith(".ibt"):
-            import_ibt_to_db(os.path.join(settings.iracing_telemetry_dir, file), DBSession)
+            send_file_to_server(os.path.join(settings.iracing_telemetry_dir, file))
 
     return
 
@@ -24,7 +38,7 @@ class TelemetryFileHandler(FileSystemEventHandler):
             try:
                 with open(event.src_path, "ab") as _:
                     pass
-                import_ibt_to_db(event.src_path, DBSession)
+                send_file_to_server(event.src_path)
             except IOError:
                 return
         return
