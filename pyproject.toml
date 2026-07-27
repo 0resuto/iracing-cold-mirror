@@ -12,7 +12,8 @@ dependencies = [
     "alembic",
     "watchdog",
     "pyyaml",
-    "httpx"
+    "httpx",
+    "python-multipart"
 ]
 
 [build-system]

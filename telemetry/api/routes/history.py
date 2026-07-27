@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+import os
+import tempfile
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
 
@@ -12,6 +15,7 @@ from telemetry.api.schemas import (
 )
 from telemetry.db.models import Lap, Player, Sector, Session, Telemetry
 from telemetry.services.delta import calculate_delta
+from telemetry.services.importer import import_ibt_to_db
 
 router = APIRouter()
 
@@ -134,3 +138,29 @@ def get_history(skip: int = 0, limit: int = 10, db=Depends(get_db)):
         db.query(Player).options(selectinload(Player.sessions)).offset(skip).limit(limit).all()
     )
     return players
+
+
+@router.post(
+    "/sessions/upload",
+    tags=["Session"],
+    summary="Upload and import .ibt telemetry file",
+)
+async def upload_file(file: UploadFile = File(...), db=Depends(get_db)):
+    if not file.filename.endswith(".ibt"):
+        raise HTTPException(status_code=400, detail="Only .ibt files are allowed")
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".ibt") as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        success = import_ibt_to_db(tmp_path, lambda: db)
+
+        if not success:
+            return {"status": "skipped", "message": "File already imported"}
+
+        return {"status": "success", "message": "Session imported successfully"}
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
