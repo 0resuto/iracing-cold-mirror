@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-const HOST = import.meta.env.VITE_API_HOST || 'localhost:8000';
-const API_BASE = `http://${HOST}/api`;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export function useHistoryQuery() {
   return useQuery({

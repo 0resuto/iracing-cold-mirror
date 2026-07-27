@@ -13,6 +13,7 @@ from telemetry.api.schemas import (
     PlayerResponse,
     TelemetryResponse,
 )
+from telemetry.db import SessionLocal
 from telemetry.db.models import Lap, Player, Sector, Session, Telemetry
 from telemetry.services.delta import calculate_delta
 from telemetry.services.importer import import_ibt_to_db
@@ -155,12 +156,13 @@ async def upload_file(file: UploadFile = File(...), db=Depends(get_db)):
         tmp_path = tmp.name
 
     try:
-        success = import_ibt_to_db(tmp_path, lambda: db)
+        success = import_ibt_to_db(tmp_path, SessionLocal)
 
         if not success:
             return {"status": "skipped", "message": "File already imported"}
-
         return {"status": "success", "message": "Session imported successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)

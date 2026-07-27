@@ -18,7 +18,7 @@ class Session(Base):
 
     file_hash = Column(String, unique=True, index=True, nullable=True)
     id = Column(Integer, primary_key=True, index=True)
-    player_id = Column(Integer, ForeignKey("players.id"))
+    player_id = Column(Integer, ForeignKey("players.id"), nullable=False, index=True)
     player = relationship("Player", back_populates="sessions")
     track_name = Column(String)
     laps = relationship("Lap", back_populates="session")
@@ -28,9 +28,9 @@ class Lap(Base):
     __tablename__ = "laps"
 
     id = Column(Integer, primary_key=True)
-    session_id = Column(Integer, ForeignKey("sessions.id"))
+    session_id = Column(Integer, ForeignKey("sessions.id"), nullable=False, index=True)
     lap_number = Column(Integer)
-    lap_time = Column(Float)
+    lap_time = Column(Float, default=0.0, index=True)
 
     session = relationship("Session", back_populates="laps")
     telemetry_data = relationship("Telemetry", back_populates="lap")
@@ -41,7 +41,7 @@ class Sector(Base):
     __tablename__ = "sectors"
 
     id = Column(Integer, primary_key=True)
-    lap_id = Column(Integer, ForeignKey("laps.id"))
+    lap_id = Column(Integer, ForeignKey("laps.id"), nullable=False, index=True)
     sector_number = Column(Integer)
     sector_time = Column(Float)
 

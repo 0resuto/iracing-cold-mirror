@@ -3,8 +3,10 @@ import { useLiveStore } from '../../store/useLiveStore';
 import { useAppStore } from '../../store/useAppStore';
 import toast from 'react-hot-toast';
 
-const HOST = import.meta.env.VITE_API_HOST || 'localhost:8000';
-const WS_URL = `ws://${HOST}/ws/telemetry/live`;
+const WS_URL = import.meta.env.VITE_WS_URL || (() => {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/ws/telemetry/live`;
+})();
 
 export function useLiveTelemetryWS(isLiveActive) {
   const setLiveLapData = useLiveStore((state) => state.setLiveLapData);
