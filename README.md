@@ -47,6 +47,7 @@ graph TD
 iracing-telemetry/
 ├── alembic/                 # Database migration scripts
 ├── deploy/                  # Production Docker deployment files & entrypoint
+├── dev/                     # Developer tools & dev control panel (dev/run_dev.bat)
 ├── frontend/                # React 19 web application (Vite + Nginx)
 ├── scripts/                 # Client agent scripts (IBT file watcher, live streamer)
 ├── telemetry/               # Main FastAPI backend package
@@ -56,7 +57,8 @@ iracing-telemetry/
 │   └── services/            # Core business logic (delta math, ibt import)
 ├── docker-compose.yml       # Production infrastructure orchestrator
 ├── README.md
-└── run_project.bat          # 1-click Windows local development script
+├── run.bat                  # Client Control Panel (Gaming PC)
+└── setup.bat                # 1-click initial environment setup
 ```
 
 ## Tech Stack
@@ -66,53 +68,38 @@ iracing-telemetry/
 - **Proxy / Web Server**: Nginx
 - **Telemetry Parsing**: pyirsdk, PyYAML
 
-## Production Deployment (Server)
+---
 
-Deploy the entire stack (PostgreSQL, Redis, FastAPI Backend, React Frontend with Nginx) with a single command:
+## Getting Started (Windows 2-Step)
+
+### Prerequisites
+- Python 3.11+
+- Node.js & npm
+- Docker Desktop (for server or full-stack local dev)
+
+### Step 1: Initial Setup (Run Once)
+Double-click `setup.bat` in the root folder.
+This automatically configures Python `venv`, installs backend/frontend dependencies, and creates `.env`.
+
+### Step 2: Running the Platform
+
+- **For Gaming PC (Client Agents)**:
+  Double-click **`run.bat`** to launch the Client Control Panel. You can run file sync, live streaming, check server connectivity, or enable silent Windows autostart.
+
+- **For Local Full-Stack Development**:
+  Double-click **`dev/run_dev.bat`** to launch the Developer Panel (runs Docker Postgres/Redis, FastAPI with auto-reload, Vite dev server, pytest, and mock generators).
+
+---
+
+## Production Deployment (Server 24/7)
+
+Deploy the entire server stack (PostgreSQL, Redis, FastAPI Backend, React Frontend with Nginx) with a single command:
 
 ```bash
 docker compose up -d --build
 ```
 
-The application will be accessible at `http://your-server-ip:8080`.
-
-### Client Agent Setup (PC with iRacing)
-1. Set the target server URL in `.env`:
-   ```env
-   SERVER_URL=http://your-server-ip:8080
-   ```
-2. Run the background watcher:
-   ```cmd
-   python -m scripts.agent
-   ```
-
----
-
-## Local Development (Windows 1-Click)
-
-The easiest way to run the project locally for development on Windows:
-
-### Prerequisites
-- Python 3.11+
-- Node.js & npm
-- Docker Desktop (must be running)
-
-### Launching
-1. Clone the repository:
-   ```cmd
-   git clone https://github.com/0resuto/iracing-cold-mirror
-   cd iracing-cold-mirror
-   ```
-2. Double-click `run_project.bat`.
-
-The script will automatically:
-- Create a Python virtual environment and install dependencies.
-- Boot up PostgreSQL and Redis via Docker Compose.
-- Run Alembic database migrations.
-- Install frontend npm packages.
-- Start the FastAPI backend on `http://127.0.0.1:8000`.
-- Start the React dev server on `http://127.0.0.1:5173`.
-- Start the background Telemetry Agent.
+The web dashboard will be accessible at `http://your-server-ip:8080`.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
