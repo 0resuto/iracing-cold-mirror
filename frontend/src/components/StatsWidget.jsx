@@ -180,7 +180,7 @@ export const StatsWidget = React.memo(function StatsWidget() {
 
       {/* G-Force Friction Circle */}
       <div className="flex items-center justify-center">
-        <FrictionCircle latAccel={data.lat_accel} longAccel={data.long_accel} maxG={2.5} />
+        <FrictionCircle latAccel={data.lat_accel ?? data.g_lat ?? 0} longAccel={data.long_accel ?? data.g_lon ?? 0} maxG={2.5} />
       </div>
 
     </div>

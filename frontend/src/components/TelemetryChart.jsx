@@ -213,6 +213,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         wheel_lock: t < 0.5 ? p1.wheel_lock : p2.wheel_lock,
         lat: p1.lat != null && p2.lat != null ? p1.lat + (p2.lat - p1.lat) * t : (p1.lat ?? null),
         lon: p1.lon != null && p2.lon != null ? p1.lon + (p2.lon - p1.lon) * t : (p1.lon ?? null),
+        lat_accel: p1.lat_accel != null && p2.lat_accel != null ? p1.lat_accel + (p2.lat_accel - p1.lat_accel) * t : (p1.lat_accel ?? p1.g_lat ?? null),
+        long_accel: p1.long_accel != null && p2.long_accel != null ? p1.long_accel + (p2.long_accel - p1.long_accel) * t : (p1.long_accel ?? p1.g_lon ?? null),
       });
     }
 
@@ -383,7 +385,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 <span className="text-zinc-300">Current</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-0.5 border-t border-dashed border-zinc-500"></div>
+                <div className="w-4 h-0.5 bg-zinc-500"></div>
                 <span className="text-zinc-500">Reference</span>
               </div>
             </div>
@@ -396,7 +398,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         onMouseEnter={() => setIsUserHovering(true)}
         onMouseLeave={() => setIsUserHovering(false)}
       >
-                {/* Delta Chart */}
+                {/* Delta Chart */}
         {visibleCharts.delta && deltaData?.length > 0 && (
           <div className="flex-none h-32 flex flex-col relative group">
             <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">DELTA (s)</div>
@@ -429,7 +431,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 <YAxis domain={[0, dataMax => Math.ceil(((dataMax || 200) * 1.05) / 10) * 10]} stroke="#a1a1aa" fontSize={10} tickCount={5} />
                 <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="speed" activeChartRef={activeChartRef} />} />
                 <Line type="linear" dataKey="speed" stroke="#ef4444" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={<FastDot />} />
-                <Line type="linear" dataKey="ref_speed" stroke="#71717a" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />
+                <Line type="linear" dataKey="ref_speed" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
                 {sectorBoundaries.map((pct, i) => (
                   <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
                 ))}
@@ -457,7 +459,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 <YAxis domain={[0, 1]} stroke="#a1a1aa" fontSize={10} tickCount={3} tickFormatter={v => (v*100).toFixed(0)} />
                 <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="throttle" activeChartRef={activeChartRef} />} />
                 <Area type="linear" dataKey="throttle" stroke="#22c55e" fill="#22c55e" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
-                <Line type="linear" dataKey="ref_throttle" stroke="#71717a" strokeWidth={1} strokeDasharray="4 4" dot={false} isAnimationActive={false} activeDot={false} />
+                <Line type="linear" dataKey="ref_throttle" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
                 <Area type="step" dataKey="tc_active" stroke="none" fill="#eab308" fillOpacity={0.15} isAnimationActive={false} activeDot={false} />
                 {sectorBoundaries.map((pct, i) => (
                   <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
@@ -486,7 +488,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 <YAxis domain={[0, 1]} stroke="#a1a1aa" fontSize={10} tickCount={3} tickFormatter={v => (v*100).toFixed(0)} />
                 <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="brake" activeChartRef={activeChartRef} />} />
                 <Area type="linear" dataKey="brake" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
-                <Line type="linear" dataKey="ref_brake" stroke="#71717a" strokeWidth={1} strokeDasharray="4 4" dot={false} isAnimationActive={false} activeDot={false} />
+                <Line type="linear" dataKey="ref_brake" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
                 <Area type="step" dataKey="abs_active" stroke="none" fill="#38bdf8" fillOpacity={0.2} isAnimationActive={false} activeDot={false} />
                 <Area type="step" dataKey="wheel_lock" stroke="none" fill="#ef4444" fillOpacity={0.3} isAnimationActive={false} activeDot={false} />
                 {sectorBoundaries.map((pct, i) => (
@@ -516,7 +518,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={10} tickCount={3} />
                 <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="wheel" activeChartRef={activeChartRef} />} />
                 <Line type="linear" dataKey="wheel_angle" stroke="#f4f4f5" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={<FastDot />} />
-                <Line type="linear" dataKey="ref_wheel_angle" stroke="#71717a" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />
+                <Line type="linear" dataKey="ref_wheel_angle" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
                 {sectorBoundaries.map((pct, i) => (
                   <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
                 ))}
