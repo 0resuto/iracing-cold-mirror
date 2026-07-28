@@ -13,7 +13,8 @@ dependencies = [
     "watchdog",
     "pyyaml",
     "httpx",
-    "python-multipart"
+    "python-multipart",
+    "pyirsdk"
 ]
 
 [build-system]
