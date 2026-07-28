@@ -23,22 +23,49 @@ This project collects live telemetry data directly from iRacing, stores historic
 The project is built with a decoupled Client-Server architecture:
 
 ```mermaid
-graph TD
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '14px' }}}%%
+flowchart LR
     subgraph Client["iRacing Client Machine"]
-        A[iRacing Simulator] -->|Writes| B[.ibt Telemetry Files]
-        A -->|Memory Map| L[Live Reader]
-        B -->|File Watcher| C[Sync Agent]
+        direction TB
+        Sim(["iRacing Simulator"])
+        IBT[/".ibt Telemetry Files"/]
+        Agent["Sync Agent"]
+        Live["Live Reader"]
+
+        Sim -->|Generates| IBT
+        Sim -->|Shared Memory| Live
+        IBT -->|Watches| Agent
     end
 
-    subgraph Server["Server Infrastructure (Docker 24/7)"]
-        N[Nginx Reverse Proxy]
-        C -->|POST /api/sessions/upload| N
-        L -->|WebSocket /ws| N
-        N -->|Static SPA| H[React Dashboard]
-        N -->|REST / WS| G[FastAPI Backend]
-        G -->|Parse & Store| E[(PostgreSQL)]
-        G -->|Pub/Sub| F[(Redis)]
+    subgraph Server["Server Infrastructure"]
+        direction TB
+        Proxy["Nginx Proxy"]
+        UI["React Dashboard"]
+        API["FastAPI Backend"]
+        DB[("PostgreSQL")]
+        Redis[("Redis Cache")]
+
+        Proxy -->|Serves App| UI
+        Proxy <-->|"/api & /ws"| API
+        API <-->|ORM Read/Write| DB
+        API <-->|Pub/Sub Cache| Redis
     end
+
+    Agent -->|HTTP POST batch| Proxy
+    Live <-->|WebSocket stream| Proxy
+
+    classDef client fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1
+    classDef edge fill:#FFF3E0,stroke:#E65100,stroke-width:1.5px,color:#E65100
+    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20
+    classDef data fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1.5px,color:#4A148C
+
+    class Sim,IBT,Agent,Live client
+    class Proxy edge
+    class UI,API app
+    class DB,Redis data
+
+    style Client fill:#FAFAFA,stroke:#90A4AE,stroke-width:1px
+    style Server fill:#FAFAFA,stroke:#90A4AE,stroke-width:1px
 ```
 
 ## Project Structure
@@ -70,15 +97,15 @@ iracing-telemetry/
 
 ---
 
-## Getting Started (Windows 2-Step)
+## Getting Started
 
 ### Prerequisites
 - Python 3.11+
-- Node.js & npm
-- Docker Desktop (for server or full-stack local dev)
+- Node.js & npm *(Optional: only needed for local frontend development)*
+- Docker Desktop *(Optional: only needed for local server development)*
 
 ### Step 1: Initial Setup (Run Once)
-Double-click `setup.bat` in the root folder.
+Double-click **`setup.bat`** in the root folder.
 This automatically configures Python `venv`, installs backend/frontend dependencies, and creates `.env`.
 
 ### Step 2: Running the Platform
@@ -91,15 +118,24 @@ This automatically configures Python `venv`, installs backend/frontend dependenc
 
 ---
 
-## Production Deployment (Server 24/7)
+## Production Deployment
 
-Deploy the entire server stack (PostgreSQL, Redis, FastAPI Backend, React Frontend with Nginx) with a single command:
+Deploy the entire server stack (PostgreSQL, Redis, FastAPI Backend, React Frontend with Nginx) to your VPS/Cloud server with a single command:
 
 ```bash
 docker compose up -d --build
 ```
 
-The web dashboard will be accessible at `http://your-server-ip:8080`.
+The web dashboard will be accessible at `http://your-vps-ip:8080`.
+
+### Connecting Gaming PC to Remote Server
+1. On your Gaming PC, set `SERVER_URL` in `.env`:
+   ```env
+   SERVER_URL=http://your-vps-ip:8080
+   ```
+2. Double-click `run.bat` and select `[4]` or `[6]` to enable silent background autostart on Windows boot.
+
+---
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
