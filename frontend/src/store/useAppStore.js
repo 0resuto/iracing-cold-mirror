@@ -8,8 +8,8 @@ export const useAppStore = create((set) => ({
   hoveredData: null,
   isUserHovering: false,
 
-  setActiveTab: (tab) => set({ activeTab: tab }),
-  setSelectedLap: (lap) => set({ selectedLap: lap }),
+  setActiveTab: (tab) => set({ activeTab: tab, hoveredData: null }),
+  setSelectedLap: (lap) => set({ selectedLap: lap, hoveredData: null }),
   setReferenceLapId: (id) => set({ referenceLapId: id }),
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   setHoveredData: (data) => set({ hoveredData: data }),

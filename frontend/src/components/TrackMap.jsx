@@ -7,7 +7,7 @@ import { useTelemetryData } from '../features/telemetry/useTelemetryData';
 export const TrackMap = React.memo(function TrackMap() {
   const [colorMode, setColorMode] = useState('default');
   const hoveredData = useAppStore((state) => state.hoveredData);
-  const { lapData, referenceData, deltaData, selectedLap } = useTelemetryData();
+  const { lapData, referenceData, deltaData, selectedLap, isLive } = useTelemetryData();
   const lapTime = selectedLap ? selectedLap.lap_time : null;
 
   let progress = 0;
@@ -368,7 +368,12 @@ export const TrackMap = React.memo(function TrackMap() {
       </div>
       
       <div style={{ flex: 1, width: '100%', position: 'relative', overflow: 'hidden', backgroundColor: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--card-border)', marginTop: '8px' }}>
-        {lapTime === undefined || lapTime === null ? (
+        {isLive && (!lapData || lapData.length === 0) ? (
+          <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-3">
+            <span className="w-6 h-6 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin"></span>
+            <span>Waiting for live GPS data...</span>
+          </div>
+        ) : lapTime === undefined || lapTime === null ? (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
             Select a lap to view map
           </div>

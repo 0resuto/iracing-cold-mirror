@@ -6,6 +6,7 @@ import { StatsWidget } from './components/StatsWidget';
 import { useAppStore } from './store/useAppStore';
 import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
 import { Toaster } from 'react-hot-toast';
+import { MapPin, Settings, Clock } from 'lucide-react';
 
 function App() {
   const activeTab = useAppStore(state => state.activeTab);
@@ -50,14 +51,7 @@ function App() {
               </button>
             )}
             <div>
-              {activeTab === 'live' ? (
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-2 text-red-400 font-semibold text-sm">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping inline-block"></span>
-                    Streaming Live Telemetry
-                  </span>
-                </div>
-              ) : activeTab === 'system' ? (
+              {activeTab === 'live' ? null : activeTab === 'system' ? (
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
@@ -74,7 +68,7 @@ function App() {
                   </span>
                   {selectedLap.track_name && (
                     <span className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md text-xs font-medium flex items-center gap-1.5">
-                      <span className="text-zinc-500">📍</span> {selectedLap.track_name}
+                      <MapPin size={14} className="text-zinc-500" /> {selectedLap.track_name}
                     </span>
                   )}
                 </div>
@@ -91,7 +85,7 @@ function App() {
         {activeTab === 'system' ? (
           <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 gap-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 p-8">
             <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-2xl">
-              ⚙️
+              <Settings size={32} className="text-zinc-500" />
             </div>
             <div className="text-center max-w-md">
               <p className="text-lg tracking-wide font-semibold text-zinc-100">System Information Panel</p>
@@ -117,7 +111,7 @@ function App() {
               }}
               className="mt-2 bg-sky-500 hover:bg-sky-400 text-zinc-950 font-semibold px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-sky-500/10 cursor-pointer flex items-center gap-2"
             >
-              <span>⏱️</span> Open History Sidebar
+              <Clock size={16} /> Open History Sidebar
             </button>
           </div>
         ) : (

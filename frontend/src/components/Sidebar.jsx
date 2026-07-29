@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useLiveStore } from '../store/useLiveStore';
 import { useHistoryQuery, useIdealLapQuery, useSystemInfoQuery } from '../api/queries';
+import { Flag, User, Timer, Radio, Settings } from 'lucide-react';
 
 // --- Subcomponents with React.memo for Performance ---
 
@@ -66,7 +67,7 @@ const SessionItem = React.memo(function SessionItem({ session, player, selectedL
         }`}
       >
         <div className="flex items-center gap-2 truncate">
-          <span className="text-xs">🏁</span>
+          <Flag size={14} className="text-zinc-500" />
           <span className="text-xs font-medium truncate">{session.track_name}</span>
         </div>
         <div className="flex items-center gap-2 flex-none">
@@ -132,7 +133,7 @@ const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSe
         }`}
       >
         <span className="flex items-center gap-2">
-          <span>👤</span> {player.name}
+          <User size={14} className="text-zinc-500" /> {player.name}
         </span>
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-mono text-zinc-500">{sessionsCount} sess</span>
@@ -518,7 +519,7 @@ export const Sidebar = React.memo(function Sidebar() {
               activeTab === 'history' ? 'border-sky-400 text-sky-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >
-            ⏱️
+            <Timer size={20} />
           </div>
 
           {/* Live Telemetry Tab */}
@@ -532,7 +533,7 @@ export const Sidebar = React.memo(function Sidebar() {
               activeTab === 'live' ? 'border-red-500 text-red-500' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >
-            📡
+            <Radio size={20} />
           </div>
 
           {/* System & Parameters Tab */}
@@ -546,7 +547,7 @@ export const Sidebar = React.memo(function Sidebar() {
               activeTab === 'system' ? 'border-emerald-400 text-emerald-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >
-            ⚙️
+            <Settings size={20} />
           </div>
         </div>
       </div>
@@ -572,7 +573,7 @@ export const Sidebar = React.memo(function Sidebar() {
                   onChange={(e) => setFilterPlayer(e.target.value)}
                   className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[11px] rounded px-2 py-1 outline-none focus:border-sky-500 cursor-pointer"
                 >
-                  <option value="all">👤 All Drivers</option>
+                  <option value="all">All Drivers</option>
                   {uniquePlayers.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
@@ -584,7 +585,7 @@ export const Sidebar = React.memo(function Sidebar() {
                   onChange={(e) => setFilterTrack(e.target.value)}
                   className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[11px] rounded px-2 py-1 outline-none focus:border-sky-500 cursor-pointer"
                 >
-                  <option value="all">🏁 All Tracks</option>
+                  <option value="all">All Tracks</option>
                   {uniqueTracks.map(t => (
                     <option key={t} value={t}>{t}</option>
                   ))}

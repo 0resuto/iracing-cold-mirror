@@ -24,7 +24,7 @@ export function useLiveTelemetryWS(isLiveActive) {
 
     let ws = null;
     lastSessionTimeRef.current = null;
-    lastUpdateTimestampRef.current = Date.now();
+    lastUpdateTimestampRef.current = 0;
 
     // Periodically check if new telemetry points arrived recently (within 2.5s)
     const statusCheckInterval = setInterval(() => {
