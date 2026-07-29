@@ -9,6 +9,7 @@ const LapItem = React.memo(function LapItem({ lap, player, session, selectedLapI
   const isSelected = selectedLapId === lap.id;
   const isBest = lap.id === bestLapId;
   const timeText = lap.lap_time > 0 ? `${lap.lap_time.toFixed(2)}s` : 'Outlap';
+  const lapLabel = lap.lap_number === 0 ? 'Outlap' : `Lap ${lap.lap_number}`;
 
   return (
     <div
@@ -19,7 +20,7 @@ const LapItem = React.memo(function LapItem({ lap, player, session, selectedLapI
           : 'border-transparent hover:bg-white/5 text-zinc-400'
       }`}
     >
-      <span>Lap {lap.lap_number}</span>
+      <span>{lapLabel}</span>
       <span className={`font-mono font-bold ${isBest ? 'text-purple-400' : 'text-inherit'}`}>
         {timeText}
       </span>

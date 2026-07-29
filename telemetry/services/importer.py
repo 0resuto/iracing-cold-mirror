@@ -50,7 +50,6 @@ def import_ibt_to_db(file_path: str, db_session_factory):
 
     batch = []
 
-    lap = 1
     lap_current_lap_time = 0
     last_lap_dist_pct = 0.0
     lap_last_lap_time = 0.0
@@ -71,19 +70,25 @@ def import_ibt_to_db(file_path: str, db_session_factory):
     db.add(current_session)
     db.commit()
 
-    current_lap = RacingLap(session_id=current_session.id, lap_number=lap, lap_time=0.0)
+    # Read first frame to determine initial iRacing lap number (0 for Outlap, 1 for Lap 1)
+    first_data = reader.read()
+    if first_data is None:
+        db.close()
+        return False
+
+    current_lap_num = first_data.get("lap", 0)
+    current_lap = RacingLap(session_id=current_session.id, lap_number=current_lap_num, lap_time=0.0)
     db.add(current_lap)
     db.commit()
 
-    while True:
-        data = reader.read()
-        if data is None:
-            break
-
+    # Process telemetry frames starting with first_data
+    data = first_data
+    while data is not None:
         lap_current_lap_time = data.get("session_time", 0.0)
 
         if last_lap_dist_pct > 0.8 and data["lap_dist_pct"] < 0.2:
-            if lap_last_lap_time == 0.0:
+            # If lap duration is less than 15s (e.g. spawned near finish line), treat as Outlap (-1.0)
+            if lap_last_lap_time < 15.0 or lap_last_lap_time == 0.0:
                 current_lap.lap_time = -1.0  # Outlap
             else:
                 current_lap.lap_time = lap_last_lap_time
@@ -101,8 +106,17 @@ def import_ibt_to_db(file_path: str, db_session_factory):
 
             current_sector_id = 0
             sector_start_time = lap_current_lap_time
-            lap += 1
-            current_lap = RacingLap(session_id=current_session.id, lap_number=lap, lap_time=0.0)
+
+            # Use iRacing's official lap number if available, otherwise increment
+            iracing_lap = data.get("lap")
+            if iracing_lap is not None and iracing_lap > current_lap_num:
+                current_lap_num = iracing_lap
+            else:
+                current_lap_num += 1
+
+            current_lap = RacingLap(
+                session_id=current_session.id, lap_number=current_lap_num, lap_time=0.0
+            )
             db.add(current_lap)
             db.commit()
 
@@ -173,6 +187,12 @@ def import_ibt_to_db(file_path: str, db_session_factory):
                         logger.warning(f"DB Error: {e}. Retrying in {sleep_time}s...")
                         time.sleep(sleep_time)
             batch.clear()
+
+        data = reader.read()
+
+    if current_lap and current_lap.lap_time == 0.0:
+        current_lap.lap_time = -1.0  # Incomplete lap at end of file
+        db.commit()
 
     if len(batch) > 0:
         db.bulk_save_objects(batch)
