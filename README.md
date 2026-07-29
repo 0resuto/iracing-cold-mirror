@@ -12,11 +12,13 @@ A telemetry analytics platform for iRacing.
 This project collects live telemetry data directly from iRacing, stores historic sessions, and provides a web interface for lap analysis, delta comparisons, and sector breakdowns.
 
 ## Features
-- **Live Telemetry Streaming**: Connects directly to the iRacing simulator memory (via `pyirsdk`) to stream live car telemetry at 60Hz over WebSockets.
-- **HTTP Session Sync Agent**: A background file watcher that automatically detects new `.ibt` files after sessions and uploads them to the server via secure HTTP API.
-- **Delta Analysis**: Real-time delta calculations between your current lap and your reference/all-time best lap.
+- **Live Telemetry Streaming**: Real-time car telemetry dashboard streaming directly from the iRacing simulator.
+- **Session Auto-Sync**: Background agent that automatically detects and uploads `.ibt` telemetry files after sessions.
+- **Delta Analysis**: Real-time delta calculations between your current lap and your reference best lap.
 - **Ideal Lap Calculation**: Automatically stitches together your best sectors to calculate your theoretical perfect lap.
-- **Interactive Track Map**: Dynamic GPS track layout with real-time car position, heading angle, slip vector, and speed/delta heatmap modes.
+- **Interactive Track Map**: Dynamic track layout with real-time car position, heading angle, slip vector, and telemetry heatmaps.
+- **API Security**: Token-based authorization for session upload endpoints.
+- **System Monitoring**: Built-in dashboard panel to view server status, storage metrics, and session activity.
 
 ## System Architecture
 
@@ -40,15 +42,15 @@ flowchart LR
     subgraph Server["Server Infrastructure"]
         direction TB
         Proxy["Nginx Proxy"]
-        UI["React Dashboard"]
         API["FastAPI Backend"]
-        Redis[("Redis Cache")]
+        UI["React Dashboard"]
         DB[("PostgreSQL")]
+        Redis[("Redis Cache")]
 
-        Proxy -->|Serves App| UI
         Proxy <-->|"/api & /ws"| API
-        API <-->|Pub/Sub Cache| Redis
+        Proxy -->|Serves App| UI
         API <-->|ORM Read/Write| DB
+        API <-->|Pub/Sub Cache| Redis
     end
 
     Agent -->|HTTP POST batch| Proxy
@@ -129,10 +131,13 @@ docker compose up -d --build
 The web dashboard will be accessible at `http://your-server-ip:8080`.
 
 ### Connecting Gaming PC to Remote Server
-1. On your Gaming PC, set `SERVER_URL` in `.env`:
+1. On your Gaming PC, configure `SERVER_URL` and optional `API_KEY` in `.env`:
    ```env
    SERVER_URL=http://your-server-ip:8080
+   API_KEY=your_secret_api_key
    ```
+   *(Tip: Generate a random key via `python -c "import secrets; print(secrets.token_hex(16))"`)*
+
 2. Double-click `run.bat` and select `[4]` or `[6]` to enable silent background autostart on Windows boot.
 
 ---
