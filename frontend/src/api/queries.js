@@ -58,3 +58,16 @@ export function useIdealLapQuery(playerId, trackName) {
     staleTime: 1000 * 60 * 5, // Ideal lap refreshes every 5 mins
   });
 }
+
+export function useSystemInfoQuery() {
+  return useQuery({
+    queryKey: ['systemInfo'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/system_info`);
+      if (!res.ok) throw new Error('Failed to fetch system info');
+      return res.json();
+    },
+    refetchInterval: 10000,
+  });
+}
+

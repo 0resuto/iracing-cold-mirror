@@ -57,6 +57,13 @@ function App() {
                     Streaming Live Telemetry
                   </span>
                 </div>
+              ) : activeTab === 'system' ? (
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                    System Overview & Infrastructure Parameters
+                  </span>
+                </div>
               ) : selectedLap ? (
                 <div className="flex items-center gap-3">
                   <span className="text-base font-semibold text-zinc-100">
@@ -81,7 +88,19 @@ function App() {
         </div>
 
         {/* Main Content or Empty State */}
-        {(!selectedLap && activeTab !== 'live') ? (
+        {activeTab === 'system' ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 gap-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 p-8">
+            <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-2xl">
+              ⚙️
+            </div>
+            <div className="text-center max-w-md">
+              <p className="text-lg tracking-wide font-semibold text-zinc-100">System Information Panel</p>
+              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                Use the left sidebar to view live server metrics, database record counts, API authentication status, and last uploaded session details.
+              </p>
+            </div>
+          </div>
+        ) : (!selectedLap && activeTab !== 'live') ? (
           <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 gap-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 p-8">
             <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
               <svg className="w-8 h-8 text-sky-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">

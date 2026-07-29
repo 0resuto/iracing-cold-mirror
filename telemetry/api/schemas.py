@@ -84,3 +84,20 @@ class PlayerResponse(BaseModel):
     sessions: list[SessionResponse] = Field([], description="List of sessions for the player")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class LastUploadInfo(BaseModel):
+    session_id: int
+    track_name: str
+    player_name: str
+    total_laps: int
+
+
+class SystemInfoResponse(BaseModel):
+    status: str
+    database: str
+    auth_enabled: bool
+    total_players: int
+    total_sessions: int
+    total_laps: int
+    last_upload: LastUploadInfo | None = None

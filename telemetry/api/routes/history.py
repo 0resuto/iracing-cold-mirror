@@ -11,8 +11,10 @@ from telemetry.api.schemas import (
     IdealLapResponse,
     LapResponse,
     PlayerResponse,
+    SystemInfoResponse,
     TelemetryResponse,
 )
+from telemetry.config import settings
 from telemetry.db import SessionLocal
 from telemetry.db.models import Lap, Player, Sector, Session, Telemetry
 from telemetry.services.delta import calculate_delta
@@ -167,3 +169,33 @@ async def upload_file(file: UploadFile = File(...)):
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
+
+
+@router.get(
+    "/system_info",
+    response_model=SystemInfoResponse,
+    tags=["System"],
+    summary="Get system information",
+)
+def get_system_info(db=Depends(get_db)):
+    total_players = db.query(func.count(Player.id)).scalar() or 0
+    total_sessions = db.query(func.count(Session.id)).scalar() or 0
+    total_laps = db.query(func.count(Lap.id)).scalar() or 0
+    last_session = db.query(Session).order_by(Session.id.desc()).first()
+    last_upload = None
+    if last_session:
+        last_upload = {
+            "session_id": last_session.id,
+            "track_name": last_session.track_name or "Unknown Track",
+            "player_name": last_session.player.name if last_session.player else "Unknown Player",
+            "total_laps": len(last_session.laps) if last_session.laps else 0,
+        }
+    return SystemInfoResponse(
+        status="ok",
+        database="PostgreSQL 16",
+        auth_enabled=bool(settings.api_key and settings.api_key.strip()),
+        total_players=total_players,
+        total_sessions=total_sessions,
+        total_laps=total_laps,
+        last_upload=last_upload,
+    )

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useLiveStore } from '../store/useLiveStore';
-import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
+import { useHistoryQuery, useIdealLapQuery, useSystemInfoQuery } from '../api/queries';
 
 // --- Subcomponents with React.memo for Performance ---
 
@@ -291,12 +291,102 @@ const LiveStreamPanel = () => {
       {!isStreaming && (
         <div className="text-xs text-amber-400/90 leading-relaxed bg-amber-500/10 p-3 rounded border border-amber-500/20">
           ⚠️ <strong>iRacing isn't running or collector is idle.</strong><br/>
-          Start iRacing live collector script (<code>run_live.bat</code> or <code>run_mock.bat</code>) to view live telemetry stream.
+          Start iRacing live collector script (<code>run.bat</code> or <code>dev/run_dev.bat</code>) to view live telemetry stream.
         </div>
       )}
     </div>
   );
 };
+
+// --- System & Parameters Panel ---
+
+const SystemPanel = () => {
+  const { data: systemInfo, isLoading, isError } = useSystemInfoQuery();
+
+  return (
+    <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto custom-scrollbar">
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">System & Parameters</h2>
+        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-bold">
+          v0.1.0
+        </span>
+      </div>
+
+      {isLoading ? (
+        <div className="text-xs text-zinc-500 animate-pulse">Loading system statistics...</div>
+      ) : isError || !systemInfo ? (
+        <div className="text-xs text-red-500">Failed to connect to server</div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {/* Server Connection Card */}
+          <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 flex flex-col gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Server Infrastructure</span>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-400">Backend API</span>
+              <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                Online
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-400">Database</span>
+              <span className="font-mono text-zinc-300">{systemInfo.database}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-400">API Key Security</span>
+              <span className={`font-semibold ${systemInfo.auth_enabled ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {systemInfo.auth_enabled ? '🔒 Active' : '🔓 Dev Mode'}
+              </span>
+            </div>
+          </div>
+
+          {/* Last Uploaded Session Card */}
+          <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 flex flex-col gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Last Session Upload</span>
+            {systemInfo.last_upload ? (
+              <>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-zinc-400">Track</span>
+                  <span className="font-semibold text-zinc-200">{systemInfo.last_upload.track_name}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-zinc-400">Driver</span>
+                  <span className="text-zinc-300">{systemInfo.last_upload.player_name}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-zinc-400">Laps Uploaded</span>
+                  <span className="font-mono text-sky-400 font-bold">{systemInfo.last_upload.total_laps} laps</span>
+                </div>
+              </>
+            ) : (
+              <div className="text-xs text-zinc-500 italic">No telemetry sessions uploaded yet</div>
+            )}
+          </div>
+
+          {/* Database Stats Card */}
+          <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 flex flex-col gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Storage Metrics</span>
+            <div className="grid grid-cols-3 gap-2 text-center mt-1">
+              <div className="bg-zinc-900 p-2 rounded border border-zinc-800/80">
+                <div className="text-xs text-zinc-500">Drivers</div>
+                <div className="text-base font-bold font-mono text-zinc-200">{systemInfo.total_players}</div>
+              </div>
+              <div className="bg-zinc-900 p-2 rounded border border-zinc-800/80">
+                <div className="text-xs text-zinc-500">Sessions</div>
+                <div className="text-base font-bold font-mono text-sky-400">{systemInfo.total_sessions}</div>
+              </div>
+              <div className="bg-zinc-900 p-2 rounded border border-zinc-800/80">
+                <div className="text-xs text-zinc-500">Laps</div>
+                <div className="text-base font-bold font-mono text-purple-400">{systemInfo.total_laps}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 
 // --- Main Sidebar Component ---
@@ -443,6 +533,20 @@ export const Sidebar = React.memo(function Sidebar() {
           >
             📡
           </div>
+
+          {/* System & Parameters Tab */}
+          <div 
+            title="System & Parameters" 
+            onClick={() => {
+              setActiveTab('system');
+              if (!isOpen) toggleSidebar();
+            }} 
+            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1 transition-colors ${
+              activeTab === 'system' ? 'border-emerald-400 text-emerald-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'
+            }`}
+          >
+            ⚙️
+          </div>
         </div>
       </div>
 
@@ -555,8 +659,10 @@ export const Sidebar = React.memo(function Sidebar() {
             {/* Sectors Widget */}
             <SectorsWidget selectedLap={selectedLap} players={rawPlayers} />
           </>
-        ) : (
+        ) : activeTab === 'live' ? (
           <LiveStreamPanel />
+        ) : (
+          <SystemPanel />
         )}
 
       </div>
