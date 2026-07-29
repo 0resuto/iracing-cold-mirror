@@ -10,10 +10,15 @@ from telemetry.config import settings
 
 def send_file_to_server(file_path: str):
     upload_url = f"{settings.server_url}/api/sessions/upload"
+
+    headers = {}
+    if settings.api_key:
+        headers["X-API-Key"] = settings.api_key
+
     try:
         with open(file_path, "rb") as f:
             files = {"file": (os.path.basename(file_path), f, "application/octet-stream")}
-            response = httpx.post(upload_url, files=files, timeout=60)
+            response = httpx.post(upload_url, files=files, headers=headers, timeout=60)
 
             if response.status_code == 200:
                 print(f"Successfully uploaded: {os.path.basename(file_path)}")

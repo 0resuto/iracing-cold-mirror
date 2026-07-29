@@ -14,7 +14,8 @@ dependencies = [
     "pyyaml",
     "httpx",
     "python-multipart",
-    "pyirsdk"
+    "pyirsdk",
+    "pytest"
 ]
 
 [build-system]

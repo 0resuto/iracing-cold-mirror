@@ -42,13 +42,13 @@ flowchart LR
         Proxy["Nginx Proxy"]
         UI["React Dashboard"]
         API["FastAPI Backend"]
-        DB[("PostgreSQL")]
         Redis[("Redis Cache")]
+        DB[("PostgreSQL")]
 
         Proxy -->|Serves App| UI
         Proxy <-->|"/api & /ws"| API
-        API <-->|ORM Read/Write| DB
         API <-->|Pub/Sub Cache| Redis
+        API <-->|ORM Read/Write| DB
     end
 
     Agent -->|HTTP POST batch| Proxy
@@ -120,18 +120,18 @@ This automatically configures Python `venv`, installs backend/frontend dependenc
 
 ## Production Deployment
 
-Deploy the entire server stack (PostgreSQL, Redis, FastAPI Backend, React Frontend with Nginx) to your VPS/Cloud server with a single command:
+Deploy the entire server stack (PostgreSQL, Redis, FastAPI Backend, React Frontend with Nginx) to your server with a single command:
 
 ```bash
 docker compose up -d --build
 ```
 
-The web dashboard will be accessible at `http://your-vps-ip:8080`.
+The web dashboard will be accessible at `http://your-server-ip:8080`.
 
 ### Connecting Gaming PC to Remote Server
 1. On your Gaming PC, set `SERVER_URL` in `.env`:
    ```env
-   SERVER_URL=http://your-vps-ip:8080
+   SERVER_URL=http://your-server-ip:8080
    ```
 2. Double-click `run.bat` and select `[4]` or `[6]` to enable silent background autostart on Windows boot.
 

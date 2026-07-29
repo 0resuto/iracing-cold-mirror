@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
 
-from telemetry.api.deps import get_db
+from telemetry.api.deps import get_db, verify_api_key
 from telemetry.api.schemas import (
     DeltaPointResponse,
     IdealLapResponse,
@@ -145,8 +145,9 @@ def get_history(skip: int = 0, limit: int = 10, db=Depends(get_db)):
     "/sessions/upload",
     tags=["Session"],
     summary="Upload and import .ibt telemetry file",
+    dependencies=[Depends(verify_api_key)],
 )
-async def upload_file(file: UploadFile = File(...), db=Depends(get_db)):
+async def upload_file(file: UploadFile = File(...)):
     if not file.filename.endswith(".ibt"):
         raise HTTPException(status_code=400, detail="Only .ibt files are allowed")
 

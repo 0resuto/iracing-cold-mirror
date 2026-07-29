@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     database_url: str = "postgresql://iracing:iracing_local@localhost:5432/telemetry"
     server_url: str = "http://localhost:8000"
+    api_key: str | None = None
 
     postgres_user: str = "iracing"
     postgres_password: str = "iracing_local"
