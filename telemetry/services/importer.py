@@ -94,7 +94,7 @@ def import_ibt_to_db(file_path: str, db_session_factory):
                 current_lap.lap_time = lap_last_lap_time
             db.commit()
 
-            current_sector_time = lap_current_lap_time - sector_start_time
+            current_sector_time = lap_last_lap_time - sector_start_time
 
             new_sector = Sector(
                 lap_id=current_lap.id,
@@ -105,7 +105,7 @@ def import_ibt_to_db(file_path: str, db_session_factory):
             db.commit()
 
             current_sector_id = 0
-            sector_start_time = lap_current_lap_time
+            sector_start_time = 0.0
 
             # Use iRacing's official lap number if available, otherwise increment
             iracing_lap = data.get("lap")

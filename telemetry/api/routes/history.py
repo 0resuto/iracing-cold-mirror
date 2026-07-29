@@ -76,7 +76,10 @@ def get_ideal_lap(player_id: int, track_name: str, db=Depends(get_db)):
         .join(Lap)
         .join(Session)
         .filter(
-            Session.player_id == player_id, Session.track_name == track_name, Sector.sector_time > 0
+            Session.player_id == player_id,
+            Session.track_name == track_name,
+            Lap.lap_time > 0,
+            Sector.sector_time > 0,
         )
         .group_by(Sector.sector_number)
         .order_by(Sector.sector_number.asc())
