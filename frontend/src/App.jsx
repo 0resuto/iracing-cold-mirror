@@ -18,7 +18,7 @@ function App() {
   useLiveTelemetryWS(activeTab === 'live');
 
   return (
-    <div className="w-full h-screen flex overflow-hidden bg-zinc-950 text-zinc-100">
+    <div className="w-full h-screen flex overflow-hidden bg-zinc-950 text-zinc-100 relative">
       <Toaster 
         position="bottom-right"
         toastOptions={{
@@ -28,39 +28,50 @@ function App() {
         }} 
       />
       
-      {/* Left Sidebar */}
+      {/* Mobile Backdrop Overlay */}
+      {isSidebarOpen && (
+        <div 
+          onClick={toggleSidebar} 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+        />
+      )}
+
+      {/* Left Sidebar (Desktop + Mobile Drawer) */}
       <div 
-        className="flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-zinc-800"
-        style={{ width: isSidebarOpen ? '320px' : '64px' }}
+        className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-zinc-800 ${
+          isSidebarOpen 
+            ? 'fixed md:relative inset-y-0 left-0 w-[360px] max-w-[88vw] z-50 md:z-auto shadow-2xl md:shadow-none' 
+            : 'relative w-[64px]'
+        }`}
       >
         <Sidebar />
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden p-6 gap-6 bg-zinc-950">
+      <div className="flex-1 flex flex-col h-full overflow-hidden p-4 md:p-6 gap-4 md:gap-6 bg-zinc-950 min-w-0">
         
         {/* Header */}
         <div className="flex items-center justify-between flex-none pb-2 border-b border-zinc-800/80">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {!isSidebarOpen && (
               <button 
                 onClick={toggleSidebar}
-                className="p-1.5 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all text-xs flex items-center gap-1.5 cursor-pointer"
+                className="p-1.5 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all text-xs flex items-center gap-1.5 cursor-pointer flex-none"
                 title="Open Sidebar"
               >
                 <span>▶</span>
               </button>
             )}
-            <div>
+            <div className="min-w-0 truncate">
               {activeTab === 'live' ? null : activeTab === 'system' ? (
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                  <span className="flex items-center gap-2 text-emerald-400 font-semibold text-sm truncate">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block flex-none"></span>
                     System Overview & Infrastructure Parameters
                   </span>
                 </div>
               ) : selectedLap ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-base font-semibold text-zinc-100">
                     Lap {selectedLap.lap_number}
                   </span>
@@ -68,13 +79,13 @@ function App() {
                     {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Incomplete Lap'}
                   </span>
                   {selectedLap.track_name && (
-                    <span className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md text-xs font-medium flex items-center gap-1.5">
-                      <MapPin size={14} className="text-zinc-500" /> {selectedLap.track_name}
+                    <span className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md text-xs font-medium flex items-center gap-1.5 truncate">
+                      <MapPin size={14} className="text-zinc-500 flex-none" /> {selectedLap.track_name}
                     </span>
                   )}
                 </div>
               ) : (
-                <div className="text-zinc-400 text-sm font-medium tracking-wide">
+                <div className="text-zinc-400 text-sm font-medium tracking-wide truncate">
                   Select a lap from history to begin analysis
                 </div>
               )}
@@ -116,18 +127,18 @@ function App() {
             </button>
           </div>
         ) : (
-          <div className="flex flex-1 gap-6 min-h-0 w-full overflow-hidden">
+          <div className="flex flex-1 gap-6 min-h-0 w-full overflow-hidden flex-col md:flex-row">
               {/* Left Column: Charts */}
               <div className="flex-[2] min-w-0 flex flex-col h-full">
                 <TelemetryChart />
               </div>
               
               {/* Right Column: Track & Stats */}
-            <div className="flex-1 min-w-[380px] flex flex-col gap-6 overflow-y-auto [scrollbar-gutter:stable] h-full pr-2 custom-scrollbar">
-                <div className="flex-1 flex flex-col min-h-[350px] bg-zinc-900 rounded-lg border border-zinc-800 shadow-xl overflow-hidden relative">
+              <div className="flex-1 min-w-0 md:min-w-[340px] flex flex-col gap-6 overflow-y-auto [scrollbar-gutter:stable] h-full pr-1 custom-scrollbar">
+                <div className="flex-1 flex flex-col min-h-[300px] bg-zinc-900 rounded-lg border border-zinc-800 shadow-xl overflow-hidden relative">
                     <TrackMap />
-                  </div>
-                  <div className="flex-none p-0 overflow-visible">
+                </div>
+                <div className="flex-none p-0 overflow-visible">
                   <StatsWidget />
                 </div>
               </div>

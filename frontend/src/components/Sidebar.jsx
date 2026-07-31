@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useLiveStore } from '../store/useLiveStore';
 import { useHistoryQuery, useIdealLapQuery, useSystemInfoQuery } from '../api/queries';
-import { Flag, User, Timer, Radio, Settings, Car, Calendar, Clock, ChevronDown, ChevronRight } from 'lucide-react';
+import { Flag, User, Timer, Radio, Settings, Car, Calendar, Clock, ChevronDown, ChevronRight, Award, Search, X } from 'lucide-react';
 
 // --- Helper Functions ---
 
@@ -33,26 +33,36 @@ const formatSessionTime = (startTimeStr, durationSec, createdAtStr) => {
 
 // --- Tree Level 4: Lap Item ---
 
-const LapItem = React.memo(function LapItem({ lap, player, trackName, selectedLapId, bestLapId, setSelectedLap }) {
+const LapItem = React.memo(function LapItem({ lap, player, trackName, selectedLapId, bestLapId, setSelectedLap, onSelectLap }) {
   const isSelected = selectedLapId === lap.id;
   const isBest = lap.id === bestLapId;
   const timeText = lap.lap_time > 0 ? `${lap.lap_time.toFixed(2)}s` : 'Outlap';
   const lapLabel = lap.lap_number === 0 ? 'Outlap' : `Lap ${lap.lap_number}`;
 
+  const handleClick = () => {
+    setSelectedLap({ ...lap, player_id: player.id, track_name: trackName });
+    if (onSelectLap) onSelectLap();
+  };
+
   return (
     <div
-      onClick={() => setSelectedLap({ ...lap, player_id: player.id, track_name: trackName })}
-      className={`flex justify-between items-center px-2.5 py-1 my-0.5 text-xs cursor-pointer border-l-2 rounded-r transition-all ${
+      onClick={handleClick}
+      className={`group flex justify-between items-center px-2.5 py-1.5 my-0.5 text-xs cursor-pointer rounded-r transition-all ${
         isSelected
-          ? 'border-sky-400 bg-sky-400/15 text-zinc-100 font-medium shadow-sm'
-          : 'border-transparent hover:bg-white/5 text-zinc-400'
+          ? 'bg-sky-500/20 text-sky-200 font-semibold border-l-4 border-sky-400 shadow-sm'
+          : 'hover:bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 border-l-2 border-transparent'
       }`}
     >
-      <span className="flex items-center gap-1.5">
-        <Timer size={12} className={isSelected ? 'text-sky-400' : 'text-zinc-500'} />
-        <span>{lapLabel}</span>
-      </span>
-      <span className={`font-mono font-bold text-[11px] ${isBest ? 'text-purple-400' : 'text-inherit'}`}>
+      <div className="flex items-center gap-2 min-w-0">
+        <Timer size={13} className={isSelected ? 'text-sky-400 flex-none' : 'text-zinc-500 group-hover:text-zinc-400 flex-none'} />
+        <span className="truncate">{lapLabel}</span>
+        {isBest && (
+          <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 flex-none">
+            <Award size={10} /> BEST
+          </span>
+        )}
+      </div>
+      <span className={`font-mono font-bold text-xs flex-none ml-2 ${isBest ? 'text-purple-400' : isSelected ? 'text-sky-300' : 'text-zinc-300'}`}>
         {timeText}
       </span>
     </div>
@@ -61,7 +71,7 @@ const LapItem = React.memo(function LapItem({ lap, player, trackName, selectedLa
 
 // --- Tree Level 3: Session Item ---
 
-const SessionItem = React.memo(function SessionItem({ session, player, trackName, selectedLapId, setSelectedLap }) {
+const SessionItem = React.memo(function SessionItem({ session, player, trackName, selectedLapId, setSelectedLap, onSelectLap }) {
   const hasSelected = useMemo(() => {
     return session.laps?.some(l => l.id === selectedLapId) ?? false;
   }, [session.laps, selectedLapId]);
@@ -93,36 +103,38 @@ const SessionItem = React.memo(function SessionItem({ session, player, trackName
   const carName = session.car_name || 'Unknown Car';
 
   return (
-    <div className="flex flex-col border-l border-zinc-800/80 my-1 ml-2 pl-2">
-      {/* Session Header Card */}
+    <div className="flex flex-col ml-2.5 pl-2.5 border-l-2 border-emerald-500/30 my-1 relative min-w-0">
+      {/* Session Card Header */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex flex-col gap-1.5 p-2.5 rounded-md cursor-pointer border transition-all ${
+        className={`flex flex-col gap-1.5 p-2 rounded-md cursor-pointer border transition-all ${
           isOpen
-            ? 'bg-zinc-900/90 border-zinc-700/80 text-zinc-100 shadow-sm'
-            : 'bg-zinc-950/40 border-zinc-800/50 hover:border-zinc-700/50 hover:bg-zinc-900/40 text-zinc-400'
+            ? 'bg-zinc-900 border-emerald-500/40 text-zinc-100 shadow-md'
+            : 'bg-zinc-950/60 border-zinc-800/80 hover:border-zinc-700 text-zinc-400 hover:bg-zinc-900/50'
         }`}
       >
-        <div className="flex items-center justify-between text-xs font-medium">
-          <div className="flex items-center gap-1.5 truncate">
-            <Calendar size={13} className="text-sky-400 flex-none" />
+        <div className="flex items-center justify-between text-xs font-semibold min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0 truncate">
+            <Calendar size={13} className="text-emerald-400 flex-none" />
             <span className="truncate text-zinc-200">{date}</span>
-            {timeRange && <span className="text-[10px] font-mono text-zinc-500">({timeRange})</span>}
+            {timeRange && <span className="text-[10px] font-mono text-zinc-500 font-normal truncate">({timeRange})</span>}
           </div>
-          <div className="flex items-center gap-1.5 flex-none">
-            <span className="text-[10px] font-mono text-zinc-500">{laps.length} laps</span>
-            {isOpen ? <ChevronDown size={14} className="text-zinc-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
+          <div className="flex items-center gap-1.5 flex-none ml-1">
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
+              {laps.length} laps
+            </span>
+            {isOpen ? <ChevronDown size={14} className="text-emerald-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
           </div>
         </div>
 
         {/* Sub-info: Car & Duration */}
-        <div className="flex items-center justify-between text-[11px] pt-0.5">
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-500/10 border border-sky-500/20 text-sky-300 font-mono text-[10px] truncate max-w-[170px]">
-            <Car size={11} className="flex-none text-sky-400" />
+        <div className="flex items-center justify-between text-[11px] min-w-0 gap-1">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-mono text-[10px] truncate flex-1 min-w-0">
+            <Car size={11} className="flex-none text-emerald-400" />
             <span className="truncate">{carName}</span>
           </span>
           {duration && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-zinc-400">
+            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-zinc-400 flex-none">
               <Clock size={10} className="text-zinc-500" />
               {duration}
             </span>
@@ -130,11 +142,11 @@ const SessionItem = React.memo(function SessionItem({ session, player, trackName
         </div>
       </div>
 
-      {/* Laps List */}
+      {/* Laps List Level 4 */}
       {isOpen && (
-        <div className="flex flex-col border-l border-zinc-800/60 my-1 ml-2 pl-1.5 bg-black/20 rounded-r py-1">
+        <div className="flex flex-col ml-2 pl-2 border-l-2 border-amber-500/30 my-1 py-1 bg-black/30 rounded-r min-w-0">
           {laps.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-zinc-500 italic">No laps recorded yet.</div>
+            <div className="px-3 py-2 text-xs text-zinc-500 italic">No laps recorded.</div>
           ) : (
             <>
               {visibleLaps.map(lap => (
@@ -146,6 +158,7 @@ const SessionItem = React.memo(function SessionItem({ session, player, trackName
                   selectedLapId={selectedLapId} 
                   bestLapId={bestLapId} 
                   setSelectedLap={setSelectedLap} 
+                  onSelectLap={onSelectLap}
                 />
               ))}
               {hiddenCount > 0 && (
@@ -166,7 +179,7 @@ const SessionItem = React.memo(function SessionItem({ session, player, trackName
 
 // --- Tree Level 2: Track Item ---
 
-const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, selectedLapId, setSelectedLap }) {
+const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, selectedLapId, setSelectedLap, onSelectLap }) {
   const hasSelected = useMemo(() => {
     return sessions.some(s => s.laps?.some(l => l.id === selectedLapId));
   }, [sessions, selectedLapId]);
@@ -182,29 +195,31 @@ const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, s
   }, [sessions]);
 
   return (
-    <div className="flex flex-col border-l border-zinc-800/80 my-1 ml-2 pl-2">
+    <div className="flex flex-col ml-2 pl-2 border-l-2 border-purple-500/40 my-1 relative min-w-0">
       {/* Track Header */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3 py-2 rounded cursor-pointer font-medium text-xs transition-colors ${
-          isOpen ? 'bg-zinc-800/60 text-zinc-100' : 'hover:bg-zinc-800/30 text-zinc-300'
+        className={`flex justify-between items-center px-2.5 py-1.5 rounded-md cursor-pointer font-semibold text-xs transition-all min-w-0 ${
+          isOpen 
+            ? 'bg-purple-500/10 border border-purple-500/30 text-purple-200 shadow-sm' 
+            : 'bg-zinc-900/60 border border-zinc-800/80 hover:bg-zinc-800/50 text-zinc-300'
         }`}
       >
-        <span className="flex items-center gap-2 truncate">
-          <Flag size={14} className="text-purple-400 flex-none" />
+        <span className="flex items-center gap-1.5 min-w-0 truncate">
+          <Flag size={13} className="text-purple-400 flex-none" />
           <span className="truncate">{trackName}</span>
         </span>
-        <div className="flex items-center gap-2 flex-none">
-          <span className="text-[10px] font-mono text-zinc-500">
-            {sessions.length} {sessions.length === 1 ? 'sess' : 'sess'} · {totalLaps} laps
+        <div className="flex items-center gap-1.5 flex-none ml-1">
+          <span className="text-[10px] font-mono text-purple-300/80 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
+            {sessions.length} sess · {totalLaps} laps
           </span>
-          {isOpen ? <ChevronDown size={14} className="text-zinc-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
+          {isOpen ? <ChevronDown size={14} className="text-purple-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
         </div>
       </div>
 
-      {/* Sessions List */}
+      {/* Sessions List Level 3 */}
       {isOpen && (
-        <div className="flex flex-col">
+        <div className="flex flex-col min-w-0">
           {sessions.map(session => (
             <SessionItem 
               key={session.id} 
@@ -213,6 +228,7 @@ const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, s
               trackName={trackName}
               selectedLapId={selectedLapId} 
               setSelectedLap={setSelectedLap} 
+              onSelectLap={onSelectLap}
             />
           ))}
         </div>
@@ -223,7 +239,7 @@ const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, s
 
 // --- Tree Level 1: Driver / Player Item ---
 
-const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSelectedLap }) {
+const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSelectedLap, onSelectLap }) {
   const hasSelected = useMemo(() => {
     return player.sessions?.some(s => s.laps?.some(l => l.id === selectedLapId)) ?? false;
   }, [player.sessions, selectedLapId]);
@@ -249,29 +265,29 @@ const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSe
   const tracksCount = Object.keys(trackGroups).length;
 
   return (
-    <div className="flex flex-col bg-zinc-950/80 border border-zinc-800/80 rounded-lg overflow-hidden shadow-sm">
-      {/* Player Header */}
+    <div className="flex flex-col bg-zinc-950 border-l-4 border-sky-500 border-y border-r border-zinc-800 rounded-lg overflow-hidden shadow-md min-w-0">
+      {/* Player Header Card */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3.5 py-2.5 cursor-pointer font-semibold text-xs transition-colors ${
-          isOpen ? 'bg-zinc-800 text-zinc-100' : 'hover:bg-zinc-800/50 text-zinc-200'
+        className={`flex justify-between items-center px-3 py-2 cursor-pointer font-bold text-xs transition-colors min-w-0 ${
+          isOpen ? 'bg-zinc-800/90 text-zinc-100' : 'hover:bg-zinc-800/50 text-zinc-200'
         }`}
       >
-        <span className="flex items-center gap-2">
-          <User size={15} className="text-sky-400" />
-          <span>{player.name}</span>
+        <span className="flex items-center gap-2 min-w-0 truncate">
+          <User size={15} className="text-sky-400 flex-none" />
+          <span className="text-sky-100 truncate">{player.name}</span>
         </span>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+        <div className="flex items-center gap-1.5 flex-none ml-1">
+          <span className="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
             {tracksCount} tracks · {sessionsCount} sess
           </span>
-          {isOpen ? <ChevronDown size={14} className="text-zinc-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
+          {isOpen ? <ChevronDown size={14} className="text-sky-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
         </div>
       </div>
       
-      {/* Tracks List */}
+      {/* Tracks List Level 2 */}
       {isOpen && (
-        <div className="flex flex-col p-1.5 bg-black/40">
+        <div className="flex flex-col p-1.5 bg-black/50 min-w-0">
           {sessionsCount === 0 ? (
             <div className="px-4 py-2 text-xs text-zinc-500 italic">No sessions yet.</div>
           ) : (
@@ -283,6 +299,7 @@ const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSe
                 player={player} 
                 selectedLapId={selectedLapId} 
                 setSelectedLap={setSelectedLap} 
+                onSelectLap={onSelectLap}
               />
             ))
           )}
@@ -330,8 +347,8 @@ const SectorsWidget = React.memo(function SectorsWidget({ selectedLap, players }
   if (!selectedLap?.sectors?.length) return null;
 
   return (
-    <div className="p-3 border-t border-zinc-800 bg-zinc-950 flex-none flex flex-col">
-      <div className="flex justify-between items-center mb-2">
+    <div className="p-3 border-t border-zinc-800 bg-zinc-950 flex-none flex flex-col min-w-0">
+      <div className="flex justify-between items-center mb-2 min-w-0">
         <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">Sectors</h3>
         <div className="flex gap-1 text-[10px]">
           <button 
@@ -357,7 +374,7 @@ const SectorsWidget = React.memo(function SectorsWidget({ selectedLap, players }
       
       <div className="flex flex-col gap-1 overflow-y-auto max-h-[140px] custom-scrollbar pr-1">
         {displaySectors.map(s => (
-          <div key={s.id || s.sector_number} className="flex justify-between items-center text-xs bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800/80">
+          <div key={s.id || s.sector_number} className="flex justify-between items-center text-xs bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800/80 min-w-0">
             <span className="text-zinc-400 font-medium">Sector {s.sector_number}</span>
             <div className="flex items-center gap-3">
               <span className="font-mono text-zinc-200">{s.sector_time.toFixed(2)}s</span>
@@ -382,7 +399,7 @@ const LiveStreamPanel = () => {
   const latestPoint = liveLapData[liveLapData.length - 1];
 
   return (
-    <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto custom-scrollbar">
+    <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto custom-scrollbar min-w-0">
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">Live Stream</h2>
         {isStreaming ? (
@@ -438,7 +455,7 @@ const SystemPanel = () => {
   const { data: systemInfo, isLoading, isError } = useSystemInfoQuery();
 
   return (
-    <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto custom-scrollbar">
+    <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto custom-scrollbar min-w-0">
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">System & Parameters</h2>
         <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-bold">
@@ -540,7 +557,8 @@ export const Sidebar = React.memo(function Sidebar() {
   const toggleSidebar = useAppStore(state => state.toggleSidebar);
   const selectedLapId = selectedLap?.id || null;
 
-  // Filter & Sort State
+  // Filter & Search State
+  const [searchQuery, setSearchQuery] = useState('');
   const [filterPlayer, setFilterPlayer] = useState('all');
   const [filterTrack, setFilterTrack] = useState('all');
   const [filterCar, setFilterCar] = useState('all');
@@ -548,6 +566,13 @@ export const Sidebar = React.memo(function Sidebar() {
 
   const { data: rawPlayers = [], isLoading, isError } = useHistoryQuery();
   const { data: idealLap } = useIdealLapQuery(selectedLap?.player_id, selectedLap?.track_name);
+
+  // Auto-close sidebar on mobile when selecting a lap
+  const handleSelectLapMobile = () => {
+    if (window.innerWidth < 768 && isOpen) {
+      toggleSidebar();
+    }
+  };
 
   // Extract unique players, tracks, and cars
   const { uniquePlayers, uniqueTracks, uniqueCars } = useMemo(() => {
@@ -574,20 +599,30 @@ export const Sidebar = React.memo(function Sidebar() {
   const processedPlayers = useMemo(() => {
     if (!rawPlayers || rawPlayers.length === 0) return [];
 
+    const q = searchQuery.trim().toLowerCase();
+
     let filtered = rawPlayers.map(p => {
-      // Filter by player
+      // Filter by player dropdown
       if (filterPlayer !== 'all' && String(p.id) !== String(filterPlayer)) {
         return null;
       }
 
-      // Filter sessions by track and car
+      // Filter sessions by track, car, and text search
       let sessions = (p.sessions || []).filter(s => {
         if (filterTrack !== 'all' && s.track_name !== filterTrack) return false;
         if (filterCar !== 'all' && (s.car_name || 'Unknown Car') !== filterCar) return false;
+        
+        if (q) {
+          const matchDriver = p.name.toLowerCase().includes(q);
+          const matchTrack = (s.track_name || '').toLowerCase().includes(q);
+          const matchCar = (s.car_name || '').toLowerCase().includes(q);
+          if (!matchDriver && !matchTrack && !matchCar) return false;
+        }
+
         return true;
       });
 
-      if (sessions.length === 0 && (filterTrack !== 'all' || filterCar !== 'all')) return null;
+      if (sessions.length === 0 && (filterTrack !== 'all' || filterCar !== 'all' || q)) return null;
 
       // Helper to compute best lap time of session
       const getBestTime = (session) => {
@@ -626,7 +661,7 @@ export const Sidebar = React.memo(function Sidebar() {
     }
 
     return filtered;
-  }, [rawPlayers, filterPlayer, filterTrack, filterCar, sortBy]);
+  }, [rawPlayers, filterPlayer, filterTrack, filterCar, sortBy, searchQuery]);
 
   // Auto-select latest session on load
   useEffect(() => {
@@ -640,10 +675,10 @@ export const Sidebar = React.memo(function Sidebar() {
   }, [rawPlayers, selectedLapId, setSelectedLap]);
 
   return (
-    <div className="flex h-full w-full bg-zinc-900">
+    <div className="flex h-full w-full bg-zinc-900 min-w-0">
       
       {/* Icon Nav Bar */}
-      <div className="w-16 min-w-[64px] border-r border-zinc-800 flex flex-col items-center py-4 bg-zinc-950 flex-none">
+      <div className="w-16 min-w-[64px] border-r border-zinc-800 flex flex-col items-center py-4 bg-zinc-950 flex-none z-10">
         <button 
           onClick={toggleSidebar} 
           className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-none cursor-pointer text-xs p-2 mb-8 rounded w-8 h-8 flex items-center justify-center transition-colors"
@@ -695,30 +730,50 @@ export const Sidebar = React.memo(function Sidebar() {
         </div>
       </div>
 
-      {/* Expanded Content */}
-      <div className={`flex-1 flex-col min-w-[270px] overflow-hidden ${isOpen ? 'flex' : 'hidden'}`}>
+      {/* Expanded Content Area */}
+      <div className={`flex-1 flex-col overflow-hidden min-w-0 ${isOpen ? 'flex' : 'hidden'}`}>
         
         {activeTab === 'history' ? (
           <>
-            {/* Filter & Sort Controls */}
-            <div className="p-3 bg-zinc-950 border-b border-zinc-800 flex-none flex flex-col gap-2">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">Telemetry Explorer</h2>
-                <span className="text-[10px] font-mono text-zinc-500">
+            {/* Filter & Search Header Controls */}
+            <div className="p-3 bg-zinc-950 border-b border-zinc-800 flex-none flex flex-col gap-2 min-w-0">
+              <div className="flex justify-between items-center min-w-0">
+                <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-bold m-0 truncate">Telemetry Explorer</h2>
+                <span className="text-[10px] font-mono text-zinc-500 flex-none">
                   {processedPlayers.reduce((acc, p) => acc + (p.sessions?.length || 0), 0)} sessions
                 </span>
               </div>
 
+              {/* Instant Search Bar */}
+              <div className="relative flex items-center min-w-0">
+                <Search size={13} className="absolute left-2.5 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="Search driver, track, car..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-md pl-8 pr-7 py-1.5 outline-none focus:border-sky-500 transition-colors"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 text-zinc-500 hover:text-zinc-300 p-0.5 cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+
               {/* Dropdown Filters (3 Columns: Driver, Track, Car) */}
-              <div className="grid grid-cols-3 gap-1">
+              <div className="grid grid-cols-3 gap-1 min-w-0">
                 {/* Driver Filter */}
                 <select
                   value={filterPlayer}
                   onChange={(e) => setFilterPlayer(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1.5 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
                   title="Filter by Driver"
                 >
-                  <option value="all">All Drivers</option>
+                  <option value="all">Drivers ({uniquePlayers.length})</option>
                   {uniquePlayers.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
@@ -728,10 +783,10 @@ export const Sidebar = React.memo(function Sidebar() {
                 <select
                   value={filterTrack}
                   onChange={(e) => setFilterTrack(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1.5 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
                   title="Filter by Track"
                 >
-                  <option value="all">All Tracks</option>
+                  <option value="all">Tracks ({uniqueTracks.length})</option>
                   {uniqueTracks.map(t => (
                     <option key={t} value={t}>{t}</option>
                   ))}
@@ -741,10 +796,10 @@ export const Sidebar = React.memo(function Sidebar() {
                 <select
                   value={filterCar}
                   onChange={(e) => setFilterCar(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1.5 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
                   title="Filter by Car"
                 >
-                  <option value="all">All Cars</option>
+                  <option value="all">Cars ({uniqueCars.length})</option>
                   {uniqueCars.map(c => (
                     <option key={c} value={c}>{c}</option>
                   ))}
@@ -752,9 +807,9 @@ export const Sidebar = React.memo(function Sidebar() {
               </div>
 
               {/* Sort Pills */}
-              <div className="flex items-center justify-between text-[10px] mt-0.5">
-                <span className="text-zinc-500 font-medium">Sort by:</span>
-                <div className="flex gap-1">
+              <div className="flex items-center justify-between text-[10px] mt-0.5 min-w-0">
+                <span className="text-zinc-500 font-medium flex-none">Sort:</span>
+                <div className="flex gap-1 flex-none">
                   <button 
                     onClick={() => setSortBy('newest')} 
                     className={`px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer ${
@@ -784,7 +839,7 @@ export const Sidebar = React.memo(function Sidebar() {
             </div>
 
             {/* History Tree List */}
-            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-2.5 custom-scrollbar min-w-0">
               {isLoading ? (
                 <div className="text-xs text-zinc-500 animate-pulse">Loading history tree...</div>
               ) : isError ? (
@@ -794,13 +849,14 @@ export const Sidebar = React.memo(function Sidebar() {
                   No matching sessions found
                 </div>
               ) : (
-                <div className="flex flex-col gap-2.5">
+                <div className="flex flex-col gap-2.5 min-w-0">
                   {processedPlayers.map(player => (
                     <PlayerItem 
                       key={player.id} 
                       player={player} 
                       selectedLapId={selectedLapId} 
                       setSelectedLap={setSelectedLap} 
+                      onSelectLap={handleSelectLapMobile}
                     />
                   ))}
                 </div>
@@ -809,10 +865,10 @@ export const Sidebar = React.memo(function Sidebar() {
 
             {/* Ideal Lap Section */}
             {idealLap && (
-              <div className="p-3 border-t border-zinc-800 bg-black/10 flex-none">
-                 <div className="flex justify-between items-center">
-                    <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">Theoretical Best</h3>
-                    <span className="font-mono font-bold text-sky-400 text-base">
+              <div className="p-3 border-t border-zinc-800 bg-black/10 flex-none min-w-0">
+                 <div className="flex justify-between items-center min-w-0">
+                    <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0 truncate">Theoretical Best</h3>
+                    <span className="font-mono font-bold text-sky-400 text-base flex-none">
                       {idealLap.ideal_lap_time.toFixed(2)}s
                     </span>
                  </div>
