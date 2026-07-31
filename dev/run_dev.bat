@@ -112,7 +112,6 @@ echo.
 echo Infrastructure started!
 echo  - Postgres: localhost:5432
 echo  - Redis:    localhost:6379
-echo  - pgAdmin:  http://localhost:5050 (admin@admin.com / admin)
 pause
 goto MENU
 

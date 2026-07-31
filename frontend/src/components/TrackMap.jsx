@@ -341,6 +341,10 @@ export const TrackMap = React.memo(function TrackMap() {
 
     // Initial center is handled by viewBox, but we can reset zoom if lap changes
     svg.call(zoomBehavior.transform, zoomIdentity);
+
+    return () => {
+      svg.on('.zoom', null);
+    };
   }, [svgData]);
 
   const getStrokeWidth = () => {

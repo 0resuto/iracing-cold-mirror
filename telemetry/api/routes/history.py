@@ -1,8 +1,8 @@
 import os
 import tempfile
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from sqlalchemy import func
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from sqlalchemy import func, text
 from sqlalchemy.orm import selectinload
 
 from telemetry.api.deps import get_db, verify_api_key
@@ -30,17 +30,31 @@ router = APIRouter()
     summary="Get lap telemetry",
 )
 def get_lap_telemetry(lap_id: int, db=Depends(get_db), max_points: int = 2000):
-    data_objects = (
-        db.query(Telemetry)
-        .filter(Telemetry.lap_id == lap_id)
-        .order_by(Telemetry.session_time.asc())
-        .limit(100000)
+    total = db.query(func.count(Telemetry.id)).filter(Telemetry.lap_id == lap_id).scalar()
+    if total == 0:
+        return []
+    step = max(1, total // max_points)
+    rows = (
+        db.execute(
+            text("""
+            SELECT id FROM (
+                SELECT id, ROW_NUMBER() OVER (ORDER BY session_time ASC) as rn
+                FROM telemetry WHERE lap_id = :lap_id
+            ) sub
+            WHERE (rn - 1) % :step = 0
+        """),
+            {"lap_id": lap_id, "step": step},
+        )
+        .scalars()
         .all()
     )
 
-    step = max(1, len(data_objects) // max_points)
-
-    return data_objects[::step]
+    return (
+        db.query(Telemetry)
+        .filter(Telemetry.id.in_(rows))
+        .order_by(Telemetry.session_time.asc())
+        .all()
+    )
 
 
 @router.get(
@@ -139,7 +153,7 @@ def get_lap_delta(lap_id: int, reference_lap_id: int, db=Depends(get_db)):
     tags=["Players"],
     summary="Get all players history",
 )
-def get_history(skip: int = 0, limit: int = 10, db=Depends(get_db)):
+def get_history(skip: int = 0, limit: int = Query(10, le=100), db=Depends(get_db)):
     players = (
         db.query(Player).options(selectinload(Player.sessions)).offset(skip).limit(limit).all()
     )
@@ -157,8 +171,8 @@ def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only .ibt files are allowed")
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ibt") as tmp:
-        content = file.file.read()
-        tmp.write(content)
+        while chunk := file.file.read(1024 * 1024):
+            tmp.write(chunk)
         tmp_path = tmp.name
 
     try:

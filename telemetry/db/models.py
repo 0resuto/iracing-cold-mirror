@@ -26,7 +26,7 @@ class Session(Base):
     car_name = Column(String, nullable=True)
     start_time = Column(DateTime, nullable=True, default=datetime.utcnow)
     duration_seconds = Column(Float, nullable=True, default=0.0)
-    laps = relationship("Lap", back_populates="session")
+    laps = relationship("Lap", back_populates="session", cascade="all, delete-orphan")
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -39,8 +39,8 @@ class Lap(Base):
     lap_time = Column(Float, default=0.0, index=True)
 
     session = relationship("Session", back_populates="laps")
-    telemetry_data = relationship("Telemetry", back_populates="lap")
-    sectors = relationship("Sector", back_populates="lap")
+    telemetry_data = relationship("Telemetry", back_populates="lap", cascade="all, delete-orphan")
+    sectors = relationship("Sector", back_populates="lap", cascade="all, delete-orphan")
 
 
 class Sector(Base):
