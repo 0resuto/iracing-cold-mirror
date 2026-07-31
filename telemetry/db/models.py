@@ -23,6 +23,9 @@ class Session(Base):
     player_id = Column(Integer, ForeignKey("players.id"), nullable=False, index=True)
     player = relationship("Player", back_populates="sessions")
     track_name = Column(String)
+    car_name = Column(String, nullable=True)
+    start_time = Column(DateTime, nullable=True, default=datetime.utcnow)
+    duration_seconds = Column(Float, nullable=True, default=0.0)
     laps = relationship("Lap", back_populates="session")
     created_at = Column(DateTime, default=datetime.utcnow)
 

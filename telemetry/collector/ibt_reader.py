@@ -21,6 +21,7 @@ class IBTReader:
         # Parse Session Info (YAML)
         self.track_name = "Unknown Track"
         self.player_name = "Unknown Player"
+        self.car_name = "Unknown Car"
         try:
             import yaml
 
@@ -42,6 +43,12 @@ class IBTReader:
             for d in drivers:
                 if d.get("CarIdx") == driver_info.get("DriverCarIdx"):
                     self.player_name = d.get("UserName", "Unknown Player")
+                    self.car_name = (
+                        d.get("CarScreenName")
+                        or d.get("CarClassShortName")
+                        or d.get("CarPath")
+                        or "Unknown Car"
+                    )
                     break
 
             split_info = session_info.get("SplitTimeInfo", {})

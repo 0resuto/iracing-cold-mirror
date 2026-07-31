@@ -2,11 +2,38 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useLiveStore } from '../store/useLiveStore';
 import { useHistoryQuery, useIdealLapQuery, useSystemInfoQuery } from '../api/queries';
-import { Flag, User, Timer, Radio, Settings } from 'lucide-react';
+import { Flag, User, Timer, Radio, Settings, Car, Calendar, Clock, ChevronDown, ChevronRight } from 'lucide-react';
 
-// --- Subcomponents with React.memo for Performance ---
+// --- Helper Functions ---
 
-const LapItem = React.memo(function LapItem({ lap, player, session, selectedLapId, bestLapId, setSelectedLap }) {
+const formatSessionTime = (startTimeStr, durationSec, createdAtStr) => {
+  const dateObj = startTimeStr ? new Date(startTimeStr) : (createdAtStr ? new Date(createdAtStr) : null);
+  if (!dateObj || isNaN(dateObj.getTime())) {
+    return { date: 'Session Date N/A', timeRange: '', duration: '' };
+  }
+
+  const date = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const startTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  let timeRange = startTime;
+  let duration = '';
+
+  if (durationSec && durationSec > 0) {
+    const endDateObj = new Date(dateObj.getTime() + durationSec * 1000);
+    const endTime = endDateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    timeRange = `${startTime} – ${endTime}`;
+
+    const mins = Math.floor(durationSec / 60);
+    const secs = Math.floor(durationSec % 60);
+    duration = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  }
+
+  return { date, timeRange, duration };
+};
+
+// --- Tree Level 4: Lap Item ---
+
+const LapItem = React.memo(function LapItem({ lap, player, trackName, selectedLapId, bestLapId, setSelectedLap }) {
   const isSelected = selectedLapId === lap.id;
   const isBest = lap.id === bestLapId;
   const timeText = lap.lap_time > 0 ? `${lap.lap_time.toFixed(2)}s` : 'Outlap';
@@ -14,22 +41,27 @@ const LapItem = React.memo(function LapItem({ lap, player, session, selectedLapI
 
   return (
     <div
-      onClick={() => setSelectedLap({ ...lap, player_id: player.id, track_name: session.track_name })}
-      className={`flex justify-between items-center px-3 py-1.5 my-0.5 text-xs cursor-pointer border-l-2 rounded-r transition-colors ${
+      onClick={() => setSelectedLap({ ...lap, player_id: player.id, track_name: trackName })}
+      className={`flex justify-between items-center px-2.5 py-1 my-0.5 text-xs cursor-pointer border-l-2 rounded-r transition-all ${
         isSelected
-          ? 'border-sky-400 bg-sky-400/10 text-zinc-100 font-medium'
+          ? 'border-sky-400 bg-sky-400/15 text-zinc-100 font-medium shadow-sm'
           : 'border-transparent hover:bg-white/5 text-zinc-400'
       }`}
     >
-      <span>{lapLabel}</span>
-      <span className={`font-mono font-bold ${isBest ? 'text-purple-400' : 'text-inherit'}`}>
+      <span className="flex items-center gap-1.5">
+        <Timer size={12} className={isSelected ? 'text-sky-400' : 'text-zinc-500'} />
+        <span>{lapLabel}</span>
+      </span>
+      <span className={`font-mono font-bold text-[11px] ${isBest ? 'text-purple-400' : 'text-inherit'}`}>
         {timeText}
       </span>
     </div>
   );
 });
 
-const SessionItem = React.memo(function SessionItem({ session, player, selectedLapId, setSelectedLap }) {
+// --- Tree Level 3: Session Item ---
+
+const SessionItem = React.memo(function SessionItem({ session, player, trackName, selectedLapId, setSelectedLap }) {
   const hasSelected = useMemo(() => {
     return session.laps?.some(l => l.id === selectedLapId) ?? false;
   }, [session.laps, selectedLapId]);
@@ -37,7 +69,6 @@ const SessionItem = React.memo(function SessionItem({ session, player, selectedL
   const [isOpen, setIsOpen] = useState(hasSelected);
   const [showAllLaps, setShowAllLaps] = useState(false);
 
-  // Expand if user selects a lap in this session
   useEffect(() => {
     if (hasSelected) setIsOpen(true);
   }, [hasSelected]);
@@ -58,30 +89,52 @@ const SessionItem = React.memo(function SessionItem({ session, player, selectedL
   const visibleLaps = showAllLaps ? laps : laps.slice(0, 15);
   const hiddenCount = laps.length - visibleLaps.length;
 
+  const { date, timeRange, duration } = formatSessionTime(session.start_time, session.duration_seconds, session.created_at);
+  const carName = session.car_name || 'Unknown Car';
+
   return (
-    <div className="flex flex-col border-t border-zinc-800/80">
+    <div className="flex flex-col border-l border-zinc-800/80 my-1 ml-2 pl-2">
+      {/* Session Header Card */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3.5 py-2 cursor-pointer transition-colors ${
-          isOpen ? 'bg-white/5 text-zinc-200' : 'hover:bg-white/5 text-zinc-400'
+        className={`flex flex-col gap-1.5 p-2.5 rounded-md cursor-pointer border transition-all ${
+          isOpen
+            ? 'bg-zinc-900/90 border-zinc-700/80 text-zinc-100 shadow-sm'
+            : 'bg-zinc-950/40 border-zinc-800/50 hover:border-zinc-700/50 hover:bg-zinc-900/40 text-zinc-400'
         }`}
       >
-        <div className="flex items-center gap-2 truncate">
-          <Flag size={14} className="text-zinc-500" />
-          <span className="text-xs font-medium truncate">{session.track_name}</span>
+        <div className="flex items-center justify-between text-xs font-medium">
+          <div className="flex items-center gap-1.5 truncate">
+            <Calendar size={13} className="text-sky-400 flex-none" />
+            <span className="truncate text-zinc-200">{date}</span>
+            {timeRange && <span className="text-[10px] font-mono text-zinc-500">({timeRange})</span>}
+          </div>
+          <div className="flex items-center gap-1.5 flex-none">
+            <span className="text-[10px] font-mono text-zinc-500">{laps.length} laps</span>
+            {isOpen ? <ChevronDown size={14} className="text-zinc-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-none">
-          <span className="text-[10px] font-mono text-zinc-500">
-            {laps.length} {laps.length === 1 ? 'lap' : 'laps'}
+
+        {/* Sub-info: Car & Duration */}
+        <div className="flex items-center justify-between text-[11px] pt-0.5">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-500/10 border border-sky-500/20 text-sky-300 font-mono text-[10px] truncate max-w-[170px]">
+            <Car size={11} className="flex-none text-sky-400" />
+            <span className="truncate">{carName}</span>
           </span>
-          <span className="text-[10px] text-zinc-500">{isOpen ? '▼' : '▶'}</span>
+          {duration && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-zinc-400">
+              <Clock size={10} className="text-zinc-500" />
+              {duration}
+            </span>
+          )}
         </div>
       </div>
 
+      {/* Laps List */}
       {isOpen && (
-        <div className="flex flex-col bg-black/20 py-1 pl-3 border-l border-zinc-800/50 my-0.5">
+        <div className="flex flex-col border-l border-zinc-800/60 my-1 ml-2 pl-1.5 bg-black/20 rounded-r py-1">
           {laps.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-zinc-500">No laps recorded yet.</div>
+            <div className="px-3 py-2 text-xs text-zinc-500 italic">No laps recorded yet.</div>
           ) : (
             <>
               {visibleLaps.map(lap => (
@@ -89,7 +142,7 @@ const SessionItem = React.memo(function SessionItem({ session, player, selectedL
                   key={lap.id} 
                   lap={lap} 
                   player={player} 
-                  session={session} 
+                  trackName={trackName} 
                   selectedLapId={selectedLapId} 
                   bestLapId={bestLapId} 
                   setSelectedLap={setSelectedLap} 
@@ -111,6 +164,65 @@ const SessionItem = React.memo(function SessionItem({ session, player, selectedL
   );
 });
 
+// --- Tree Level 2: Track Item ---
+
+const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, selectedLapId, setSelectedLap }) {
+  const hasSelected = useMemo(() => {
+    return sessions.some(s => s.laps?.some(l => l.id === selectedLapId));
+  }, [sessions, selectedLapId]);
+
+  const [isOpen, setIsOpen] = useState(hasSelected);
+
+  useEffect(() => {
+    if (hasSelected) setIsOpen(true);
+  }, [hasSelected]);
+
+  const totalLaps = useMemo(() => {
+    return sessions.reduce((sum, s) => sum + (s.laps?.length || 0), 0);
+  }, [sessions]);
+
+  return (
+    <div className="flex flex-col border-l border-zinc-800/80 my-1 ml-2 pl-2">
+      {/* Track Header */}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex justify-between items-center px-3 py-2 rounded cursor-pointer font-medium text-xs transition-colors ${
+          isOpen ? 'bg-zinc-800/60 text-zinc-100' : 'hover:bg-zinc-800/30 text-zinc-300'
+        }`}
+      >
+        <span className="flex items-center gap-2 truncate">
+          <Flag size={14} className="text-purple-400 flex-none" />
+          <span className="truncate">{trackName}</span>
+        </span>
+        <div className="flex items-center gap-2 flex-none">
+          <span className="text-[10px] font-mono text-zinc-500">
+            {sessions.length} {sessions.length === 1 ? 'sess' : 'sess'} · {totalLaps} laps
+          </span>
+          {isOpen ? <ChevronDown size={14} className="text-zinc-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
+        </div>
+      </div>
+
+      {/* Sessions List */}
+      {isOpen && (
+        <div className="flex flex-col">
+          {sessions.map(session => (
+            <SessionItem 
+              key={session.id} 
+              session={session} 
+              player={player} 
+              trackName={trackName}
+              selectedLapId={selectedLapId} 
+              setSelectedLap={setSelectedLap} 
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
+// --- Tree Level 1: Driver / Player Item ---
+
 const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSelectedLap }) {
   const hasSelected = useMemo(() => {
     return player.sessions?.some(s => s.laps?.some(l => l.id === selectedLapId)) ?? false;
@@ -122,34 +234,52 @@ const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSe
     if (hasSelected) setIsOpen(true);
   }, [hasSelected]);
 
+  // Group sessions by Track Name for this player
+  const trackGroups = useMemo(() => {
+    const groups = {};
+    (player.sessions || []).forEach(s => {
+      const track = s.track_name || 'Unknown Track';
+      if (!groups[track]) groups[track] = [];
+      groups[track].push(s);
+    });
+    return groups;
+  }, [player.sessions]);
+
   const sessionsCount = player.sessions?.length || 0;
+  const tracksCount = Object.keys(trackGroups).length;
 
   return (
-    <div className="flex flex-col bg-zinc-950/60 border border-zinc-800/80 rounded-md overflow-hidden shadow-sm">
+    <div className="flex flex-col bg-zinc-950/80 border border-zinc-800/80 rounded-lg overflow-hidden shadow-sm">
+      {/* Player Header */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3.5 py-2 cursor-pointer font-medium text-xs transition-colors ${
-          isOpen ? 'bg-zinc-800 text-zinc-100' : 'hover:bg-zinc-800/50 text-zinc-300'
+        className={`flex justify-between items-center px-3.5 py-2.5 cursor-pointer font-semibold text-xs transition-colors ${
+          isOpen ? 'bg-zinc-800 text-zinc-100' : 'hover:bg-zinc-800/50 text-zinc-200'
         }`}
       >
         <span className="flex items-center gap-2">
-          <User size={14} className="text-zinc-500" /> {player.name}
+          <User size={15} className="text-sky-400" />
+          <span>{player.name}</span>
         </span>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono text-zinc-500">{sessionsCount} sess</span>
-          <span className="text-[10px] text-zinc-500">{isOpen ? '▼' : '▶'}</span>
+          <span className="text-[10px] font-mono text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+            {tracksCount} tracks · {sessionsCount} sess
+          </span>
+          {isOpen ? <ChevronDown size={14} className="text-zinc-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
         </div>
       </div>
       
+      {/* Tracks List */}
       {isOpen && (
-        <div className="flex flex-col">
+        <div className="flex flex-col p-1.5 bg-black/40">
           {sessionsCount === 0 ? (
-            <div className="px-6 py-2 text-xs text-zinc-500 border-t border-zinc-800">No sessions yet.</div>
+            <div className="px-4 py-2 text-xs text-zinc-500 italic">No sessions yet.</div>
           ) : (
-            player.sessions.map(session => (
-              <SessionItem 
-                key={session.id} 
-                session={session} 
+            Object.entries(trackGroups).map(([trackName, sessions]) => (
+              <TrackItem 
+                key={trackName} 
+                trackName={trackName} 
+                sessions={sessions} 
                 player={player} 
                 selectedLapId={selectedLapId} 
                 setSelectedLap={setSelectedLap} 
@@ -161,6 +291,8 @@ const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSe
     </div>
   );
 });
+
+// --- Sectors Widget Component ---
 
 const SectorsWidget = React.memo(function SectorsWidget({ selectedLap, players }) {
   const [sortBy, setSortBy] = useState('order');
@@ -397,8 +529,6 @@ const SystemPanel = () => {
   );
 };
 
-
-
 // --- Main Sidebar Component ---
 
 export const Sidebar = React.memo(function Sidebar() {
@@ -413,26 +543,30 @@ export const Sidebar = React.memo(function Sidebar() {
   // Filter & Sort State
   const [filterPlayer, setFilterPlayer] = useState('all');
   const [filterTrack, setFilterTrack] = useState('all');
+  const [filterCar, setFilterCar] = useState('all');
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'fastest'
 
   const { data: rawPlayers = [], isLoading, isError } = useHistoryQuery();
   const { data: idealLap } = useIdealLapQuery(selectedLap?.player_id, selectedLap?.track_name);
 
-  // Extract unique players and tracks
-  const { uniquePlayers, uniqueTracks } = useMemo(() => {
+  // Extract unique players, tracks, and cars
+  const { uniquePlayers, uniqueTracks, uniqueCars } = useMemo(() => {
     const playersList = [];
     const tracksSet = new Set();
+    const carsSet = new Set();
 
     (rawPlayers || []).forEach(p => {
       playersList.push({ id: p.id, name: p.name });
       (p.sessions || []).forEach(s => {
         if (s.track_name) tracksSet.add(s.track_name);
+        if (s.car_name) carsSet.add(s.car_name);
       });
     });
 
     return {
       uniquePlayers: playersList,
-      uniqueTracks: Array.from(tracksSet).sort()
+      uniqueTracks: Array.from(tracksSet).sort(),
+      uniqueCars: Array.from(carsSet).sort()
     };
   }, [rawPlayers]);
 
@@ -446,13 +580,14 @@ export const Sidebar = React.memo(function Sidebar() {
         return null;
       }
 
-      // Filter sessions by track
+      // Filter sessions by track and car
       let sessions = (p.sessions || []).filter(s => {
         if (filterTrack !== 'all' && s.track_name !== filterTrack) return false;
+        if (filterCar !== 'all' && (s.car_name || 'Unknown Car') !== filterCar) return false;
         return true;
       });
 
-      if (sessions.length === 0 && filterTrack !== 'all') return null;
+      if (sessions.length === 0 && (filterTrack !== 'all' || filterCar !== 'all')) return null;
 
       // Helper to compute best lap time of session
       const getBestTime = (session) => {
@@ -491,7 +626,7 @@ export const Sidebar = React.memo(function Sidebar() {
     }
 
     return filtered;
-  }, [rawPlayers, filterPlayer, filterTrack, sortBy]);
+  }, [rawPlayers, filterPlayer, filterTrack, filterCar, sortBy]);
 
   // Auto-select latest session on load
   useEffect(() => {
@@ -508,7 +643,7 @@ export const Sidebar = React.memo(function Sidebar() {
     <div className="flex h-full w-full bg-zinc-900">
       
       {/* Icon Nav Bar */}
-      <div className="w-16 min-w-[64px] border-r border-zinc-800 flex flex-col items-center py-4 bg-zinc-950">
+      <div className="w-16 min-w-[64px] border-r border-zinc-800 flex flex-col items-center py-4 bg-zinc-950 flex-none">
         <button 
           onClick={toggleSidebar} 
           className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-none cursor-pointer text-xs p-2 mb-8 rounded w-8 h-8 flex items-center justify-center transition-colors"
@@ -561,25 +696,27 @@ export const Sidebar = React.memo(function Sidebar() {
       </div>
 
       {/* Expanded Content */}
-      <div className={`flex-1 flex-col min-w-[256px] overflow-hidden ${isOpen ? 'flex' : 'hidden'}`}>
+      <div className={`flex-1 flex-col min-w-[270px] overflow-hidden ${isOpen ? 'flex' : 'hidden'}`}>
         
         {activeTab === 'history' ? (
           <>
             {/* Filter & Sort Controls */}
             <div className="p-3 bg-zinc-950 border-b border-zinc-800 flex-none flex flex-col gap-2">
               <div className="flex justify-between items-center">
-                <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">History</h2>
+                <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">Telemetry Explorer</h2>
                 <span className="text-[10px] font-mono text-zinc-500">
                   {processedPlayers.reduce((acc, p) => acc + (p.sessions?.length || 0), 0)} sessions
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-1.5">
+              {/* Dropdown Filters (3 Columns: Driver, Track, Car) */}
+              <div className="grid grid-cols-3 gap-1">
                 {/* Driver Filter */}
                 <select
                   value={filterPlayer}
                   onChange={(e) => setFilterPlayer(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[11px] rounded px-2 py-1 outline-none focus:border-sky-500 cursor-pointer"
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1.5 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
+                  title="Filter by Driver"
                 >
                   <option value="all">All Drivers</option>
                   {uniquePlayers.map(p => (
@@ -591,11 +728,25 @@ export const Sidebar = React.memo(function Sidebar() {
                 <select
                   value={filterTrack}
                   onChange={(e) => setFilterTrack(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[11px] rounded px-2 py-1 outline-none focus:border-sky-500 cursor-pointer"
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1.5 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
+                  title="Filter by Track"
                 >
                   <option value="all">All Tracks</option>
                   {uniqueTracks.map(t => (
                     <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+
+                {/* Car Filter */}
+                <select
+                  value={filterCar}
+                  onChange={(e) => setFilterCar(e.target.value)}
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1.5 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
+                  title="Filter by Car"
+                >
+                  <option value="all">All Cars</option>
+                  {uniqueCars.map(c => (
+                    <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
               </div>
@@ -632,16 +783,18 @@ export const Sidebar = React.memo(function Sidebar() {
               </div>
             </div>
 
-            {/* History List */}
+            {/* History Tree List */}
             <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
               {isLoading ? (
-                <div className="text-xs text-zinc-500 animate-pulse">Loading history...</div>
+                <div className="text-xs text-zinc-500 animate-pulse">Loading history tree...</div>
               ) : isError ? (
                 <div className="text-xs text-red-500">Failed to load history</div>
               ) : processedPlayers.length === 0 ? (
-                <div className="text-xs text-zinc-500 text-center py-4">No matching sessions found</div>
+                <div className="text-xs text-zinc-500 text-center py-6 border border-dashed border-zinc-800 rounded-lg">
+                  No matching sessions found
+                </div>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2.5">
                   {processedPlayers.map(player => (
                     <PlayerItem 
                       key={player.id} 
