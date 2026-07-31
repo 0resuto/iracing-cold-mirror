@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 import secrets
 
@@ -15,16 +14,27 @@ router = APIRouter()
 @router.websocket("/ws/telemetry/live")
 async def websocket_telemetry(websocket: WebSocket):
     await websocket.accept()
+    pubsub = None
     try:
-        while True:
-            raw_data = await redis_client.get("telemetry:latest")
-            if raw_data:
-                await websocket.send_text(raw_data)
-            else:
-                await websocket.send_text(json.dumps({"status": "waiting for data"}))
-            await asyncio.sleep(0.016)
+        try:
+            snapshot = await redis_client.get("telemetry:latest")
+            if snapshot:
+                await websocket.send_text(snapshot)
+        except Exception as e:
+            logger.warning(f"Could not fetch initial snapshot: {e}")
+        pubsub = redis_client.pubsub()
+        await pubsub.subscribe("telemetry:stream")
+        async for message in pubsub.listen():
+            if message["type"] == "message":
+                await websocket.send_text(message["data"])
     except WebSocketDisconnect:
         logger.info("Client disconnected")
+    except Exception as e:
+        logger.error(f"Error in subscriber websocket: {e}")
+    finally:
+        if pubsub:
+            await pubsub.unsubscribe("telemetry:stream")
+            await pubsub.close()
 
 
 @router.websocket("/ws/telemetry/publish")
@@ -39,6 +49,11 @@ async def websocket_publish_telemetry(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            await redis_client.set("telemetry:latest", data)
+            try:
+                await redis_client.set("telemetry:latest", data)
+                await redis_client.publish("telemetry:stream", data)
+            except Exception as e:
+                logger.error(f"Error publishing data: {e}")
+                await asyncio.sleep(0.5)
     except WebSocketDisconnect:
         logger.info("Publisher disconnected")
