@@ -19,7 +19,12 @@ def run(reader):
     sectors = getattr(reader, "sectors", [])
     current_sector_id = 0
 
-    ws_url = settings.server_url.replace("http", "ws") + "/ws/telemetry/publish"
+    ws_url = (
+        settings.server_url.replace("https://", "wss://").replace("http://", "ws://")
+        + "/ws/telemetry/publish"
+    )
+    if settings.api_key and settings.api_key.strip():
+        ws_url += f"?token={settings.api_key}"
 
     while True:
         try:
@@ -74,8 +79,6 @@ def run(reader):
                     }
 
                     ws.send(json.dumps(live_data))
-
-                    time.sleep(0.016)
 
         except KeyboardInterrupt:
             logger.info("Stopped by user")

@@ -1,4 +1,4 @@
-import redis
+import redis.asyncio as redis
 
 from telemetry.config import settings
 

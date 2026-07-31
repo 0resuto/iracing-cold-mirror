@@ -1,4 +1,5 @@
 import math
+import time
 
 import irsdk
 
@@ -129,6 +130,9 @@ class IBTReader:
         )
 
         self.current_idx += 1
+
+        time.sleep(0.016)
+
         return data
 
     def set_lap_dist_pct(self, pct):
