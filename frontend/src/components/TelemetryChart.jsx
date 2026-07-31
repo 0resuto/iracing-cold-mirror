@@ -55,7 +55,7 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
   // On mobile, render a compact translucent summary at top of screen to avoid covering the chart
   if (isMobile) {
     return (
-      <div className="bg-zinc-900/95 border border-zinc-700/80 p-2 text-[10px] z-[100] rounded-md shadow-lg backdrop-blur-md max-w-[280px]">
+      <div className="bg-zinc-900/95 border border-zinc-700/80 p-2 text-xs z-[100] rounded-lg shadow-lg backdrop-blur-md max-w-[280px]">
         <div className="flex justify-between font-bold text-zinc-100 border-b border-zinc-800 pb-1 mb-1">
           <span>Dist: {(data.lap_dist_pct * 100).toFixed(1)}%</span>
           {hasRef && (
@@ -64,7 +64,7 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
             </span>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-mono">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs font-mono">
           <span className="text-red-400">Spd: {data.speed?.toFixed(1)}</span>
           <span className="text-green-400">Thr: {data.throttle?.toFixed(2)}</span>
           <span className="text-red-500">Brk: {data.brake?.toFixed(2)}</span>
@@ -136,7 +136,7 @@ const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChar
         ))}
         <Brush 
           dataKey="lap_dist_pct" 
-          height={18} 
+          height={20} 
           stroke="#52525b" 
           fill="#18181b" 
           tickFormatter={() => ''} 
@@ -331,10 +331,10 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-zinc-950 p-2 sm:p-4 min-w-0">
-      {/* Controls Header */}
+      {/* Controls Header (High Tap Targets for Mobile) */}
       <div className="flex flex-wrap justify-between items-center mb-3 pb-3 border-b border-zinc-800 flex-none gap-2 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-xs uppercase tracking-wider text-zinc-300 font-bold m-0 flex-none">Telemetry Analysis</h2>
+        <div className="flex items-center gap-2 flex-wrap min-h-[38px]">
+            <h2 className="text-xs uppercase tracking-wider text-zinc-300 font-extrabold m-0 flex-none">Telemetry Analysis</h2>
             {availableLaps.length > 0 && (() => {
                 let bestLapId = null;
                 let bestTime = Infinity;
@@ -346,11 +346,11 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 });
                 return (
                     <div className="flex items-center gap-1.5 flex-none">
-                        <span className="text-[11px] text-zinc-500 font-medium">Ref:</span>
+                        <span className="text-xs text-zinc-400 font-bold">Ref:</span>
                         <select 
                             value={activeRefId || ''} 
                             onChange={e => setReferenceLapId(parseInt(e.target.value))}
-                            className="bg-zinc-900 text-zinc-100 border border-zinc-800 px-2 py-0.5 rounded text-xs cursor-pointer outline-none focus:border-sky-500 font-mono truncate max-w-[150px]"
+                            className="bg-zinc-900 text-zinc-100 border border-zinc-800 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer outline-none focus:border-sky-500 font-mono truncate max-w-[170px] min-h-[36px] font-semibold"
                         >
                             {availableLaps.map(l => (
                                 <option 
@@ -367,19 +367,19 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
             })()}
         </div>
 
-        {/* Buttons & Toggles */}
+        {/* Buttons & High-Target Toggles */}
         <div className="flex items-center gap-2 flex-wrap">
           {brushRange && (
             <button 
               onClick={() => setBrushRange(null)}
-              className="bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 px-2 py-0.5 rounded text-[11px] font-mono transition-all flex items-center gap-1 cursor-pointer flex-none"
+              className="bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 px-3 py-1.5 rounded-lg text-xs font-mono transition-all flex items-center gap-1 cursor-pointer flex-none min-h-[36px] font-bold active:scale-95"
             >
               <span>🔍</span> Reset
             </button>
           )}
 
-          {/* Toggle Pills */}
-          <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded p-0.5 flex-none">
+          {/* Toggle Pills (High Touch Target: Min 36px Height, 40px Width) */}
+          <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1 flex-none flex-wrap">
             {[
               { id: 'speed', label: 'SPD', color: 'text-red-400' },
               { id: 'throttle', label: 'THR', color: 'text-green-400' },
@@ -391,10 +391,10 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               <button
                 key={c.id}
                 onClick={() => toggleChart(c.id)}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
+                className={`px-2.5 py-1.5 rounded-md text-xs font-mono transition-all cursor-pointer min-h-[34px] min-w-[38px] flex items-center justify-center active:scale-95 ${
                   visibleCharts[c.id]
-                    ? `${c.color} bg-zinc-800 font-bold border border-zinc-700`
-                    : 'text-zinc-600 hover:text-zinc-400 bg-transparent border border-transparent'
+                    ? `${c.color} bg-zinc-800 font-extrabold border border-zinc-700 shadow-sm`
+                    : 'text-zinc-500 hover:text-zinc-300 bg-transparent border border-transparent'
                 }`}
                 title={`Toggle ${c.id} chart`}
               >

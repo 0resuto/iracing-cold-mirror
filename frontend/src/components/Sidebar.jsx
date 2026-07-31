@@ -47,18 +47,18 @@ const LapItem = React.memo(function LapItem({ lap, player, trackName, selectedLa
   return (
     <div
       onClick={handleClick}
-      className={`group flex justify-between items-center px-3 py-1.5 my-0.5 text-xs cursor-pointer rounded-md transition-all ${
+      className={`group flex justify-between items-center px-3 py-2.5 my-1 text-xs cursor-pointer rounded-lg transition-all min-h-[38px] active:scale-[0.98] ${
         isSelected
-          ? 'bg-sky-500/20 text-sky-200 font-semibold border-l-4 border-sky-400 shadow-sm'
-          : 'hover:bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 border-l-2 border-transparent'
+          ? 'bg-sky-500/25 text-sky-200 font-bold border-l-4 border-sky-400 shadow-md'
+          : 'hover:bg-zinc-800/70 text-zinc-300 hover:text-zinc-100 border-l-2 border-transparent'
       }`}
     >
-      <div className="flex items-center gap-2 min-w-0">
-        <Timer size={13} className={isSelected ? 'text-sky-400 flex-none' : 'text-zinc-500 group-hover:text-zinc-400 flex-none'} />
-        <span className="truncate">{lapLabel}</span>
+      <div className="flex items-center gap-2.5 min-w-0">
+        <Timer size={14} className={isSelected ? 'text-sky-400 flex-none' : 'text-zinc-500 group-hover:text-zinc-400 flex-none'} />
+        <span className="truncate font-semibold">{lapLabel}</span>
         {isBest && (
-          <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 flex-none">
-            <Award size={10} /> BEST
+          <span className="flex items-center gap-1 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-purple-500/25 text-purple-300 border border-purple-500/40 flex-none">
+            <Award size={11} /> BEST
           </span>
         )}
       </div>
@@ -103,39 +103,39 @@ const SessionItem = React.memo(function SessionItem({ session, player, trackName
   const carName = session.car_name || 'Unknown Car';
 
   return (
-    <div className="flex flex-col my-1 relative min-w-0">
+    <div className="flex flex-col my-1.5 relative min-w-0">
       {/* Session Header Card */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex flex-col gap-1 p-2.5 rounded-lg cursor-pointer border transition-all ${
+        className={`flex flex-col gap-1.5 p-3 rounded-xl cursor-pointer border transition-all active:scale-[0.99] min-h-[44px] ${
           isOpen
             ? 'bg-zinc-900 border-zinc-700 text-zinc-100 shadow-md'
-            : 'bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700 text-zinc-400 hover:bg-zinc-900/70'
+            : 'bg-zinc-900/50 border-zinc-800/80 hover:border-zinc-700 text-zinc-300 hover:bg-zinc-900/80'
         }`}
       >
-        <div className="flex items-center justify-between text-xs font-semibold min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0 truncate">
-            <Calendar size={13} className="text-emerald-400 flex-none" />
-            <span className="truncate text-zinc-200">{date}</span>
-            {timeRange && <span className="text-[10px] font-mono text-zinc-500 font-normal truncate">({timeRange})</span>}
+        <div className="flex items-center justify-between text-xs font-bold min-w-0">
+          <div className="flex items-center gap-2 min-w-0 truncate">
+            <Calendar size={14} className="text-emerald-400 flex-none" />
+            <span className="truncate text-zinc-100">{date}</span>
+            {timeRange && <span className="text-[11px] font-mono text-zinc-400 font-normal truncate">({timeRange})</span>}
           </div>
-          <div className="flex items-center gap-1.5 flex-none ml-1">
-            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
+          <div className="flex items-center gap-2 flex-none ml-1">
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
               {laps.length} laps
             </span>
-            {isOpen ? <ChevronDown size={14} className="text-emerald-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
+            {isOpen ? <ChevronDown size={16} className="text-emerald-400" /> : <ChevronRight size={16} className="text-zinc-400" />}
           </div>
         </div>
 
         {/* Sub-info: Car & Duration */}
-        <div className="flex items-center justify-between text-[11px] min-w-0 gap-1 mt-0.5">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-mono text-[10px] truncate flex-1 min-w-0">
-            <Car size={11} className="flex-none text-emerald-400" />
+        <div className="flex items-center justify-between text-[11px] min-w-0 gap-1.5 mt-0.5">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-mono text-[11px] truncate flex-1 min-w-0 font-medium">
+            <Car size={12} className="flex-none text-emerald-400" />
             <span className="truncate">{carName}</span>
           </span>
           {duration && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-zinc-400 flex-none">
-              <Clock size={10} className="text-zinc-500" />
+            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-zinc-400 flex-none">
+              <Clock size={11} className="text-zinc-500" />
               {duration}
             </span>
           )}
@@ -144,7 +144,7 @@ const SessionItem = React.memo(function SessionItem({ session, player, trackName
 
       {/* Laps List Level 4 */}
       {isOpen && (
-        <div className="flex flex-col ml-3 pl-2 border-l-2 border-amber-500/40 my-1 py-1 bg-black/40 rounded-r min-w-0">
+        <div className="flex flex-col ml-3 pl-2.5 border-l-2 border-amber-500/50 my-1 py-1 bg-black/40 rounded-r-lg min-w-0 gap-0.5">
           {laps.length === 0 ? (
             <div className="px-3 py-2 text-xs text-zinc-500 italic">No laps recorded.</div>
           ) : (
@@ -164,7 +164,7 @@ const SessionItem = React.memo(function SessionItem({ session, player, trackName
               {hiddenCount > 0 && (
                 <button
                   onClick={() => setShowAllLaps(true)}
-                  className="mt-1 text-[11px] text-sky-400 hover:text-sky-300 font-mono py-1 px-3 text-left cursor-pointer transition-colors"
+                  className="mt-1 text-xs text-sky-400 hover:text-sky-300 font-mono py-2 px-3 text-left cursor-pointer transition-colors font-bold min-h-[36px]"
                 >
                   + Show {hiddenCount} more laps
                 </button>
@@ -199,27 +199,27 @@ const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, s
       {/* Track Header */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3 py-2 rounded-lg cursor-pointer font-semibold text-xs transition-all min-w-0 border ${
+        className={`flex justify-between items-center px-3 py-2.5 rounded-xl cursor-pointer font-bold text-xs transition-all min-w-0 border active:scale-[0.99] min-h-[42px] ${
           isOpen 
-            ? 'bg-purple-500/10 border-purple-500/30 text-purple-200 shadow-sm' 
-            : 'bg-zinc-900/70 border-zinc-800 hover:bg-zinc-800/60 text-zinc-300'
+            ? 'bg-purple-500/15 border-purple-500/40 text-purple-100 shadow-sm' 
+            : 'bg-zinc-900/80 border-zinc-800 hover:bg-zinc-800/70 text-zinc-200'
         }`}
       >
         <span className="flex items-center gap-2 min-w-0 truncate">
-          <Flag size={14} className="text-purple-400 flex-none" />
-          <span className="truncate font-bold">{trackName}</span>
+          <Flag size={15} className="text-purple-400 flex-none" />
+          <span className="truncate text-xs font-extrabold">{trackName}</span>
         </span>
-        <div className="flex items-center gap-1.5 flex-none ml-1">
-          <span className="text-[10px] font-mono text-purple-300/90 bg-purple-500/15 px-1.5 py-0.5 rounded border border-purple-500/20 font-bold">
+        <div className="flex items-center gap-2 flex-none ml-1">
+          <span className="text-[10px] font-mono text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/30 font-bold">
             {sessions.length} sess · {totalLaps} laps
           </span>
-          {isOpen ? <ChevronDown size={14} className="text-purple-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
+          {isOpen ? <ChevronDown size={16} className="text-purple-400" /> : <ChevronRight size={16} className="text-zinc-400" />}
         </div>
       </div>
 
       {/* Sessions List Level 3 */}
       {isOpen && (
-        <div className="flex flex-col ml-3 pl-2 border-l-2 border-purple-500/30 my-1 min-w-0">
+        <div className="flex flex-col ml-3 pl-2.5 border-l-2 border-purple-500/40 my-1 min-w-0">
           {sessions.map(session => (
             <SessionItem 
               key={session.id} 
@@ -269,25 +269,25 @@ const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSe
       {/* Player Header Card */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3.5 py-2.5 cursor-pointer font-bold text-xs transition-colors min-w-0 ${
-          isOpen ? 'bg-zinc-800/90 text-zinc-100' : 'hover:bg-zinc-800/50 text-zinc-200'
+        className={`flex justify-between items-center px-3.5 py-3 cursor-pointer font-extrabold text-xs transition-colors min-w-0 active:scale-[0.99] min-h-[46px] ${
+          isOpen ? 'bg-zinc-800/90 text-zinc-100' : 'hover:bg-zinc-800/60 text-zinc-100'
         }`}
       >
-        <span className="flex items-center gap-2 min-w-0 truncate">
-          <User size={15} className="text-sky-400 flex-none" />
-          <span className="text-sky-100 font-bold truncate">{player.name}</span>
+        <span className="flex items-center gap-2.5 min-w-0 truncate">
+          <User size={16} className="text-sky-400 flex-none" />
+          <span className="text-sky-100 font-extrabold text-xs sm:text-sm truncate">{player.name}</span>
         </span>
-        <div className="flex items-center gap-1.5 flex-none ml-1">
-          <span className="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20 font-bold">
+        <div className="flex items-center gap-2 flex-none ml-1">
+          <span className="text-[10px] font-mono text-sky-300 bg-sky-500/15 px-2 py-0.5 rounded-full border border-sky-500/25 font-bold">
             {tracksCount} tracks · {sessionsCount} sess
           </span>
-          {isOpen ? <ChevronDown size={14} className="text-sky-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
+          {isOpen ? <ChevronDown size={16} className="text-sky-400" /> : <ChevronRight size={16} className="text-zinc-400" />}
         </div>
       </div>
       
       {/* Tracks List Level 2 */}
       {isOpen && (
-        <div className="flex flex-col p-2 bg-black/60 min-w-0 gap-1">
+        <div className="flex flex-col p-2 bg-black/60 min-w-0 gap-1.5">
           {sessionsCount === 0 ? (
             <div className="px-4 py-2 text-xs text-zinc-500 italic">No sessions yet.</div>
           ) : (
@@ -349,37 +349,37 @@ const SectorsWidget = React.memo(function SectorsWidget({ selectedLap, players }
   return (
     <div className="p-3 border-t border-zinc-800 bg-zinc-950 flex-none flex flex-col min-w-0">
       <div className="flex justify-between items-center mb-2 min-w-0">
-        <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">Sectors</h3>
-        <div className="flex gap-1 text-[10px]">
+        <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-bold m-0">Sectors</h3>
+        <div className="flex gap-1 text-xs">
           <button 
             onClick={() => setSortBy('order')} 
-            className={`px-1.5 py-0.5 rounded cursor-pointer ${sortBy === 'order' ? 'bg-zinc-800 text-zinc-200 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`px-2 py-1 rounded cursor-pointer font-bold ${sortBy === 'order' ? 'bg-zinc-800 text-zinc-100 border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             #
           </button>
           <button 
             onClick={() => setSortBy('time')} 
-            className={`px-1.5 py-0.5 rounded cursor-pointer ${sortBy === 'time' ? 'bg-zinc-800 text-zinc-200 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`px-2 py-1 rounded cursor-pointer font-bold ${sortBy === 'time' ? 'bg-zinc-800 text-zinc-100 border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Time
           </button>
           <button 
             onClick={() => setSortBy('delta')} 
-            className={`px-1.5 py-0.5 rounded cursor-pointer ${sortBy === 'delta' ? 'bg-zinc-800 text-zinc-200 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`px-2 py-1 rounded cursor-pointer font-bold ${sortBy === 'delta' ? 'bg-zinc-800 text-zinc-100 border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Δ
           </button>
         </div>
       </div>
       
-      <div className="flex flex-col gap-1 overflow-y-auto max-h-[130px] custom-scrollbar pr-1">
+      <div className="flex flex-col gap-1 overflow-y-auto max-h-[140px] custom-scrollbar pr-1">
         {displaySectors.map(s => (
-          <div key={s.id || s.sector_number} className="flex justify-between items-center text-xs bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800/80 min-w-0">
-            <span className="text-zinc-400 font-medium">Sector {s.sector_number}</span>
+          <div key={s.id || s.sector_number} className="flex justify-between items-center text-xs bg-zinc-900 px-3 py-1.5 rounded-md border border-zinc-800/80 min-w-0">
+            <span className="text-zinc-400 font-bold">Sector {s.sector_number}</span>
             <div className="flex items-center gap-3">
-              <span className="font-mono text-zinc-200">{s.sector_time.toFixed(2)}s</span>
+              <span className="font-mono text-zinc-200 font-bold">{s.sector_time.toFixed(2)}s</span>
               {s.delta !== null && (
-                <span className={`font-mono text-[11px] ${s.delta <= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <span className={`font-mono text-xs font-bold ${s.delta <= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {s.delta > 0 ? '+' : ''}{s.delta.toFixed(2)}s
                 </span>
               )}
@@ -401,20 +401,20 @@ const LiveStreamPanel = () => {
   return (
     <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto custom-scrollbar min-w-0">
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">Live Stream</h2>
+        <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-bold m-0">Live Stream</h2>
         {isStreaming ? (
-          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
             LIVE
           </span>
         ) : (
-          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 text-[10px] font-medium">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 text-xs font-medium">
             OFFLINE
           </span>
         )}
       </div>
 
-      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 flex flex-col gap-3">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3">
         <div className="text-xs text-zinc-400 flex justify-between items-center">
           <span>Collector Status</span>
           <span className={`font-semibold flex items-center gap-1.5 ${isStreaming ? 'text-green-400' : 'text-zinc-500'}`}>
@@ -440,7 +440,7 @@ const LiveStreamPanel = () => {
       </div>
 
       {!isStreaming && (
-        <div className="text-xs text-amber-400/90 leading-relaxed bg-amber-500/10 p-3 rounded border border-amber-500/20">
+        <div className="text-xs text-amber-400/90 leading-relaxed bg-amber-500/10 p-3.5 rounded-xl border border-amber-500/20">
           ⚠️ <strong>iRacing isn't running or collector is idle.</strong><br/>
           Start iRacing live collector script (<code>run.bat</code> or <code>dev/run_dev.bat</code>) to view live telemetry stream.
         </div>
@@ -457,8 +457,8 @@ const SystemPanel = () => {
   return (
     <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto custom-scrollbar min-w-0">
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0">System & Parameters</h2>
-        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-bold">
+        <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-bold m-0">System Parameters</h2>
+        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-bold">
           v0.1.0
         </span>
       </div>
@@ -470,47 +470,47 @@ const SystemPanel = () => {
       ) : (
         <div className="flex flex-col gap-4">
           {/* Server Connection Card */}
-          <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 flex flex-col gap-2">
-            <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Server Infrastructure</span>
+          <div className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 flex flex-col gap-2.5">
+            <span className="text-xs uppercase tracking-wider text-zinc-500 font-bold">Server Infrastructure</span>
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400">Backend API</span>
-              <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+              <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                 Online
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400">Database</span>
-              <span className="font-mono text-zinc-300">{systemInfo.database}</span>
+              <span className="font-mono text-zinc-300 font-bold">{systemInfo.database}</span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400">API Key Security</span>
-              <span className={`font-semibold ${systemInfo.auth_enabled ? 'text-emerald-400' : 'text-amber-400'}`}>
+              <span className={`font-bold ${systemInfo.auth_enabled ? 'text-emerald-400' : 'text-amber-400'}`}>
                 {systemInfo.auth_enabled ? '🔒 Active' : '🔓 Dev Mode'}
               </span>
             </div>
           </div>
 
           {/* Last Uploaded Session Card */}
-          <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 flex flex-col gap-2">
-            <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Last Session Upload</span>
+          <div className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 flex flex-col gap-2.5">
+            <span className="text-xs uppercase tracking-wider text-zinc-500 font-bold">Last Session Upload</span>
             {systemInfo.last_upload ? (
               <>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-400">Track</span>
-                  <span className="font-semibold text-zinc-200">{systemInfo.last_upload.track_name}</span>
+                  <span className="font-bold text-zinc-100">{systemInfo.last_upload.track_name}</span>
                 </div>
                 {systemInfo.last_upload.created_at && (
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-zinc-400">Uploaded</span>
-                    <span className="text-zinc-300">
+                    <span className="text-zinc-300 font-mono">
                       {new Date(systemInfo.last_upload.created_at).toLocaleString()}
                     </span>
                   </div>
                 )}
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-400">Driver</span>
-                  <span className="text-zinc-300">{systemInfo.last_upload.player_name}</span>
+                  <span className="text-zinc-200 font-bold">{systemInfo.last_upload.player_name}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-400">Laps Uploaded</span>
@@ -523,18 +523,18 @@ const SystemPanel = () => {
           </div>
 
           {/* Database Stats Card */}
-          <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 flex flex-col gap-2">
-            <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Storage Metrics</span>
+          <div className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 flex flex-col gap-2">
+            <span className="text-xs uppercase tracking-wider text-zinc-500 font-bold">Storage Metrics</span>
             <div className="grid grid-cols-3 gap-2 text-center mt-1">
-              <div className="bg-zinc-900 p-2 rounded border border-zinc-800/80">
+              <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800/80">
                 <div className="text-xs text-zinc-500">Drivers</div>
-                <div className="text-base font-bold font-mono text-zinc-200">{systemInfo.total_players}</div>
+                <div className="text-base font-bold font-mono text-zinc-100">{systemInfo.total_players}</div>
               </div>
-              <div className="bg-zinc-900 p-2 rounded border border-zinc-800/80">
+              <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800/80">
                 <div className="text-xs text-zinc-500">Sessions</div>
                 <div className="text-base font-bold font-mono text-sky-400">{systemInfo.total_sessions}</div>
               </div>
-              <div className="bg-zinc-900 p-2 rounded border border-zinc-800/80">
+              <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800/80">
                 <div className="text-xs text-zinc-500">Laps</div>
                 <div className="text-base font-bold font-mono text-purple-400">{systemInfo.total_laps}</div>
               </div>
@@ -677,11 +677,11 @@ export const Sidebar = React.memo(function Sidebar() {
   return (
     <div className="flex h-full w-full bg-zinc-900 min-w-0">
       
-      {/* Left Icon Navigation Bar (DESKTOP ONLY - Hidden on Mobile to save space) */}
+      {/* Left Icon Navigation Bar (DESKTOP ONLY) */}
       <div className="hidden md:flex w-16 min-w-[64px] border-r border-zinc-800 flex-col items-center py-4 bg-zinc-950 flex-none z-10">
         <button 
           onClick={toggleSidebar} 
-          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-none cursor-pointer text-xs p-2 mb-8 rounded w-8 h-8 flex items-center justify-center transition-colors"
+          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-none cursor-pointer text-xs p-2 mb-8 rounded-lg w-9 h-9 flex items-center justify-center transition-colors shadow-sm"
         >
           {isOpen ? '◀' : '▶'}
         </button>
@@ -693,11 +693,11 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('history');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1 transition-colors ${
+            className={`cursor-pointer text-xl flex justify-center border-l-2 py-2 transition-colors ${
               activeTab === 'history' ? 'border-sky-400 text-sky-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >
-            <Timer size={20} />
+            <Timer size={22} />
           </div>
 
           {/* Live Telemetry Tab */}
@@ -707,11 +707,11 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('live');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1 transition-colors ${
+            className={`cursor-pointer text-xl flex justify-center border-l-2 py-2 transition-colors ${
               activeTab === 'live' ? 'border-red-500 text-red-500' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >
-            <Radio size={20} />
+            <Radio size={22} />
           </div>
 
           {/* System & Parameters Tab */}
@@ -721,96 +721,96 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('system');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1 transition-colors ${
+            className={`cursor-pointer text-xl flex justify-center border-l-2 py-2 transition-colors ${
               activeTab === 'system' ? 'border-emerald-400 text-emerald-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >
-            <Settings size={20} />
+            <Settings size={22} />
           </div>
         </div>
       </div>
 
-      {/* Expanded Content Area (Takes 100% width on Mobile, Flex-1 on Desktop) */}
+      {/* Expanded Content Area */}
       <div className={`flex-1 flex-col overflow-hidden min-w-0 ${isOpen ? 'flex' : 'hidden'}`}>
         
-        {/* MOBILE TOP BAR (Top Tabs + Close Button) */}
-        <div className="flex md:hidden items-center justify-between p-3 bg-zinc-950 border-b border-zinc-800 flex-none gap-2">
+        {/* MOBILE TOP BAR (High-Touch Target Segmented Tabs + Close Button) */}
+        <div className="flex md:hidden items-center justify-between p-3 bg-zinc-950 border-b border-zinc-800 flex-none gap-2 min-h-[52px]">
           {/* Segmented Top Tabs */}
-          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800 flex-1">
+          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 flex-1">
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                activeTab === 'history' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' : 'text-zinc-500'
+              className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 ${
+                activeTab === 'history' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm' : 'text-zinc-400'
               }`}
             >
-              <Timer size={14} /> History
+              <Timer size={16} /> History
             </button>
             <button
               onClick={() => setActiveTab('live')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                activeTab === 'live' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-zinc-500'
+              className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 ${
+                activeTab === 'live' ? 'bg-red-500/20 text-red-400 border border-red-500/40 shadow-sm' : 'text-zinc-400'
               }`}
             >
-              <Radio size={14} /> Live
+              <Radio size={16} /> Live
             </button>
             <button
               onClick={() => setActiveTab('system')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                activeTab === 'system' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-500'
+              className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 ${
+                activeTab === 'system' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm' : 'text-zinc-400'
               }`}
             >
-              <Settings size={14} /> System
+              <Settings size={16} /> System
             </button>
           </div>
 
           {/* Close Drawer Button */}
           <button
             onClick={toggleSidebar}
-            className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 flex-none"
+            className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 flex-none min-w-[42px] min-h-[42px] flex items-center justify-center active:scale-95"
             title="Close Drawer"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
         {activeTab === 'history' ? (
           <>
             {/* Filter & Search Header Controls */}
-            <div className="p-3 bg-zinc-950 border-b border-zinc-800 flex-none flex flex-col gap-2 min-w-0">
+            <div className="p-3 bg-zinc-950 border-b border-zinc-800 flex-none flex flex-col gap-2.5 min-w-0">
               <div className="flex justify-between items-center min-w-0">
-                <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-bold m-0 truncate">Telemetry Explorer</h2>
-                <span className="text-[10px] font-mono text-zinc-500 flex-none">
+                <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-extrabold m-0 truncate">Telemetry Explorer</h2>
+                <span className="text-xs font-mono text-zinc-400 flex-none font-bold">
                   {processedPlayers.reduce((acc, p) => acc + (p.sessions?.length || 0), 0)} sessions
                 </span>
               </div>
 
               {/* Instant Search Bar */}
               <div className="relative flex items-center min-w-0">
-                <Search size={13} className="absolute left-2.5 text-zinc-500" />
+                <Search size={15} className="absolute left-3 text-zinc-500" />
                 <input
                   type="text"
                   placeholder="Search driver, track, car..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-lg pl-8 pr-7 py-1.5 outline-none focus:border-sky-500 transition-colors"
+                  className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 text-xs rounded-xl pl-9 pr-8 py-2 outline-none focus:border-sky-500 transition-colors min-h-[40px]"
                 />
                 {searchQuery && (
                   <button 
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-2 text-zinc-500 hover:text-zinc-300 p-0.5 cursor-pointer"
+                    className="absolute right-2.5 text-zinc-400 hover:text-zinc-200 p-1 cursor-pointer"
                   >
-                    <X size={12} />
+                    <X size={14} />
                   </button>
                 )}
               </div>
 
               {/* Dropdown Filters (3 Columns: Driver, Track, Car) */}
-              <div className="grid grid-cols-3 gap-1 min-w-0">
+              <div className="grid grid-cols-3 gap-1.5 min-w-0">
                 {/* Driver Filter */}
                 <select
                   value={filterPlayer}
                   onChange={(e) => setFilterPlayer(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-lg px-2 py-2 outline-none focus:border-sky-500 cursor-pointer truncate min-h-[38px] font-semibold"
                   title="Filter by Driver"
                 >
                   <option value="all">Drivers ({uniquePlayers.length})</option>
@@ -823,7 +823,7 @@ export const Sidebar = React.memo(function Sidebar() {
                 <select
                   value={filterTrack}
                   onChange={(e) => setFilterTrack(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-lg px-2 py-2 outline-none focus:border-sky-500 cursor-pointer truncate min-h-[38px] font-semibold"
                   title="Filter by Track"
                 >
                   <option value="all">Tracks ({uniqueTracks.length})</option>
@@ -836,7 +836,7 @@ export const Sidebar = React.memo(function Sidebar() {
                 <select
                   value={filterCar}
                   onChange={(e) => setFilterCar(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] rounded px-1 py-1 outline-none focus:border-sky-500 cursor-pointer truncate"
+                  className="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-lg px-2 py-2 outline-none focus:border-sky-500 cursor-pointer truncate min-h-[38px] font-semibold"
                   title="Filter by Car"
                 >
                   <option value="all">Cars ({uniqueCars.length})</option>
@@ -847,29 +847,29 @@ export const Sidebar = React.memo(function Sidebar() {
               </div>
 
               {/* Sort Pills */}
-              <div className="flex items-center justify-between text-[10px] mt-0.5 min-w-0">
-                <span className="text-zinc-500 font-medium flex-none">Sort:</span>
-                <div className="flex gap-1 flex-none">
+              <div className="flex items-center justify-between text-xs mt-0.5 min-w-0">
+                <span className="text-zinc-400 font-bold flex-none">Sort:</span>
+                <div className="flex gap-1.5 flex-none">
                   <button 
                     onClick={() => setSortBy('newest')} 
-                    className={`px-2 py-0.5 rounded font-mono transition-colors cursor-pointer ${
-                      sortBy === 'newest' ? 'bg-zinc-800 text-sky-400 font-bold border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'
+                    className={`px-2.5 py-1.5 rounded-lg font-mono text-xs transition-colors cursor-pointer min-h-[32px] ${
+                      sortBy === 'newest' ? 'bg-zinc-800 text-sky-400 font-bold border border-zinc-700' : 'text-zinc-400 hover:text-zinc-200'
                     }`}
                   >
                     Newest
                   </button>
                   <button 
                     onClick={() => setSortBy('oldest')} 
-                    className={`px-2 py-0.5 rounded font-mono transition-colors cursor-pointer ${
-                      sortBy === 'oldest' ? 'bg-zinc-800 text-sky-400 font-bold border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'
+                    className={`px-2.5 py-1.5 rounded-lg font-mono text-xs transition-colors cursor-pointer min-h-[32px] ${
+                      sortBy === 'oldest' ? 'bg-zinc-800 text-sky-400 font-bold border border-zinc-700' : 'text-zinc-400 hover:text-zinc-200'
                     }`}
                   >
                     Oldest
                   </button>
                   <button 
                     onClick={() => setSortBy('fastest')} 
-                    className={`px-2 py-0.5 rounded font-mono transition-colors cursor-pointer ${
-                      sortBy === 'fastest' ? 'bg-zinc-800 text-purple-400 font-bold border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'
+                    className={`px-2.5 py-1.5 rounded-lg font-mono text-xs transition-colors cursor-pointer min-h-[32px] ${
+                      sortBy === 'fastest' ? 'bg-zinc-800 text-purple-400 font-bold border border-zinc-700' : 'text-zinc-400 hover:text-zinc-200'
                     }`}
                   >
                     Fastest
@@ -879,7 +879,7 @@ export const Sidebar = React.memo(function Sidebar() {
             </div>
 
             {/* History Tree List */}
-            <div className="flex-1 overflow-y-auto p-2.5 custom-scrollbar min-w-0">
+            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar min-w-0">
               {isLoading ? (
                 <div className="text-xs text-zinc-500 animate-pulse">Loading history tree...</div>
               ) : isError ? (
@@ -889,7 +889,7 @@ export const Sidebar = React.memo(function Sidebar() {
                   No matching sessions found
                 </div>
               ) : (
-                <div className="flex flex-col gap-2.5 min-w-0">
+                <div className="flex flex-col gap-3 min-w-0">
                   {processedPlayers.map(player => (
                     <PlayerItem 
                       key={player.id} 
