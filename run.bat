@@ -24,17 +24,19 @@ if errorlevel 1 (
 )
 
 echo.
-echo   Autostart Status:
-if exist "%VBS_IBT%" (
-    echo     - IBT Sync Agent:   [ ENABLED - Silent ]
+echo   Process Status (Memory):
+wmic process where "name='python.exe' and commandline like '%%scripts.agent%%'" get processid 2>nul | findstr [0-9] >nul
+if %errorlevel% equ 0 (
+    echo     - IBT Sync Agent:   [ RUNNING ]
 ) else (
-    echo     - IBT Sync Agent:   [ DISABLED ]
+    echo     - IBT Sync Agent:   [ STOPPED ]
 )
 
-if exist "%VBS_LIVE%" (
-    echo     - Live Telemetry:   [ ENABLED - Silent ]
+wmic process where "name='python.exe' and commandline like '%%scripts.run_live%%'" get processid 2>nul | findstr [0-9] >nul
+if %errorlevel% equ 0 (
+    echo     - Live Telemetry:   [ RUNNING ]
 ) else (
-    echo     - Live Telemetry:   [ DISABLED ]
+    echo     - Live Telemetry:   [ STOPPED ]
 )
 echo ======================================================================
 echo.
@@ -98,10 +100,14 @@ goto MENU
 cls
 echo Creating silent startup script for IBT Sync Agent...
 (
-    echo Set WinScriptHost = CreateObject("WScript.Shell")
+    echo Set WinScriptHost = CreateObject("WScript.Shell"^)
     echo WinScriptHost.Run "cmd /c cd /d ""%~dp0"" && call venv\Scripts\activate.bat && python -m scripts.agent", 0, False
-) > "%VBS_IBT%"
-echo Autostart enabled for IBT Sync Agent!
+) > "%VBS_IBT%" 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] Could not write to Startup folder! Try running as Administrator.
+) else (
+    echo Autostart enabled for IBT Sync Agent!
+)
 timeout /t 2 >nul
 goto MENU
 
@@ -109,10 +115,14 @@ goto MENU
 cls
 echo Creating silent startup script for Live Telemetry Streamer...
 (
-    echo Set WinScriptHost = CreateObject("WScript.Shell")
+    echo Set WinScriptHost = CreateObject("WScript.Shell"^)
     echo WinScriptHost.Run "cmd /c cd /d ""%~dp0"" && call venv\Scripts\activate.bat && python -m scripts.run_live", 0, False
-) > "%VBS_LIVE%"
-echo Autostart enabled for Live Telemetry Streamer!
+) > "%VBS_LIVE%" 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] Could not write to Startup folder! Try running as Administrator.
+) else (
+    echo Autostart enabled for Live Telemetry Streamer!
+)
 timeout /t 2 >nul
 goto MENU
 

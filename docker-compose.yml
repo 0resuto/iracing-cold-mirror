@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-iracing} -d ${POSTGRES_DB:-telemetry}"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
 
   pgadmin:
     image: dpage/pgadmin4
@@ -39,8 +44,10 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-iracing}:${POSTGRES_PASSWORD:-iracing_local}@postgres:5432/${POSTGRES_DB:-telemetry}
       - REDIS_HOST=redis
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   frontend:
     build: ./frontend
