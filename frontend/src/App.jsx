@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TelemetryChart } from './components/TelemetryChart';
 import { TrackMap } from './components/TrackMap';
@@ -6,7 +6,7 @@ import { StatsWidget } from './components/StatsWidget';
 import { useAppStore } from './store/useAppStore';
 import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
 import { Toaster } from 'react-hot-toast';
-import { MapPin, Settings, Clock } from 'lucide-react';
+import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2 } from 'lucide-react';
 
 function App() {
   const activeTab = useAppStore(state => state.activeTab);
@@ -14,11 +14,14 @@ function App() {
   const isSidebarOpen = useAppStore(state => state.isSidebarOpen);
   const toggleSidebar = useAppStore(state => state.toggleSidebar);
 
+  // Mobile View Tab state (for switching between Telemetry Charts, Track Map, and Stats on small screens)
+  const [mobileView, setMobileView] = useState('charts'); // 'charts' | 'map' | 'stats'
+
   // Initialize live telemetry websocket when activeTab is 'live'
   useLiveTelemetryWS(activeTab === 'live');
 
   return (
-    <div className="w-full h-screen flex overflow-hidden bg-zinc-950 text-zinc-100 relative">
+    <div className="w-full h-screen flex overflow-hidden bg-zinc-950 text-zinc-100 relative font-sans">
       <Toaster 
         position="bottom-right"
         toastOptions={{
@@ -32,7 +35,7 @@ function App() {
       {isSidebarOpen && (
         <div 
           onClick={toggleSidebar} 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden"
         />
       )}
 
@@ -40,105 +43,151 @@ function App() {
       <div 
         className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-zinc-800 ${
           isSidebarOpen 
-            ? 'fixed md:relative inset-y-0 left-0 w-[360px] max-w-[88vw] z-50 md:z-auto shadow-2xl md:shadow-none' 
-            : 'relative w-[64px]'
+            ? 'fixed md:relative inset-y-0 left-0 w-[320px] sm:w-[360px] max-w-[90vw] z-50 md:z-auto shadow-2xl md:shadow-none' 
+            : 'w-0 md:w-[64px] border-none md:border-r border-zinc-800'
         }`}
       >
         <Sidebar />
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden p-4 md:p-6 gap-4 md:gap-6 bg-zinc-950 min-w-0">
+      <div className="flex-1 flex flex-col h-full overflow-hidden p-2 sm:p-4 md:p-6 gap-3 md:gap-6 bg-zinc-950 min-w-0">
         
-        {/* Header */}
-        <div className="flex items-center justify-between flex-none pb-2 border-b border-zinc-800/80">
-          <div className="flex items-center gap-3 min-w-0">
-            {!isSidebarOpen && (
-              <button 
-                onClick={toggleSidebar}
-                className="p-1.5 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all text-xs flex items-center gap-1.5 cursor-pointer flex-none"
-                title="Open Sidebar"
-              >
-                <span>▶</span>
-              </button>
-            )}
+        {/* Header Bar */}
+        <div className="flex items-center justify-between flex-none pb-2 border-b border-zinc-800/80 gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <button 
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-sky-400 hover:text-sky-300 transition-all text-xs flex items-center gap-1.5 cursor-pointer flex-none"
+              title="Toggle Sidebar"
+            >
+              <Menu size={16} />
+              <span className="hidden sm:inline text-[11px] font-semibold">Menu</span>
+            </button>
+
             <div className="min-w-0 truncate">
               {activeTab === 'live' ? null : activeTab === 'system' ? (
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-2 text-emerald-400 font-semibold text-sm truncate">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block flex-none"></span>
-                    System Overview & Infrastructure Parameters
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 text-emerald-400 font-semibold text-xs sm:text-sm truncate">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block flex-none animate-pulse"></span>
+                    System Infrastructure
                   </span>
                 </div>
               ) : selectedLap ? (
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-base font-semibold text-zinc-100">
+                <div className="flex items-center gap-2 truncate">
+                  <span className="text-xs sm:text-sm font-bold text-zinc-100 flex-none">
                     Lap {selectedLap.lap_number}
                   </span>
-                  <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold">
-                    {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Incomplete Lap'}
+                  <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold flex-none">
+                    {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Outlap'}
                   </span>
                   {selectedLap.track_name && (
-                    <span className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md text-xs font-medium flex items-center gap-1.5 truncate">
-                      <MapPin size={14} className="text-zinc-500 flex-none" /> {selectedLap.track_name}
+                    <span className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2 py-0.5 rounded-md text-[11px] font-medium flex items-center gap-1 truncate hidden xs:flex">
+                      <MapPin size={12} className="text-zinc-500 flex-none" /> 
+                      <span className="truncate">{selectedLap.track_name}</span>
                     </span>
                   )}
                 </div>
               ) : (
-                <div className="text-zinc-400 text-sm font-medium tracking-wide truncate">
-                  Select a lap from history to begin analysis
+                <div className="text-zinc-400 text-xs sm:text-sm font-medium tracking-wide truncate">
+                  Select lap from menu
                 </div>
               )}
             </div>
           </div>
+
+          {/* Mobile View Toggle Pills (Only visible on small screens when lap is selected) */}
+          {selectedLap && activeTab === 'history' && (
+            <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800 md:hidden flex-none">
+              <button
+                onClick={() => setMobileView('charts')}
+                className={`p-1.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all ${
+                  mobileView === 'charts' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' : 'text-zinc-500'
+                }`}
+                title="Charts"
+              >
+                <Activity size={13} />
+                <span className="hidden xs:inline">Charts</span>
+              </button>
+              <button
+                onClick={() => setMobileView('map')}
+                className={`p-1.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all ${
+                  mobileView === 'map' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-zinc-500'
+                }`}
+                title="Track Map"
+              >
+                <Map size={13} />
+                <span className="hidden xs:inline">Map</span>
+              </button>
+              <button
+                onClick={() => setMobileView('stats')}
+                className={`p-1.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all ${
+                  mobileView === 'stats' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-500'
+                }`}
+                title="Sectors"
+              >
+                <BarChart2 size={13} />
+                <span className="hidden xs:inline">Stats</span>
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Main Content or Empty State */}
+        {/* Main Content Body */}
         {activeTab === 'system' ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 gap-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 p-8">
-            <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-2xl">
-              <Settings size={32} className="text-zinc-500" />
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 gap-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 p-6">
+            <div className="w-14 h-14 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-2xl">
+              <Settings size={28} className="text-zinc-500" />
             </div>
             <div className="text-center max-w-md">
-              <p className="text-lg tracking-wide font-semibold text-zinc-100">System Information Panel</p>
+              <p className="text-base tracking-wide font-semibold text-zinc-100">System Parameters Panel</p>
               <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                Use the left sidebar to view live server metrics, database record counts, API authentication status, and last uploaded session details.
+                Use the left menu to view live server metrics, database records, API auth status, and last uploaded session details.
               </p>
             </div>
           </div>
         ) : (!selectedLap && activeTab !== 'live') ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 gap-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 p-8">
-            <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-              <svg className="w-8 h-8 text-sky-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 gap-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 p-6">
+            <div className="w-14 h-14 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+              <svg className="w-7 h-7 text-sky-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
             </div>
             <div className="text-center">
-              <p className="text-lg tracking-wide font-medium text-zinc-200">No Lap Selected</p>
-              <p className="text-xs text-zinc-400 mt-1 max-w-sm">Choose a lap from the session history sidebar to view detailed telemetry curves and track position.</p>
+              <p className="text-base tracking-wide font-medium text-zinc-200">No Lap Selected</p>
+              <p className="text-xs text-zinc-400 mt-1 max-w-xs">Select a lap from the menu to analyze telemetry curves and track lines.</p>
             </div>
             <button 
               onClick={() => {
                 if (!isSidebarOpen) toggleSidebar();
               }}
-              className="mt-2 bg-sky-500 hover:bg-sky-400 text-zinc-950 font-semibold px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-sky-500/10 cursor-pointer flex items-center gap-2"
+              className="mt-2 bg-sky-500 hover:bg-sky-400 text-zinc-950 font-semibold px-4 py-2 rounded-lg text-xs transition-all shadow-lg shadow-sky-500/10 cursor-pointer flex items-center gap-2"
             >
-              <Clock size={16} /> Open History Sidebar
+              <Clock size={15} /> Open Telemetry Menu
             </button>
           </div>
         ) : (
-          <div className="flex flex-1 gap-6 min-h-0 w-full overflow-hidden flex-col md:flex-row">
-              {/* Left Column: Charts */}
-              <div className="flex-[2] min-w-0 flex flex-col h-full">
+          <div className="flex flex-1 gap-4 md:gap-6 min-h-0 w-full overflow-hidden">
+              {/* Telemetry Charts (Visible on desktop or when mobileView === 'charts') */}
+              <div className={`flex-[2] min-w-0 flex flex-col h-full ${mobileView === 'charts' ? 'flex' : 'hidden md:flex'}`}>
                 <TelemetryChart />
               </div>
               
-              {/* Right Column: Track & Stats */}
-              <div className="flex-1 min-w-0 md:min-w-[340px] flex flex-col gap-6 overflow-y-auto [scrollbar-gutter:stable] h-full pr-1 custom-scrollbar">
-                <div className="flex-1 flex flex-col min-h-[300px] bg-zinc-900 rounded-lg border border-zinc-800 shadow-xl overflow-hidden relative">
-                    <TrackMap />
+              {/* Track Map & Stats Column (Visible on desktop or when mobileView === 'map' / 'stats') */}
+              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-4 overflow-y-auto h-full pr-1 custom-scrollbar ${
+                mobileView !== 'charts' ? 'flex' : 'hidden md:flex'
+              }`}>
+                {/* Track Map */}
+                <div className={`flex-1 flex-col min-h-[260px] bg-zinc-900 rounded-lg border border-zinc-800 shadow-xl overflow-hidden relative ${
+                  mobileView === 'map' || window.innerWidth >= 768 ? 'flex' : 'hidden'
+                }`}>
+                  <TrackMap />
                 </div>
-                <div className="flex-none p-0 overflow-visible">
+
+                {/* Stats & Sectors */}
+                <div className={`flex-none p-0 overflow-visible ${
+                  mobileView === 'stats' || window.innerWidth >= 768 ? 'block' : 'hidden'
+                }`}>
                   <StatsWidget />
                 </div>
               </div>

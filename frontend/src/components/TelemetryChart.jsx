@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Brush, ReferenceDot
+  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Brush
 } from 'recharts';
 import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
@@ -50,9 +50,33 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
   const data = payload[0].payload;
   const hasRef = data.ref_elapsed_time !== null && data.ref_elapsed_time !== undefined;
   const timeDelta = data.delta !== null && data.delta !== undefined ? data.delta : (hasRef ? (data.elapsed_time - data.ref_elapsed_time) : 0);
-  
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // On mobile, render a compact translucent summary at top of screen to avoid covering the chart
+  if (isMobile) {
+    return (
+      <div className="bg-zinc-900/95 border border-zinc-700/80 p-2 text-[10px] z-[100] rounded-md shadow-lg backdrop-blur-md max-w-[280px]">
+        <div className="flex justify-between font-bold text-zinc-100 border-b border-zinc-800 pb-1 mb-1">
+          <span>Dist: {(data.lap_dist_pct * 100).toFixed(1)}%</span>
+          {hasRef && (
+            <span className={timeDelta <= 0 ? 'text-green-400' : 'text-red-400'}>
+              Δ {timeDelta > 0 ? '+' : ''}{timeDelta.toFixed(2)}s
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-mono">
+          <span className="text-red-400">Spd: {data.speed?.toFixed(1)}</span>
+          <span className="text-green-400">Thr: {data.throttle?.toFixed(2)}</span>
+          <span className="text-red-500">Brk: {data.brake?.toFixed(2)}</span>
+          <span className="text-zinc-200">Str: {data.wheel_angle?.toFixed(2)}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop floating tooltip
   return (
-    <div className="bg-zinc-900 border border-zinc-800 p-2 text-xs z-[100] rounded-md shadow-xl backdrop-blur-md bg-opacity-90">
+    <div className="bg-zinc-900 border border-zinc-800 p-2 text-xs z-[100] rounded-md shadow-xl backdrop-blur-md bg-opacity-90 min-w-[150px]">
       <p className="m-0 font-bold text-zinc-100 mb-1.5 flex justify-between">
         <span>Dist: {(data.lap_dist_pct * 100).toFixed(1)}%</span>
         {hasRef && (
@@ -97,12 +121,12 @@ const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChar
         data={mergedData} 
         syncId="telemetry"
         syncMethod="value"
-        margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+        margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
         onMouseEnter={() => { activeChartRef.current = 'delta'; }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
         <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
-        <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={10} tickCount={3} tickFormatter={v => v.toFixed(1)} />
+        <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={9} tickCount={3} tickFormatter={v => v.toFixed(1)} width={35} />
         <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="delta" activeChartRef={activeChartRef} />} />
         <ReferenceLine y={0} stroke="#a1a1aa" opacity={0.5} />
         <Area type="linear" dataKey="delta" stroke="#f4f4f5" fillOpacity={0} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
@@ -112,7 +136,7 @@ const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChar
         ))}
         <Brush 
           dataKey="lap_dist_pct" 
-          height={20} 
+          height={18} 
           stroke="#52525b" 
           fill="#18181b" 
           tickFormatter={() => ''} 
@@ -175,16 +199,13 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       localSpeed = totalDist > 0 ? totalDist / totalTime : 1;
     }
 
-    // Resample uniformly by lap_dist_pct to ensure Brush (categorical index) perfectly aligns with XAxis (numerical value)
     let finalData = [];
     const numPoints = 1500;
     
-    // We want to generate exactly `numPoints` points from pct=0.0 to pct=1.0
     let uIdx = 0;
     for (let i = 0; i < numPoints; i++) {
       let pct = i / (numPoints - 1);
       
-      // Advance uIdx until unwrapped[uIdx + 1] is past our target pct, or we run out of points
       while (uIdx < unwrapped.length - 2 && unwrapped[uIdx + 1].lap_dist_pct < pct) {
         uIdx++;
       }
@@ -303,16 +324,17 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
   if (!lapData?.length) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-zinc-500 font-mono text-sm tracking-widest">NO TELEMETRY DATA</p>
+        <p className="text-zinc-500 font-mono text-xs tracking-widest">NO TELEMETRY DATA AVAILABLE</p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-950 p-4">
-      <div className="flex justify-between items-center mb-4 pb-4 border-b border-zinc-800 flex-none">
-        <div className="flex items-center gap-4">
-            <h2 className="text-sm uppercase tracking-widest text-zinc-300 font-semibold m-0">Telemetry Analysis</h2>
+    <div className="flex-1 flex flex-col h-full bg-zinc-950 p-2 sm:p-4 min-w-0">
+      {/* Controls Header */}
+      <div className="flex flex-wrap justify-between items-center mb-3 pb-3 border-b border-zinc-800 flex-none gap-2 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-xs uppercase tracking-wider text-zinc-300 font-bold m-0 flex-none">Telemetry Analysis</h2>
             {availableLaps.length > 0 && (() => {
                 let bestLapId = null;
                 let bestTime = Infinity;
@@ -323,18 +345,18 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                     }
                 });
                 return (
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-500">Ref Lap</span>
+                    <div className="flex items-center gap-1.5 flex-none">
+                        <span className="text-[11px] text-zinc-500 font-medium">Ref:</span>
                         <select 
                             value={activeRefId || ''} 
                             onChange={e => setReferenceLapId(parseInt(e.target.value))}
-                            className="bg-zinc-950 text-zinc-100 border border-zinc-700 px-2.5 py-1 rounded-md text-xs cursor-pointer outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all"
+                            className="bg-zinc-900 text-zinc-100 border border-zinc-800 px-2 py-0.5 rounded text-xs cursor-pointer outline-none focus:border-sky-500 font-mono truncate max-w-[150px]"
                         >
                             {availableLaps.map(l => (
                                 <option 
                                     key={l.id} 
                                     value={l.id}
-                                    className={l.id === bestLapId ? 'text-purple-400' : 'text-inherit'}
+                                    className={l.id === bestLapId ? 'text-purple-400 font-bold' : 'text-inherit'}
                                 >
                                     Lap {l.lap_number} ({l.lap_time.toFixed(2)}s)
                                 </option>
@@ -344,17 +366,20 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 );
             })()}
         </div>
-        <div className="flex items-center gap-3">
+
+        {/* Buttons & Toggles */}
+        <div className="flex items-center gap-2 flex-wrap">
           {brushRange && (
             <button 
               onClick={() => setBrushRange(null)}
-              className="bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 px-2.5 py-1 rounded-md text-xs font-mono transition-all flex items-center gap-1 cursor-pointer"
+              className="bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 px-2 py-0.5 rounded text-[11px] font-mono transition-all flex items-center gap-1 cursor-pointer flex-none"
             >
-              <span>🔍</span> Reset Zoom
+              <span>🔍</span> Reset
             </button>
           )}
 
-          <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-md p-1">
+          {/* Toggle Pills */}
+          <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded p-0.5 flex-none">
             {[
               { id: 'speed', label: 'SPD', color: 'text-red-400' },
               { id: 'throttle', label: 'THR', color: 'text-green-400' },
@@ -377,30 +402,18 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               </button>
             ))}
           </div>
-
-          {referenceData?.length > 0 && (
-            <div className="text-xs text-zinc-500 flex gap-4 bg-zinc-950 px-3 py-1.5 rounded-full border border-zinc-800">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-0.5 bg-sky-400"></div>
-                <span className="text-zinc-300">Current</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-0.5 bg-zinc-500"></div>
-                <span className="text-zinc-500">Reference</span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
       
+      {/* Charts Scroll Container */}
       <div 
-        className="w-full flex-1 flex flex-col gap-3 overflow-y-auto [scrollbar-gutter:stable] pr-2 custom-scrollbar"
+        className="w-full flex-1 flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-1 min-w-0"
         onMouseEnter={() => setIsUserHovering(true)}
         onMouseLeave={() => setIsUserHovering(false)}
       >
-                {/* Delta Chart */}
+        {/* Delta Chart */}
         {visibleCharts.delta && deltaData?.length > 0 && (
-          <div className="flex-none h-32 flex flex-col relative group">
+          <div className="flex-none h-28 flex flex-col relative group min-w-0">
             <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">DELTA (s)</div>
             <div className="flex-1 mt-3">
               <DeltaMinimapChart 
@@ -415,7 +428,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
 
         {/* Speed Chart */}
         {visibleCharts.speed && (
-          <div className="flex-1 min-h-[140px] flex flex-col relative group">
+          <div className="flex-1 min-h-[130px] flex flex-col relative group min-w-0">
             <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">SPEED (km/h)</div>
             <div className="flex-1 mt-3">
               <ResponsiveContainer width="100%" height="100%">
@@ -423,12 +436,12 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 data={zoomedData} 
                 syncId="telemetry"
                 syncMethod="value"
-                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
                 onMouseEnter={() => { activeChartRef.current = 'speed'; }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                 <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
-                <YAxis domain={[0, dataMax => Math.ceil(((dataMax || 200) * 1.05) / 10) * 10]} stroke="#a1a1aa" fontSize={10} tickCount={5} />
+                <YAxis domain={[0, dataMax => Math.ceil(((dataMax || 200) * 1.05) / 10) * 10]} stroke="#a1a1aa" fontSize={9} tickCount={5} width={35} />
                 <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="speed" activeChartRef={activeChartRef} />} />
                 <Line type="linear" dataKey="speed" stroke="#ef4444" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={<FastDot />} />
                 <Line type="linear" dataKey="ref_speed" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
@@ -443,7 +456,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
 
         {/* Throttle Chart */}
         {visibleCharts.throttle && (
-          <div className="flex-1 min-h-[100px] flex flex-col relative group">
+          <div className="flex-1 min-h-[90px] flex flex-col relative group min-w-0">
             <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">THROTTLE (%)</div>
             <div className="flex-1 mt-3">
               <ResponsiveContainer width="100%" height="100%">
@@ -451,12 +464,12 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 data={zoomedData} 
                 syncId="telemetry"
                 syncMethod="value"
-                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
                 onMouseEnter={() => { activeChartRef.current = 'throttle'; }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                 <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
-                <YAxis domain={[0, 1]} stroke="#a1a1aa" fontSize={10} tickCount={3} tickFormatter={v => (v*100).toFixed(0)} />
+                <YAxis domain={[0, 1]} stroke="#a1a1aa" fontSize={9} tickCount={3} tickFormatter={v => (v*100).toFixed(0)} width={35} />
                 <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="throttle" activeChartRef={activeChartRef} />} />
                 <Area type="linear" dataKey="throttle" stroke="#22c55e" fill="#22c55e" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
                 <Line type="linear" dataKey="ref_throttle" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
@@ -472,7 +485,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
 
         {/* Brake Chart */}
         {visibleCharts.brake && (
-          <div className="flex-1 min-h-[100px] flex flex-col relative group">
+          <div className="flex-1 min-h-[90px] flex flex-col relative group min-w-0">
             <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">BRAKE (%)</div>
             <div className="flex-1 mt-3">
               <ResponsiveContainer width="100%" height="100%">
@@ -480,12 +493,12 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 data={zoomedData} 
                 syncId="telemetry"
                 syncMethod="value"
-                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
                 onMouseEnter={() => { activeChartRef.current = 'brake'; }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                 <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
-                <YAxis domain={[0, 1]} stroke="#a1a1aa" fontSize={10} tickCount={3} tickFormatter={v => (v*100).toFixed(0)} />
+                <YAxis domain={[0, 1]} stroke="#a1a1aa" fontSize={9} tickCount={3} tickFormatter={v => (v*100).toFixed(0)} width={35} />
                 <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="brake" activeChartRef={activeChartRef} />} />
                 <Area type="linear" dataKey="brake" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
                 <Line type="linear" dataKey="ref_brake" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
@@ -502,7 +515,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
 
         {/* Steering Chart */}
         {visibleCharts.steering && (
-          <div className="flex-1 min-h-[100px] flex flex-col relative group">
+          <div className="flex-1 min-h-[90px] flex flex-col relative group min-w-0">
             <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">STEERING (deg)</div>
             <div className="flex-1 mt-3">
               <ResponsiveContainer width="100%" height="100%">
@@ -510,12 +523,12 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 data={zoomedData} 
                 syncId="telemetry"
                 syncMethod="value"
-                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
                 onMouseEnter={() => { activeChartRef.current = 'wheel'; }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                 <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
-                <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={10} tickCount={3} />
+                <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={9} tickCount={3} width={35} />
                 <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="wheel" activeChartRef={activeChartRef} />} />
                 <Line type="linear" dataKey="wheel_angle" stroke="#f4f4f5" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={<FastDot />} />
                 <Line type="linear" dataKey="ref_wheel_angle" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
@@ -530,7 +543,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
 
         {/* Slip Angle Chart */}
         {visibleCharts.slip && (
-          <div className="flex-1 min-h-[100px] flex flex-col relative group">
+          <div className="flex-1 min-h-[90px] flex flex-col relative group min-w-0">
             <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">SLIP ANGLE (deg)</div>
             <div className="flex-1 mt-3">
               <ResponsiveContainer width="100%" height="100%">
@@ -538,7 +551,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 data={zoomedData} 
                 syncId="telemetry"
                 syncMethod="value"
-                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
                 onMouseEnter={() => { activeChartRef.current = 'slip'; }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
@@ -548,10 +561,10 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                   type="number"
                   domain={['dataMin', 'dataMax']}
                   tickFormatter={(val) => (val * 100).toFixed(0) + '%'}
-                  fontSize={10}
+                  fontSize={9}
                   minTickGap={30}
                 />
-                <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={10} tickCount={3} />
+                <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={9} tickCount={3} width={35} />
                 <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="slip" activeChartRef={activeChartRef} />} />
                 <Area type="linear" dataKey="slip_angle" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
                 <Line type="linear" dataKey="ref_slip_angle" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
