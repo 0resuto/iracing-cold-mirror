@@ -20,7 +20,7 @@ export const SystemPanel = () => {
       ) : (
         <div className="flex flex-col gap-4">
           {/* Server Connection Card */}
-          <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 flex flex-col gap-3">
+          <div className="bg-zinc-950 rounded-xl border border-zinc-800 flex flex-col gap-3" style={{ padding: '16px' }}>
             <span className="text-xs uppercase tracking-wider text-zinc-500 font-bold">Server Infrastructure</span>
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400">Backend API</span>
@@ -42,7 +42,7 @@ export const SystemPanel = () => {
           </div>
 
           {/* Last Uploaded Session Card */}
-          <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 flex flex-col gap-3">
+          <div className="bg-zinc-950 rounded-xl border border-zinc-800 flex flex-col gap-3" style={{ padding: '16px' }}>
             <span className="text-xs uppercase tracking-wider text-zinc-500 font-bold">Last Session Upload</span>
             {systemInfo.last_upload ? (
               <>
@@ -73,7 +73,7 @@ export const SystemPanel = () => {
           </div>
 
           {/* Database Stats Card */}
-          <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 flex flex-col gap-2.5">
+          <div className="bg-zinc-950 rounded-xl border border-zinc-800 flex flex-col gap-2.5" style={{ padding: '16px' }}>
             <span className="text-xs uppercase tracking-wider text-zinc-500 font-bold">Storage Metrics</span>
             <div className="grid grid-cols-3 gap-2.5 text-center mt-1">
               <div className="bg-zinc-900 p-3 rounded-lg border border-zinc-800/80">

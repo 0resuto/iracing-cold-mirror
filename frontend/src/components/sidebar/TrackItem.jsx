@@ -22,11 +22,11 @@ export const TrackItem = React.memo(function TrackItem({ trackName, sessions, pl
       {/* Track Header */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        style={{ padding: '12px 14px' }}
-        className={`flex justify-between items-center rounded-xl cursor-pointer font-bold text-xs sm:text-sm transition-all min-w-0 border active:scale-[0.99] min-h-[46px] ${
+        style={{ padding: '6px 12px' }}
+        className={`flex justify-between items-center cursor-pointer font-bold text-xs sm:text-sm transition-all min-w-0 rounded-xl border-l-4 border-purple-500 border-y border-r border-purple-500/30 active:scale-[0.99] min-h-[34px] relative z-10 ${
           isOpen 
-            ? 'bg-purple-500/15 border-purple-500/40 text-purple-100 shadow-sm' 
-            : 'bg-zinc-900/80 border-zinc-800 hover:bg-zinc-800/70 text-zinc-200'
+            ? 'bg-purple-950/90 text-purple-100 shadow-sm' 
+            : 'bg-zinc-900/80 hover:bg-zinc-800/70 text-zinc-200'
         }`}
       >
         <span className="flex items-center gap-2.5 min-w-0 truncate pr-2">
@@ -43,18 +43,25 @@ export const TrackItem = React.memo(function TrackItem({ trackName, sessions, pl
 
       {/* Sessions List Level 3 */}
       {isOpen && (
-        <div className="flex flex-col ml-3 pl-3 border-l-2 border-purple-500/40 my-1 min-w-0">
-          {sessions.map(session => (
-            <SessionItem 
-              key={session.id} 
-              session={session} 
-              player={player} 
-              trackName={trackName}
-              selectedLapId={selectedLapId} 
-              setSelectedLap={setSelectedLap} 
-              onSelectLap={onSelectLap}
-            />
-          ))}
+        <div className="relative flex flex-col my-1 min-w-0" style={{ marginLeft: '4px' }}>
+          {/* Vertical Guide Line extending 10px UP under Track Header */}
+          <div 
+            className="absolute top-[-10px] bottom-1 w-1 bg-purple-500/70 rounded-full pointer-events-none" 
+            style={{ left: '-4px', zIndex: 0 }}
+          />
+          <div className="flex flex-col gap-1.5 relative z-10 min-w-0" style={{ paddingLeft: '4px' }}>
+            {sessions.map(session => (
+              <SessionItem 
+                key={session.id} 
+                session={session} 
+                player={player} 
+                trackName={trackName}
+                selectedLapId={selectedLapId} 
+                setSelectedLap={setSelectedLap} 
+                onSelectLap={onSelectLap}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -51,93 +51,61 @@ function App() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden p-3 sm:p-4 md:p-6 gap-3 sm:gap-4 md:gap-6 bg-zinc-950 min-w-0">
+      <div className="flex-1 flex flex-col h-full overflow-hidden gap-3 sm:gap-4 md:gap-6 bg-zinc-950 min-w-0" style={{ padding: '12px 16px' }}>
         
         {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between flex-none pb-2.5 border-b border-zinc-800/80 gap-3">
-          <div className="flex items-center justify-between sm:justify-start gap-3 min-w-0 w-full sm:w-auto">
-            {/* Prominent Menu Toggle Button */}
-            <button 
-              onClick={toggleSidebar}
-              className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 active:bg-zinc-800 text-sky-400 hover:text-sky-300 transition-all text-xs flex items-center gap-2 cursor-pointer flex-none min-h-[42px] shadow-sm active:scale-95 font-bold"
-              title="Toggle Menu"
-            >
-              <Menu size={18} />
-              <span>Menu</span>
-            </button>
-
-            <div className="min-w-0 truncate">
-              {activeTab === 'live' ? null : activeTab === 'system' ? (
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-2 text-emerald-400 font-semibold text-xs sm:text-sm truncate">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block flex-none animate-pulse"></span>
-                    System Infrastructure
-                  </span>
-                </div>
-              ) : selectedLap ? (
-                <div className="flex items-center gap-2 truncate pr-2">
-                  <span className="text-xs sm:text-sm font-bold text-zinc-100 flex-none">
-                    Lap {selectedLap.lap_number}
-                  </span>
-                  <span className="bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold flex-none">
-                    {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Outlap'}
-                  </span>
-                  {selectedLap.track_name && (
-                    <span className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md text-[11px] font-medium flex items-center gap-1.5 truncate hidden sm:flex">
-                      <MapPin size={13} className="text-zinc-500 flex-none" /> 
-                      <span className="truncate">{selectedLap.track_name}</span>
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <div className="text-zinc-400 text-xs sm:text-sm font-medium tracking-wide truncate">
-                  Select lap from menu
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Full-Width Segmented View Switcher Buttons on Mobile (Charts, Map, Stats) */}
+        <div className="flex items-center justify-between flex-none pb-2.5 border-b border-zinc-800/80 gap-2.5 w-full min-w-0">
+          
+          {/* View Switcher Buttons on Mobile (Charts, Map, Stats) - Takes flex-1 width */}
           {selectedLap && activeTab === 'history' && (
-            <div className="grid grid-cols-3 gap-2 bg-zinc-900/90 p-1.5 rounded-xl border border-zinc-800/90 md:hidden w-full sm:w-auto flex-none shadow-inner">
+            <div className="grid grid-cols-3 gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/90 md:hidden flex-1 shadow-inner min-w-0">
               <button
                 onClick={() => setMobileView('charts')}
-                className={`py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[40px] active:scale-95 ${
+                className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 min-w-0 ${
                   mobileView === 'charts' 
                     ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm font-extrabold' 
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
                 title="Charts View"
               >
-                <Activity size={16} />
-                <span>Charts</span>
+                <Activity size={15} className="flex-none" />
+                <span className="truncate">Charts</span>
               </button>
               <button
                 onClick={() => setMobileView('map')}
-                className={`py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[40px] active:scale-95 ${
+                className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 min-w-0 ${
                   mobileView === 'map' 
                     ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm font-extrabold' 
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
                 title="Track Map View"
               >
-                <Map size={16} />
-                <span>Map</span>
+                <Map size={15} className="flex-none" />
+                <span className="truncate">Map</span>
               </button>
               <button
                 onClick={() => setMobileView('stats')}
-                className={`py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[40px] active:scale-95 ${
+                className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 min-w-0 ${
                   mobileView === 'stats' 
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm font-extrabold' 
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
                 title="Sectors & Stats View"
               >
-                <BarChart2 size={16} />
-                <span>Stats</span>
+                <BarChart2 size={15} className="flex-none" />
+                <span className="truncate">Stats</span>
               </button>
             </div>
           )}
+
+          {/* Gray Icon-Only Menu Toggle Button (Mobile Only) */}
+          <button 
+            onClick={toggleSidebar}
+            className="md:hidden p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 active:bg-zinc-800 text-zinc-300 hover:text-zinc-100 transition-all flex items-center justify-center cursor-pointer flex-none min-w-[42px] min-h-[42px] shadow-sm active:scale-95"
+            title="Toggle Menu"
+          >
+            <Menu size={20} />
+          </button>
         </div>
 
         {/* Main Content Body */}

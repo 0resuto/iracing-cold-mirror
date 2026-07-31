@@ -39,11 +39,11 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
       {/* Session Header Card */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        style={{ padding: '14px' }}
-        className={`flex flex-col gap-1.5 rounded-xl cursor-pointer border transition-all active:scale-[0.99] min-h-[48px] ${
+        style={{ padding: '8px 10px' }}
+        className={`flex flex-col gap-1 cursor-pointer rounded-xl border-l-4 border-emerald-500 border-y border-r border-emerald-500/30 transition-all active:scale-[0.99] min-h-[36px] relative z-10 ${
           isOpen
-            ? 'bg-zinc-900 border-zinc-700 text-zinc-100 shadow-md'
-            : 'bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700 text-zinc-300 hover:bg-zinc-900/80'
+            ? 'bg-zinc-900 text-zinc-100 shadow-md'
+            : 'bg-zinc-900/60 hover:bg-zinc-900/80 text-zinc-300'
         }`}
       >
         <div className="flex items-center justify-between text-xs sm:text-sm font-bold min-w-0">
@@ -77,34 +77,41 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
 
       {/* Laps List Level 4 */}
       {isOpen && (
-        <div className="flex flex-col ml-3 pl-3 border-l-2 border-amber-500/50 my-1 py-1 bg-black/40 rounded-r-xl min-w-0 gap-1">
-          {laps.length === 0 ? (
-            <div className="px-4 py-2 text-xs text-zinc-500 italic">No laps recorded.</div>
-          ) : (
-            <>
-              {visibleLaps.map(lap => (
-                <LapItem 
-                  key={lap.id} 
-                  lap={lap} 
-                  player={player} 
-                  trackName={trackName} 
-                  selectedLapId={selectedLapId} 
-                  bestLapId={bestLapId} 
-                  setSelectedLap={setSelectedLap} 
-                  onSelectLap={onSelectLap}
-                />
-              ))}
-              {hiddenCount > 0 && (
-                <button
-                  onClick={() => setShowAllLaps(true)}
-                  style={{ padding: '8px 16px' }}
-                  className="mt-1 text-xs text-sky-400 hover:text-sky-300 font-mono text-left cursor-pointer transition-colors font-bold min-h-[38px]"
-                >
-                  + Show {hiddenCount} more laps
-                </button>
-              )}
-            </>
-          )}
+        <div className="relative flex flex-col my-1 bg-black/40 rounded-r-xl min-w-0" style={{ marginLeft: '4px' }}>
+          {/* Vertical Guide Line extending 10px UP under Session Header */}
+          <div 
+            className="absolute top-[-10px] bottom-1 w-1 bg-emerald-500/70 rounded-full pointer-events-none" 
+            style={{ left: '-4px', zIndex: 0 }}
+          />
+          <div className="flex flex-col gap-1 relative z-10 min-w-0 py-1" style={{ paddingLeft: '4px', paddingRight: '4px' }}>
+            {laps.length === 0 ? (
+              <div className="px-4 py-2 text-xs text-zinc-500 italic">No laps recorded.</div>
+            ) : (
+              <>
+                {visibleLaps.map(lap => (
+                  <LapItem 
+                    key={lap.id} 
+                    lap={lap} 
+                    player={player} 
+                    trackName={trackName} 
+                    selectedLapId={selectedLapId} 
+                    bestLapId={bestLapId} 
+                    setSelectedLap={setSelectedLap} 
+                    onSelectLap={onSelectLap}
+                  />
+                ))}
+                {hiddenCount > 0 && (
+                  <button
+                    onClick={() => setShowAllLaps(true)}
+                    style={{ padding: '8px 16px' }}
+                    className="mt-1 text-xs text-sky-400 hover:text-sky-300 font-mono text-left cursor-pointer transition-colors font-bold min-h-[38px]"
+                  >
+                    + Show {hiddenCount} more laps
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

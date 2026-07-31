@@ -22,7 +22,7 @@ export const LiveStreamPanel = () => {
         )}
       </div>
 
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-xl flex flex-col gap-3" style={{ padding: '16px' }}>
         <div className="text-xs text-zinc-400 flex justify-between items-center">
           <span>Collector Status</span>
           <span className={`font-semibold flex items-center gap-1.5 ${isStreaming ? 'text-green-400' : 'text-zinc-500'}`}>
@@ -48,7 +48,7 @@ export const LiveStreamPanel = () => {
       </div>
 
       {!isStreaming && (
-        <div className="text-xs text-amber-400/90 leading-relaxed bg-amber-500/10 p-4 rounded-xl border border-amber-500/20">
+        <div className="text-xs text-amber-400/90 leading-relaxed bg-amber-500/10 rounded-xl border border-amber-500/20" style={{ padding: '16px' }}>
           ⚠️ <strong>iRacing isn't running or collector is idle.</strong><br/>
           Start iRacing live collector script (<code>run.bat</code> or <code>dev/run_dev.bat</code>) to view live telemetry stream.
         </div>

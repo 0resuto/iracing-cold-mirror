@@ -63,7 +63,7 @@ export const SectorsWidget = React.memo(function SectorsWidget({ selectedLap, pl
       
       <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[140px] custom-scrollbar pr-1">
         {displaySectors.map(s => (
-          <div key={s.id || s.sector_number} className="flex justify-between items-center text-xs bg-zinc-900 px-3.5 py-2 rounded-lg border border-zinc-800/80 min-w-0">
+          <div key={s.id || s.sector_number} className="flex justify-between items-center text-xs bg-zinc-900 rounded-lg border border-zinc-800/80 min-w-0" style={{ padding: '4px 14px' }}>
             <span className="text-zinc-400 font-bold">Sector {s.sector_number}</span>
             <div className="flex items-center gap-3">
               <span className="font-mono text-zinc-200 font-bold">{s.sector_time.toFixed(2)}s</span>

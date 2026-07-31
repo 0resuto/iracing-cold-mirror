@@ -334,7 +334,18 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       {/* Controls Header (High Tap Targets for Mobile) */}
       <div className="flex flex-wrap justify-between items-center mb-3 pb-3 border-b border-zinc-800 flex-none gap-2 min-w-0">
         <div className="flex items-center gap-2 flex-wrap min-h-[38px]">
-            <h2 className="text-xs uppercase tracking-wider text-zinc-300 font-extrabold m-0 flex-none">Telemetry Analysis</h2>
+            {selectedLap ? (
+              <div className="flex items-center gap-2 flex-none">
+                <span className="text-xs sm:text-sm font-bold text-zinc-100 flex-none">
+                  Lap {selectedLap.lap_number}
+                </span>
+                <span className="bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold flex-none">
+                  {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Outlap'}
+                </span>
+              </div>
+            ) : (
+              <h2 className="text-xs uppercase tracking-wider text-zinc-300 font-extrabold m-0 flex-none">Telemetry Analysis</h2>
+            )}
             {availableLaps.length > 0 && (() => {
                 let bestLapId = null;
                 let bestTime = Infinity;
@@ -350,7 +361,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                         <select 
                             value={activeRefId || ''} 
                             onChange={e => setReferenceLapId(parseInt(e.target.value))}
-                            className="bg-zinc-900 text-zinc-100 border border-zinc-800 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer outline-none focus:border-sky-500 font-mono truncate max-w-[170px] min-h-[36px] font-semibold"
+                            className="bg-zinc-900 text-zinc-100 border border-zinc-800 px-2 py-1 rounded-lg text-xs cursor-pointer outline-none focus:border-sky-500 font-mono truncate max-w-[170px] min-h-[28px] font-semibold"
                         >
                             {availableLaps.map(l => (
                                 <option 
@@ -372,14 +383,14 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
           {brushRange && (
             <button 
               onClick={() => setBrushRange(null)}
-              className="bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 px-3 py-1.5 rounded-lg text-xs font-mono transition-all flex items-center gap-1 cursor-pointer flex-none min-h-[36px] font-bold active:scale-95"
+              className="bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 px-2.5 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1 cursor-pointer flex-none min-h-[28px] font-bold active:scale-95"
             >
               <span>🔍</span> Reset
             </button>
           )}
 
-          {/* Toggle Pills (High Touch Target: Min 36px Height, 40px Width) */}
-          <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1 flex-none flex-wrap">
+          {/* Toggle Pills */}
+          <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 flex-none flex-wrap">
             {[
               { id: 'speed', label: 'SPD', color: 'text-red-400' },
               { id: 'throttle', label: 'THR', color: 'text-green-400' },
@@ -391,7 +402,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
               <button
                 key={c.id}
                 onClick={() => toggleChart(c.id)}
-                className={`px-2.5 py-1.5 rounded-md text-xs font-mono transition-all cursor-pointer min-h-[34px] min-w-[38px] flex items-center justify-center active:scale-95 ${
+                className={`px-2 py-1 rounded-md text-xs font-mono transition-all cursor-pointer min-h-[26px] min-w-[32px] flex items-center justify-center active:scale-95 ${
                   visibleCharts[c.id]
                     ? `${c.color} bg-zinc-800 font-extrabold border border-zinc-700 shadow-sm`
                     : 'text-zinc-500 hover:text-zinc-300 bg-transparent border border-transparent'

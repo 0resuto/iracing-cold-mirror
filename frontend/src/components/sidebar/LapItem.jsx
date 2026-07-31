@@ -15,8 +15,8 @@ export const LapItem = React.memo(function LapItem({ lap, player, trackName, sel
   return (
     <div
       onClick={handleClick}
-      style={{ padding: '12px 16px' }}
-      className={`group flex justify-between items-center my-1 text-xs cursor-pointer rounded-xl transition-all min-h-[42px] active:scale-[0.98] ${
+      style={{ padding: '4px 10px' }}
+      className={`group flex justify-between items-center my-0.5 text-xs cursor-pointer rounded-lg transition-all min-h-[32px] active:scale-[0.98] ${
         isSelected
           ? 'bg-sky-500/25 text-sky-200 font-bold border-l-4 border-sky-400 shadow-md'
           : 'hover:bg-zinc-800/70 text-zinc-300 hover:text-zinc-100 border-l-2 border-transparent'

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
-import { Timer, Radio, Settings, X } from 'lucide-react';
+import { Timer, Radio, Settings, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { LiveStreamPanel } from './sidebar/LiveStreamPanel';
 import { SystemPanel } from './sidebar/SystemPanel';
@@ -140,13 +140,16 @@ export const Sidebar = React.memo(function Sidebar() {
       
       {/* Left Icon Navigation Bar (DESKTOP ONLY) */}
       <div className="hidden md:flex w-16 min-w-[64px] border-r border-zinc-800 flex-col items-center py-4 bg-zinc-950 flex-none z-10">
+        {/* Toggle Sidebar Arrow Button */}
         <button 
           onClick={toggleSidebar} 
-          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-none cursor-pointer text-xs p-2 mb-8 rounded-lg w-9 h-9 flex items-center justify-center transition-colors shadow-sm"
+          title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+          className="p-3 rounded-xl hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-all flex items-center justify-center cursor-pointer mt-1 mb-10 w-12 h-12 border border-transparent hover:border-zinc-800 active:scale-95"
         >
-          {isOpen ? '◀' : '▶'}
+          {isOpen ? <ChevronLeft size={26} strokeWidth={2.5} /> : <ChevronRight size={26} strokeWidth={2.5} />}
         </button>
-        <div className="flex flex-col gap-6 w-full">
+
+        <div className="flex flex-col gap-4 w-full">
           {/* History Tab */}
           <div 
             title="History" 
@@ -154,11 +157,11 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('history');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'history' ? 'border-sky-400 text-sky-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'
+            className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
+              activeTab === 'history' ? 'border-sky-400 text-sky-400 font-bold' : 'border-transparent text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            <Timer size={22} />
+            <Timer size={24} />
           </div>
 
           {/* Live Telemetry Tab */}
@@ -168,11 +171,11 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('live');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1 transition-colors ${
-              activeTab === 'live' ? 'border-red-500 text-red-500' : 'border-transparent text-zinc-600 hover:text-zinc-400'
+            className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
+              activeTab === 'live' ? 'border-red-500 text-red-500 font-bold' : 'border-transparent text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            <Radio size={22} />
+            <Radio size={24} />
           </div>
 
           {/* System & Parameters Tab */}
@@ -182,11 +185,11 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('system');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'system' ? 'border-emerald-400 text-emerald-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'
+            className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
+              activeTab === 'system' ? 'border-emerald-400 text-emerald-400 font-bold' : 'border-transparent text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            <Settings size={22} />
+            <Settings size={24} />
           </div>
         </div>
       </div>
@@ -195,7 +198,7 @@ export const Sidebar = React.memo(function Sidebar() {
       <div className={`flex-1 flex-col overflow-hidden min-w-0 ${isOpen ? 'flex' : 'hidden'}`}>
         
         {/* MOBILE TOP BAR (Segmented Tabs + Close Button) */}
-        <div className="flex md:hidden items-center justify-between p-4 bg-zinc-950 border-b border-zinc-800 flex-none gap-3 min-h-[60px]">
+        <div className="flex md:hidden items-center justify-between bg-zinc-950 border-b border-zinc-800 flex-none gap-3 min-h-[60px]" style={{ padding: '16px 20px' }}>
           {/* Segmented Top Tabs */}
           <div className="flex items-center gap-2 bg-zinc-900 p-1.5 rounded-xl border border-zinc-800 flex-1">
             <button
@@ -254,7 +257,7 @@ export const Sidebar = React.memo(function Sidebar() {
             />
 
             {/* History Tree List */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar min-w-0" style={{ padding: '16px 20px' }}>
+            <div className="flex-1 overflow-y-auto custom-scrollbar min-w-0" style={{ padding: '12px 0' }}>
               {isLoading ? (
                 <div className="text-xs text-zinc-500 animate-pulse">Loading history tree...</div>
               ) : isError ? (
@@ -280,10 +283,10 @@ export const Sidebar = React.memo(function Sidebar() {
 
             {/* Ideal Lap Section */}
             {idealLap && (
-              <div className="border-t border-zinc-800 bg-black/10 flex-none min-w-0" style={{ padding: '14px 20px' }}>
+              <div className="border-t border-zinc-800 bg-black/10 flex-none min-w-0" style={{ padding: '6px 20px' }}>
                  <div className="flex justify-between items-center min-w-0">
                     <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0 truncate">Theoretical Best</h3>
-                    <span className="font-mono font-bold text-sky-400 text-base flex-none">
+                    <span className="font-mono font-bold text-sky-400 text-xs flex-none">
                       {idealLap.ideal_lap_time.toFixed(2)}s
                     </span>
                  </div>
