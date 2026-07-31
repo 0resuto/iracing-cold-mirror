@@ -12,6 +12,7 @@ function App() {
   const activeTab = useAppStore(state => state.activeTab);
   const selectedLap = useAppStore(state => state.selectedLap);
   const isSidebarOpen = useAppStore(state => state.isSidebarOpen);
+  const toggleSidebar = useAppStore(state => state.toggleSidebar);
 
   // Initialize live telemetry websocket when activeTab is 'live'
   useLiveTelemetryWS(activeTab === 'live');
