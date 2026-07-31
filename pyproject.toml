@@ -15,7 +15,8 @@ dependencies = [
     "httpx",
     "python-multipart",
     "pyirsdk",
-    "pytest"
+    "pytest",
+    "websockets"
 ]
 
 [build-system]
