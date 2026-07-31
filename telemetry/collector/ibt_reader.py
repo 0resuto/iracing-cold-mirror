@@ -3,6 +3,8 @@ import time
 
 import irsdk
 
+from telemetry.physics import calculate_wheel_physics
+
 
 class IBTReader:
     def __init__(self, file_path="dev/telemetry.ibt", loop=True):
@@ -112,29 +114,7 @@ class IBTReader:
         data["lr_speed"] = get_val("LRspeed") * 3.6 if "LRspeed" in self.names else data["speed"]
         data["rr_speed"] = get_val("RRspeed") * 3.6 if "RRspeed" in self.names else data["speed"]
 
-        # Flags (ABS, TC) depending on car might have different names, fallback to 0
-        data["abs_active"] = 0
-        if data["brake"] > 0.1 and data["speed"] > 20.0:
-            min_wheel_speed = min(
-                data["lf_speed"], data["rf_speed"], data["lr_speed"], data["rr_speed"]
-            )
-            slip_ratio = (data["speed"] - min_wheel_speed) / data["speed"]
-            if slip_ratio > 0.15:
-                data["abs_active"] = 1
-
-        data["tc_active"] = 0
-        if data["throttle"] > 0.1 and data["speed"] > 10.0:
-            max_wheel_speed = max(
-                data["lf_speed"], data["rf_speed"], data["lr_speed"], data["rr_speed"]
-            )
-            tc_slip_ratio = (max_wheel_speed - data["speed"]) / data["speed"]
-            if tc_slip_ratio > 0.15:
-                data["tc_active"] = 1
-
-        # Simple wheel lock logic
-        data["wheel_lock"] = (
-            1 if (data["brake"] > 0.5 and data["lf_speed"] < 5.0 and data["speed"] > 10.0) else 0
-        )
+        data = calculate_wheel_physics(data)
 
         self.current_idx += 1
 
