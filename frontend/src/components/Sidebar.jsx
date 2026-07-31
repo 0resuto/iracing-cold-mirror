@@ -351,6 +351,14 @@ const SystemPanel = () => {
                   <span className="text-zinc-400">Track</span>
                   <span className="font-semibold text-zinc-200">{systemInfo.last_upload.track_name}</span>
                 </div>
+                {systemInfo.last_upload.created_at && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-400">Uploaded</span>
+                    <span className="text-zinc-300">
+                      {new Date(systemInfo.last_upload.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-400">Driver</span>
                   <span className="text-zinc-300">{systemInfo.last_upload.player_name}</span>

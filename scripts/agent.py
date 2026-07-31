@@ -19,16 +19,23 @@ def send_file_to_server(file_path: str):
 
     print(f"  -> Uploading '{file_name}' ({file_size_mb:.2f} MB)...")
     try:
+        file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
+        print("  -> Uploading to server (fast)...")
+
         with open(file_path, "rb") as f:
             files = {"file": (file_name, f, "application/octet-stream")}
-            response = httpx.post(upload_url, files=files, headers=headers, timeout=120)
+
+            print(
+                "  -> Server is processing the file (Parsing IBT & saving to DB). This may take several minutes, please wait..."
+            )
+
+            # Отключаем таймаут! Запрос будет висеть, пока сервер не закончит парсить и сохранять всё в БД.
+            response = httpx.post(upload_url, files=files, headers=headers, timeout=None)
 
             if response.status_code == 200:
-                print(f"  [OK] Successfully uploaded: {file_name}")
+                print(f"  [OK] Successfully uploaded and processed: {file_name}")
             elif response.status_code == 413:
-                print(
-                    f"  [ERROR] File too large (413). Increase client_max_body_size in Nginx! Size: {file_size_mb:.2f} MB"
-                )
+                print(f"  [ERROR] File too large (413). Size: {file_size_mb:.2f} MB")
             else:
                 print(f"  [ERROR] Server error [{response.status_code}]: {response.text}")
     except Exception as e:

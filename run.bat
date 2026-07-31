@@ -25,14 +25,14 @@ if errorlevel 1 (
 
 echo.
 echo   Process Status (Memory):
-wmic process where "name='python.exe' and commandline like '%%scripts.agent%%'" get processid 2>nul | findstr [0-9] >nul
+powershell -noprofile -command "if (Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.agent' }) { exit 0 } else { exit 1 }" >nul 2>&1
 if %errorlevel% equ 0 (
     echo     - IBT Sync Agent:   [ RUNNING ]
 ) else (
     echo     - IBT Sync Agent:   [ STOPPED ]
 )
 
-wmic process where "name='python.exe' and commandline like '%%scripts.run_live%%'" get processid 2>nul | findstr [0-9] >nul
+powershell -noprofile -command "if (Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.run_live' }) { exit 0 } else { exit 1 }" >nul 2>&1
 if %errorlevel% equ 0 (
     echo     - Live Telemetry:   [ RUNNING ]
 ) else (

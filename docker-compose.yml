@@ -43,6 +43,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-iracing}:${POSTGRES_PASSWORD:-iracing_local}@postgres:5432/${POSTGRES_DB:-telemetry}
       - REDIS_HOST=redis
+      - API_KEY=${API_KEY}
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -91,6 +93,7 @@ class LastUploadInfo(BaseModel):
     track_name: str
     player_name: str
     total_laps: int
+    created_at: datetime | None = None
 
 
 class SystemInfoResponse(BaseModel):

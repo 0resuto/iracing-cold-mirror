@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Float, ForeignKey, Integer, String
+from datetime import datetime
+
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from telemetry.db import Base, engine
@@ -22,6 +24,7 @@ class Session(Base):
     player = relationship("Player", back_populates="sessions")
     track_name = Column(String)
     laps = relationship("Lap", back_populates="session")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 class Lap(Base):

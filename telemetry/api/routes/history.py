@@ -152,12 +152,12 @@ def get_history(skip: int = 0, limit: int = 10, db=Depends(get_db)):
     summary="Upload and import .ibt telemetry file",
     dependencies=[Depends(verify_api_key)],
 )
-async def upload_file(file: UploadFile = File(...)):
+def upload_file(file: UploadFile = File(...)):
     if not file.filename.endswith(".ibt"):
         raise HTTPException(status_code=400, detail="Only .ibt files are allowed")
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ibt") as tmp:
-        content = await file.read()
+        content = file.file.read()
         tmp.write(content)
         tmp_path = tmp.name
 
@@ -192,6 +192,7 @@ def get_system_info(db=Depends(get_db)):
             "track_name": last_session.track_name or "Unknown Track",
             "player_name": last_session.player.name if last_session.player else "Unknown Player",
             "total_laps": len(last_session.laps) if last_session.laps else 0,
+            "created_at": last_session.created_at,
         }
     return SystemInfoResponse(
         status="ok",

@@ -16,7 +16,8 @@ dependencies = [
     "python-multipart",
     "pyirsdk",
     "pytest",
-    "websockets"
+    "websockets",
+    "tqdm"
 ]
 
 [build-system]
