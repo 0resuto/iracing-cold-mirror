@@ -47,7 +47,7 @@ const LapItem = React.memo(function LapItem({ lap, player, trackName, selectedLa
   return (
     <div
       onClick={handleClick}
-      className={`group flex justify-between items-center px-2.5 py-1.5 my-0.5 text-xs cursor-pointer rounded-r transition-all ${
+      className={`group flex justify-between items-center px-3 py-1.5 my-0.5 text-xs cursor-pointer rounded-md transition-all ${
         isSelected
           ? 'bg-sky-500/20 text-sky-200 font-semibold border-l-4 border-sky-400 shadow-sm'
           : 'hover:bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 border-l-2 border-transparent'
@@ -103,14 +103,14 @@ const SessionItem = React.memo(function SessionItem({ session, player, trackName
   const carName = session.car_name || 'Unknown Car';
 
   return (
-    <div className="flex flex-col ml-2.5 pl-2.5 border-l-2 border-emerald-500/30 my-1 relative min-w-0">
-      {/* Session Card Header */}
+    <div className="flex flex-col my-1 relative min-w-0">
+      {/* Session Header Card */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex flex-col gap-1.5 p-2 rounded-md cursor-pointer border transition-all ${
+        className={`flex flex-col gap-1 p-2.5 rounded-lg cursor-pointer border transition-all ${
           isOpen
-            ? 'bg-zinc-900 border-emerald-500/40 text-zinc-100 shadow-md'
-            : 'bg-zinc-950/60 border-zinc-800/80 hover:border-zinc-700 text-zinc-400 hover:bg-zinc-900/50'
+            ? 'bg-zinc-900 border-zinc-700 text-zinc-100 shadow-md'
+            : 'bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700 text-zinc-400 hover:bg-zinc-900/70'
         }`}
       >
         <div className="flex items-center justify-between text-xs font-semibold min-w-0">
@@ -128,8 +128,8 @@ const SessionItem = React.memo(function SessionItem({ session, player, trackName
         </div>
 
         {/* Sub-info: Car & Duration */}
-        <div className="flex items-center justify-between text-[11px] min-w-0 gap-1">
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-mono text-[10px] truncate flex-1 min-w-0">
+        <div className="flex items-center justify-between text-[11px] min-w-0 gap-1 mt-0.5">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-mono text-[10px] truncate flex-1 min-w-0">
             <Car size={11} className="flex-none text-emerald-400" />
             <span className="truncate">{carName}</span>
           </span>
@@ -144,7 +144,7 @@ const SessionItem = React.memo(function SessionItem({ session, player, trackName
 
       {/* Laps List Level 4 */}
       {isOpen && (
-        <div className="flex flex-col ml-2 pl-2 border-l-2 border-amber-500/30 my-1 py-1 bg-black/30 rounded-r min-w-0">
+        <div className="flex flex-col ml-3 pl-2 border-l-2 border-amber-500/40 my-1 py-1 bg-black/40 rounded-r min-w-0">
           {laps.length === 0 ? (
             <div className="px-3 py-2 text-xs text-zinc-500 italic">No laps recorded.</div>
           ) : (
@@ -195,22 +195,22 @@ const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, s
   }, [sessions]);
 
   return (
-    <div className="flex flex-col ml-2 pl-2 border-l-2 border-purple-500/40 my-1 relative min-w-0">
+    <div className="flex flex-col my-1 min-w-0">
       {/* Track Header */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-2.5 py-1.5 rounded-md cursor-pointer font-semibold text-xs transition-all min-w-0 ${
+        className={`flex justify-between items-center px-3 py-2 rounded-lg cursor-pointer font-semibold text-xs transition-all min-w-0 border ${
           isOpen 
-            ? 'bg-purple-500/10 border border-purple-500/30 text-purple-200 shadow-sm' 
-            : 'bg-zinc-900/60 border border-zinc-800/80 hover:bg-zinc-800/50 text-zinc-300'
+            ? 'bg-purple-500/10 border-purple-500/30 text-purple-200 shadow-sm' 
+            : 'bg-zinc-900/70 border-zinc-800 hover:bg-zinc-800/60 text-zinc-300'
         }`}
       >
-        <span className="flex items-center gap-1.5 min-w-0 truncate">
-          <Flag size={13} className="text-purple-400 flex-none" />
-          <span className="truncate">{trackName}</span>
+        <span className="flex items-center gap-2 min-w-0 truncate">
+          <Flag size={14} className="text-purple-400 flex-none" />
+          <span className="truncate font-bold">{trackName}</span>
         </span>
         <div className="flex items-center gap-1.5 flex-none ml-1">
-          <span className="text-[10px] font-mono text-purple-300/80 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
+          <span className="text-[10px] font-mono text-purple-300/90 bg-purple-500/15 px-1.5 py-0.5 rounded border border-purple-500/20 font-bold">
             {sessions.length} sess · {totalLaps} laps
           </span>
           {isOpen ? <ChevronDown size={14} className="text-purple-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
@@ -219,7 +219,7 @@ const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, s
 
       {/* Sessions List Level 3 */}
       {isOpen && (
-        <div className="flex flex-col min-w-0">
+        <div className="flex flex-col ml-3 pl-2 border-l-2 border-purple-500/30 my-1 min-w-0">
           {sessions.map(session => (
             <SessionItem 
               key={session.id} 
@@ -265,20 +265,20 @@ const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSe
   const tracksCount = Object.keys(trackGroups).length;
 
   return (
-    <div className="flex flex-col bg-zinc-950 border-l-4 border-sky-500 border-y border-r border-zinc-800 rounded-lg overflow-hidden shadow-md min-w-0">
+    <div className="flex flex-col bg-zinc-950 border-l-4 border-sky-500 border-y border-r border-zinc-800 rounded-xl overflow-hidden shadow-lg min-w-0">
       {/* Player Header Card */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3 py-2 cursor-pointer font-bold text-xs transition-colors min-w-0 ${
+        className={`flex justify-between items-center px-3.5 py-2.5 cursor-pointer font-bold text-xs transition-colors min-w-0 ${
           isOpen ? 'bg-zinc-800/90 text-zinc-100' : 'hover:bg-zinc-800/50 text-zinc-200'
         }`}
       >
         <span className="flex items-center gap-2 min-w-0 truncate">
           <User size={15} className="text-sky-400 flex-none" />
-          <span className="text-sky-100 truncate">{player.name}</span>
+          <span className="text-sky-100 font-bold truncate">{player.name}</span>
         </span>
         <div className="flex items-center gap-1.5 flex-none ml-1">
-          <span className="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
+          <span className="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20 font-bold">
             {tracksCount} tracks · {sessionsCount} sess
           </span>
           {isOpen ? <ChevronDown size={14} className="text-sky-400" /> : <ChevronRight size={14} className="text-zinc-500" />}
@@ -287,7 +287,7 @@ const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSe
       
       {/* Tracks List Level 2 */}
       {isOpen && (
-        <div className="flex flex-col p-1.5 bg-black/50 min-w-0">
+        <div className="flex flex-col p-2 bg-black/60 min-w-0 gap-1">
           {sessionsCount === 0 ? (
             <div className="px-4 py-2 text-xs text-zinc-500 italic">No sessions yet.</div>
           ) : (
@@ -372,7 +372,7 @@ const SectorsWidget = React.memo(function SectorsWidget({ selectedLap, players }
         </div>
       </div>
       
-      <div className="flex flex-col gap-1 overflow-y-auto max-h-[140px] custom-scrollbar pr-1">
+      <div className="flex flex-col gap-1 overflow-y-auto max-h-[130px] custom-scrollbar pr-1">
         {displaySectors.map(s => (
           <div key={s.id || s.sector_number} className="flex justify-between items-center text-xs bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800/80 min-w-0">
             <span className="text-zinc-400 font-medium">Sector {s.sector_number}</span>
@@ -569,7 +569,7 @@ export const Sidebar = React.memo(function Sidebar() {
 
   // Auto-close sidebar on mobile when selecting a lap
   const handleSelectLapMobile = () => {
-    if (window.innerWidth < 768 && isOpen) {
+    if (typeof window !== 'undefined' && window.innerWidth < 768 && isOpen) {
       toggleSidebar();
     }
   };
@@ -677,8 +677,8 @@ export const Sidebar = React.memo(function Sidebar() {
   return (
     <div className="flex h-full w-full bg-zinc-900 min-w-0">
       
-      {/* Icon Nav Bar */}
-      <div className="w-16 min-w-[64px] border-r border-zinc-800 flex flex-col items-center py-4 bg-zinc-950 flex-none z-10">
+      {/* Left Icon Navigation Bar (DESKTOP ONLY - Hidden on Mobile to save space) */}
+      <div className="hidden md:flex w-16 min-w-[64px] border-r border-zinc-800 flex-col items-center py-4 bg-zinc-950 flex-none z-10">
         <button 
           onClick={toggleSidebar} 
           className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-none cursor-pointer text-xs p-2 mb-8 rounded w-8 h-8 flex items-center justify-center transition-colors"
@@ -730,9 +730,49 @@ export const Sidebar = React.memo(function Sidebar() {
         </div>
       </div>
 
-      {/* Expanded Content Area */}
+      {/* Expanded Content Area (Takes 100% width on Mobile, Flex-1 on Desktop) */}
       <div className={`flex-1 flex-col overflow-hidden min-w-0 ${isOpen ? 'flex' : 'hidden'}`}>
         
+        {/* MOBILE TOP BAR (Top Tabs + Close Button) */}
+        <div className="flex md:hidden items-center justify-between p-3 bg-zinc-950 border-b border-zinc-800 flex-none gap-2">
+          {/* Segmented Top Tabs */}
+          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800 flex-1">
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex-1 py-1 px-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                activeTab === 'history' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' : 'text-zinc-500'
+              }`}
+            >
+              <Timer size={14} /> History
+            </button>
+            <button
+              onClick={() => setActiveTab('live')}
+              className={`flex-1 py-1 px-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                activeTab === 'live' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-zinc-500'
+              }`}
+            >
+              <Radio size={14} /> Live
+            </button>
+            <button
+              onClick={() => setActiveTab('system')}
+              className={`flex-1 py-1 px-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                activeTab === 'system' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-500'
+              }`}
+            >
+              <Settings size={14} /> System
+            </button>
+          </div>
+
+          {/* Close Drawer Button */}
+          <button
+            onClick={toggleSidebar}
+            className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 flex-none"
+            title="Close Drawer"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
         {activeTab === 'history' ? (
           <>
             {/* Filter & Search Header Controls */}
@@ -752,7 +792,7 @@ export const Sidebar = React.memo(function Sidebar() {
                   placeholder="Search driver, track, car..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-md pl-8 pr-7 py-1.5 outline-none focus:border-sky-500 transition-colors"
+                  className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-lg pl-8 pr-7 py-1.5 outline-none focus:border-sky-500 transition-colors"
                 />
                 {searchQuery && (
                   <button 
@@ -812,7 +852,7 @@ export const Sidebar = React.memo(function Sidebar() {
                 <div className="flex gap-1 flex-none">
                   <button 
                     onClick={() => setSortBy('newest')} 
-                    className={`px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer ${
+                    className={`px-2 py-0.5 rounded font-mono transition-colors cursor-pointer ${
                       sortBy === 'newest' ? 'bg-zinc-800 text-sky-400 font-bold border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
@@ -820,7 +860,7 @@ export const Sidebar = React.memo(function Sidebar() {
                   </button>
                   <button 
                     onClick={() => setSortBy('oldest')} 
-                    className={`px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer ${
+                    className={`px-2 py-0.5 rounded font-mono transition-colors cursor-pointer ${
                       sortBy === 'oldest' ? 'bg-zinc-800 text-sky-400 font-bold border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
@@ -828,7 +868,7 @@ export const Sidebar = React.memo(function Sidebar() {
                   </button>
                   <button 
                     onClick={() => setSortBy('fastest')} 
-                    className={`px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer ${
+                    className={`px-2 py-0.5 rounded font-mono transition-colors cursor-pointer ${
                       sortBy === 'fastest' ? 'bg-zinc-800 text-purple-400 font-bold border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
