@@ -1,0 +1,112 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { Calendar, ChevronDown, ChevronRight, Car, Clock } from 'lucide-react';
+import { formatSessionTime } from './utils';
+import { LapItem } from './LapItem';
+
+export const SessionItem = React.memo(function SessionItem({ session, player, trackName, selectedLapId, setSelectedLap, onSelectLap }) {
+  const hasSelected = useMemo(() => {
+    return session.laps?.some(l => l.id === selectedLapId) ?? false;
+  }, [session.laps, selectedLapId]);
+
+  const [isOpen, setIsOpen] = useState(hasSelected);
+  const [showAllLaps, setShowAllLaps] = useState(false);
+
+  useEffect(() => {
+    if (hasSelected) setIsOpen(true);
+  }, [hasSelected]);
+
+  const bestLapId = useMemo(() => {
+    let best = null;
+    let minTime = Infinity;
+    (session.laps || []).forEach(l => {
+      if (l.lap_time > 0 && l.lap_time < minTime) {
+        minTime = l.lap_time;
+        best = l.id;
+      }
+    });
+    return best;
+  }, [session.laps]);
+
+  const laps = session.laps || [];
+  const visibleLaps = showAllLaps ? laps : laps.slice(0, 15);
+  const hiddenCount = laps.length - visibleLaps.length;
+
+  const { date, timeRange, duration } = formatSessionTime(session.start_time, session.duration_seconds, session.created_at);
+  const carName = session.car_name || 'Unknown Car';
+
+  return (
+    <div className="flex flex-col my-1.5 relative min-w-0">
+      {/* Session Header Card */}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ padding: '14px' }}
+        className={`flex flex-col gap-1.5 rounded-xl cursor-pointer border transition-all active:scale-[0.99] min-h-[48px] ${
+          isOpen
+            ? 'bg-zinc-900 border-zinc-700 text-zinc-100 shadow-md'
+            : 'bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700 text-zinc-300 hover:bg-zinc-900/80'
+        }`}
+      >
+        <div className="flex items-center justify-between text-xs sm:text-sm font-bold min-w-0">
+          <div className="flex items-center gap-2 min-w-0 truncate pr-2">
+            <Calendar size={15} className="text-emerald-400 flex-none" />
+            <span className="truncate text-zinc-100 font-bold">{date}</span>
+            {timeRange && <span className="text-xs font-mono text-zinc-400 font-normal truncate">({timeRange})</span>}
+          </div>
+          <div className="flex items-center gap-2 flex-none ml-1">
+            <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-200 border border-zinc-700">
+              {laps.length} laps
+            </span>
+            {isOpen ? <ChevronDown size={18} className="text-emerald-400" /> : <ChevronRight size={18} className="text-zinc-400" />}
+          </div>
+        </div>
+
+        {/* Sub-info: Car & Duration */}
+        <div className="flex items-center justify-between text-xs min-w-0 gap-2 mt-0.5">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-mono text-xs truncate flex-1 min-w-0 font-semibold">
+            <Car size={13} className="flex-none text-emerald-400" />
+            <span className="truncate">{carName}</span>
+          </span>
+          {duration && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-mono text-zinc-400 flex-none font-medium">
+              <Clock size={12} className="text-zinc-500" />
+              {duration}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Laps List Level 4 */}
+      {isOpen && (
+        <div className="flex flex-col ml-3 pl-3 border-l-2 border-amber-500/50 my-1 py-1 bg-black/40 rounded-r-xl min-w-0 gap-1">
+          {laps.length === 0 ? (
+            <div className="px-4 py-2 text-xs text-zinc-500 italic">No laps recorded.</div>
+          ) : (
+            <>
+              {visibleLaps.map(lap => (
+                <LapItem 
+                  key={lap.id} 
+                  lap={lap} 
+                  player={player} 
+                  trackName={trackName} 
+                  selectedLapId={selectedLapId} 
+                  bestLapId={bestLapId} 
+                  setSelectedLap={setSelectedLap} 
+                  onSelectLap={onSelectLap}
+                />
+              ))}
+              {hiddenCount > 0 && (
+                <button
+                  onClick={() => setShowAllLaps(true)}
+                  style={{ padding: '8px 16px' }}
+                  className="mt-1 text-xs text-sky-400 hover:text-sky-300 font-mono text-left cursor-pointer transition-colors font-bold min-h-[38px]"
+                >
+                  + Show {hiddenCount} more laps
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+});

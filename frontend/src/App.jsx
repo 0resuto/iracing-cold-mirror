@@ -35,15 +35,15 @@ function App() {
       {isSidebarOpen && (
         <div 
           onClick={toggleSidebar} 
-          className="fixed inset-0 bg-black/70 backdrop-blur-md z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/75 backdrop-blur-md z-40 md:hidden transition-opacity"
         />
       )}
 
-      {/* Left Sidebar (Desktop + Mobile Drawer) */}
+      {/* Left Sidebar (Desktop + Mobile 100% Full-Width Drawer) */}
       <div 
         className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-zinc-800 ${
           isSidebarOpen 
-            ? 'fixed md:relative inset-y-0 left-0 w-[320px] sm:w-[360px] max-w-[92vw] z-50 md:z-auto shadow-2xl md:shadow-none' 
+            ? 'fixed md:relative inset-y-0 left-0 right-0 w-full md:w-[380px] z-50 md:z-auto shadow-2xl md:shadow-none bg-zinc-900' 
             : 'w-0 md:w-[64px] border-none md:border-r border-zinc-800'
         }`}
       >
@@ -51,19 +51,19 @@ function App() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden p-2.5 sm:p-4 md:p-6 gap-2.5 sm:gap-4 md:gap-6 bg-zinc-950 min-w-0">
+      <div className="flex-1 flex flex-col h-full overflow-hidden p-3 sm:p-4 md:p-6 gap-3 sm:gap-4 md:gap-6 bg-zinc-950 min-w-0">
         
-        {/* Header Bar (With Finger-Friendly Touch Buttons) */}
-        <div className="flex items-center justify-between flex-none pb-2 border-b border-zinc-800/80 gap-2 min-h-[44px]">
-          <div className="flex items-center gap-2 min-w-0">
-            {/* Prominent Mobile Menu Button (Min 40px Height) */}
+        {/* Header Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between flex-none pb-2.5 border-b border-zinc-800/80 gap-3">
+          <div className="flex items-center justify-between sm:justify-start gap-3 min-w-0 w-full sm:w-auto">
+            {/* Prominent Menu Toggle Button */}
             <button 
               onClick={toggleSidebar}
-              className="p-2 sm:px-3 sm:py-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 active:bg-zinc-800 text-sky-400 hover:text-sky-300 transition-all text-xs flex items-center gap-2 cursor-pointer flex-none min-h-[40px] active:scale-95"
+              className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 active:bg-zinc-800 text-sky-400 hover:text-sky-300 transition-all text-xs flex items-center gap-2 cursor-pointer flex-none min-h-[42px] shadow-sm active:scale-95 font-bold"
               title="Toggle Menu"
             >
               <Menu size={18} />
-              <span className="font-bold text-xs">Menu</span>
+              <span>Menu</span>
             </button>
 
             <div className="min-w-0 truncate">
@@ -75,16 +75,16 @@ function App() {
                   </span>
                 </div>
               ) : selectedLap ? (
-                <div className="flex items-center gap-1.5 sm:gap-2 truncate">
+                <div className="flex items-center gap-2 truncate pr-2">
                   <span className="text-xs sm:text-sm font-bold text-zinc-100 flex-none">
                     Lap {selectedLap.lap_number}
                   </span>
-                  <span className="bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold flex-none">
+                  <span className="bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold flex-none">
                     {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Outlap'}
                   </span>
                   {selectedLap.track_name && (
-                    <span className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2 py-0.5 rounded-md text-[11px] font-medium flex items-center gap-1 truncate hidden sm:flex">
-                      <MapPin size={12} className="text-zinc-500 flex-none" /> 
+                    <span className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md text-[11px] font-medium flex items-center gap-1.5 truncate hidden sm:flex">
+                      <MapPin size={13} className="text-zinc-500 flex-none" /> 
                       <span className="truncate">{selectedLap.track_name}</span>
                     </span>
                   )}
@@ -97,38 +97,44 @@ function App() {
             </div>
           </div>
 
-          {/* Mobile View Section Switchers (Large Tap Targets) */}
+          {/* Full-Width Segmented View Switcher Buttons on Mobile (Charts, Map, Stats) */}
           {selectedLap && activeTab === 'history' && (
-            <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800 md:hidden flex-none">
+            <div className="grid grid-cols-3 gap-2 bg-zinc-900/90 p-1.5 rounded-xl border border-zinc-800/90 md:hidden w-full sm:w-auto flex-none shadow-inner">
               <button
                 onClick={() => setMobileView('charts')}
-                className={`px-2.5 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all min-h-[36px] active:scale-95 ${
-                  mobileView === 'charts' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40 shadow-sm' : 'text-zinc-400'
+                className={`py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[40px] active:scale-95 ${
+                  mobileView === 'charts' 
+                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm font-extrabold' 
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
                 title="Charts View"
               >
-                <Activity size={15} />
-                <span className="hidden xs:inline">Charts</span>
+                <Activity size={16} />
+                <span>Charts</span>
               </button>
               <button
                 onClick={() => setMobileView('map')}
-                className={`px-2.5 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all min-h-[36px] active:scale-95 ${
-                  mobileView === 'map' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-sm' : 'text-zinc-400'
+                className={`py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[40px] active:scale-95 ${
+                  mobileView === 'map' 
+                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm font-extrabold' 
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
                 title="Track Map View"
               >
-                <Map size={15} />
-                <span className="hidden xs:inline">Map</span>
+                <Map size={16} />
+                <span>Map</span>
               </button>
               <button
                 onClick={() => setMobileView('stats')}
-                className={`px-2.5 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all min-h-[36px] active:scale-95 ${
-                  mobileView === 'stats' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm' : 'text-zinc-400'
+                className={`py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[40px] active:scale-95 ${
+                  mobileView === 'stats' 
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm font-extrabold' 
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
                 title="Sectors & Stats View"
               >
-                <BarChart2 size={15} />
-                <span className="hidden xs:inline">Stats</span>
+                <BarChart2 size={16} />
+                <span>Stats</span>
               </button>
             </div>
           )}

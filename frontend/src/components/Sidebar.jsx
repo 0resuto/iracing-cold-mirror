@@ -1,552 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { useLiveStore } from '../store/useLiveStore';
-import { useHistoryQuery, useIdealLapQuery, useSystemInfoQuery } from '../api/queries';
-import { Flag, User, Timer, Radio, Settings, Car, Calendar, Clock, ChevronDown, ChevronRight, Award, Search, X } from 'lucide-react';
+import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
+import { Timer, Radio, Settings, X } from 'lucide-react';
 
-// --- Helper Functions ---
-
-const formatSessionTime = (startTimeStr, durationSec, createdAtStr) => {
-  const dateObj = startTimeStr ? new Date(startTimeStr) : (createdAtStr ? new Date(createdAtStr) : null);
-  if (!dateObj || isNaN(dateObj.getTime())) {
-    return { date: 'Session Date N/A', timeRange: '', duration: '' };
-  }
-
-  const date = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  const startTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  let timeRange = startTime;
-  let duration = '';
-
-  if (durationSec && durationSec > 0) {
-    const endDateObj = new Date(dateObj.getTime() + durationSec * 1000);
-    const endTime = endDateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    timeRange = `${startTime} – ${endTime}`;
-
-    const mins = Math.floor(durationSec / 60);
-    const secs = Math.floor(durationSec % 60);
-    duration = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-  }
-
-  return { date, timeRange, duration };
-};
-
-// --- Tree Level 4: Lap Item ---
-
-const LapItem = React.memo(function LapItem({ lap, player, trackName, selectedLapId, bestLapId, setSelectedLap, onSelectLap }) {
-  const isSelected = selectedLapId === lap.id;
-  const isBest = lap.id === bestLapId;
-  const timeText = lap.lap_time > 0 ? `${lap.lap_time.toFixed(2)}s` : 'Outlap';
-  const lapLabel = lap.lap_number === 0 ? 'Outlap' : `Lap ${lap.lap_number}`;
-
-  const handleClick = () => {
-    setSelectedLap({ ...lap, player_id: player.id, track_name: trackName });
-    if (onSelectLap) onSelectLap();
-  };
-
-  return (
-    <div
-      onClick={handleClick}
-      className={`group flex justify-between items-center px-3 py-2.5 my-1 text-xs cursor-pointer rounded-lg transition-all min-h-[38px] active:scale-[0.98] ${
-        isSelected
-          ? 'bg-sky-500/25 text-sky-200 font-bold border-l-4 border-sky-400 shadow-md'
-          : 'hover:bg-zinc-800/70 text-zinc-300 hover:text-zinc-100 border-l-2 border-transparent'
-      }`}
-    >
-      <div className="flex items-center gap-2.5 min-w-0">
-        <Timer size={14} className={isSelected ? 'text-sky-400 flex-none' : 'text-zinc-500 group-hover:text-zinc-400 flex-none'} />
-        <span className="truncate font-semibold">{lapLabel}</span>
-        {isBest && (
-          <span className="flex items-center gap-1 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-purple-500/25 text-purple-300 border border-purple-500/40 flex-none">
-            <Award size={11} /> BEST
-          </span>
-        )}
-      </div>
-      <span className={`font-mono font-bold text-xs flex-none ml-2 ${isBest ? 'text-purple-400' : isSelected ? 'text-sky-300' : 'text-zinc-300'}`}>
-        {timeText}
-      </span>
-    </div>
-  );
-});
-
-// --- Tree Level 3: Session Item ---
-
-const SessionItem = React.memo(function SessionItem({ session, player, trackName, selectedLapId, setSelectedLap, onSelectLap }) {
-  const hasSelected = useMemo(() => {
-    return session.laps?.some(l => l.id === selectedLapId) ?? false;
-  }, [session.laps, selectedLapId]);
-
-  const [isOpen, setIsOpen] = useState(hasSelected);
-  const [showAllLaps, setShowAllLaps] = useState(false);
-
-  useEffect(() => {
-    if (hasSelected) setIsOpen(true);
-  }, [hasSelected]);
-
-  const bestLapId = useMemo(() => {
-    let best = null;
-    let minTime = Infinity;
-    (session.laps || []).forEach(l => {
-      if (l.lap_time > 0 && l.lap_time < minTime) {
-        minTime = l.lap_time;
-        best = l.id;
-      }
-    });
-    return best;
-  }, [session.laps]);
-
-  const laps = session.laps || [];
-  const visibleLaps = showAllLaps ? laps : laps.slice(0, 15);
-  const hiddenCount = laps.length - visibleLaps.length;
-
-  const { date, timeRange, duration } = formatSessionTime(session.start_time, session.duration_seconds, session.created_at);
-  const carName = session.car_name || 'Unknown Car';
-
-  return (
-    <div className="flex flex-col my-1.5 relative min-w-0">
-      {/* Session Header Card */}
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex flex-col gap-1.5 p-3 rounded-xl cursor-pointer border transition-all active:scale-[0.99] min-h-[44px] ${
-          isOpen
-            ? 'bg-zinc-900 border-zinc-700 text-zinc-100 shadow-md'
-            : 'bg-zinc-900/50 border-zinc-800/80 hover:border-zinc-700 text-zinc-300 hover:bg-zinc-900/80'
-        }`}
-      >
-        <div className="flex items-center justify-between text-xs font-bold min-w-0">
-          <div className="flex items-center gap-2 min-w-0 truncate">
-            <Calendar size={14} className="text-emerald-400 flex-none" />
-            <span className="truncate text-zinc-100">{date}</span>
-            {timeRange && <span className="text-[11px] font-mono text-zinc-400 font-normal truncate">({timeRange})</span>}
-          </div>
-          <div className="flex items-center gap-2 flex-none ml-1">
-            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
-              {laps.length} laps
-            </span>
-            {isOpen ? <ChevronDown size={16} className="text-emerald-400" /> : <ChevronRight size={16} className="text-zinc-400" />}
-          </div>
-        </div>
-
-        {/* Sub-info: Car & Duration */}
-        <div className="flex items-center justify-between text-[11px] min-w-0 gap-1.5 mt-0.5">
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-mono text-[11px] truncate flex-1 min-w-0 font-medium">
-            <Car size={12} className="flex-none text-emerald-400" />
-            <span className="truncate">{carName}</span>
-          </span>
-          {duration && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-zinc-400 flex-none">
-              <Clock size={11} className="text-zinc-500" />
-              {duration}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Laps List Level 4 */}
-      {isOpen && (
-        <div className="flex flex-col ml-3 pl-2.5 border-l-2 border-amber-500/50 my-1 py-1 bg-black/40 rounded-r-lg min-w-0 gap-0.5">
-          {laps.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-zinc-500 italic">No laps recorded.</div>
-          ) : (
-            <>
-              {visibleLaps.map(lap => (
-                <LapItem 
-                  key={lap.id} 
-                  lap={lap} 
-                  player={player} 
-                  trackName={trackName} 
-                  selectedLapId={selectedLapId} 
-                  bestLapId={bestLapId} 
-                  setSelectedLap={setSelectedLap} 
-                  onSelectLap={onSelectLap}
-                />
-              ))}
-              {hiddenCount > 0 && (
-                <button
-                  onClick={() => setShowAllLaps(true)}
-                  className="mt-1 text-xs text-sky-400 hover:text-sky-300 font-mono py-2 px-3 text-left cursor-pointer transition-colors font-bold min-h-[36px]"
-                >
-                  + Show {hiddenCount} more laps
-                </button>
-              )}
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  );
-});
-
-// --- Tree Level 2: Track Item ---
-
-const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, selectedLapId, setSelectedLap, onSelectLap }) {
-  const hasSelected = useMemo(() => {
-    return sessions.some(s => s.laps?.some(l => l.id === selectedLapId));
-  }, [sessions, selectedLapId]);
-
-  const [isOpen, setIsOpen] = useState(hasSelected);
-
-  useEffect(() => {
-    if (hasSelected) setIsOpen(true);
-  }, [hasSelected]);
-
-  const totalLaps = useMemo(() => {
-    return sessions.reduce((sum, s) => sum + (s.laps?.length || 0), 0);
-  }, [sessions]);
-
-  return (
-    <div className="flex flex-col my-1 min-w-0">
-      {/* Track Header */}
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3 py-2.5 rounded-xl cursor-pointer font-bold text-xs transition-all min-w-0 border active:scale-[0.99] min-h-[42px] ${
-          isOpen 
-            ? 'bg-purple-500/15 border-purple-500/40 text-purple-100 shadow-sm' 
-            : 'bg-zinc-900/80 border-zinc-800 hover:bg-zinc-800/70 text-zinc-200'
-        }`}
-      >
-        <span className="flex items-center gap-2 min-w-0 truncate">
-          <Flag size={15} className="text-purple-400 flex-none" />
-          <span className="truncate text-xs font-extrabold">{trackName}</span>
-        </span>
-        <div className="flex items-center gap-2 flex-none ml-1">
-          <span className="text-[10px] font-mono text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/30 font-bold">
-            {sessions.length} sess · {totalLaps} laps
-          </span>
-          {isOpen ? <ChevronDown size={16} className="text-purple-400" /> : <ChevronRight size={16} className="text-zinc-400" />}
-        </div>
-      </div>
-
-      {/* Sessions List Level 3 */}
-      {isOpen && (
-        <div className="flex flex-col ml-3 pl-2.5 border-l-2 border-purple-500/40 my-1 min-w-0">
-          {sessions.map(session => (
-            <SessionItem 
-              key={session.id} 
-              session={session} 
-              player={player} 
-              trackName={trackName}
-              selectedLapId={selectedLapId} 
-              setSelectedLap={setSelectedLap} 
-              onSelectLap={onSelectLap}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-});
-
-// --- Tree Level 1: Driver / Player Item ---
-
-const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSelectedLap, onSelectLap }) {
-  const hasSelected = useMemo(() => {
-    return player.sessions?.some(s => s.laps?.some(l => l.id === selectedLapId)) ?? false;
-  }, [player.sessions, selectedLapId]);
-
-  const [isOpen, setIsOpen] = useState(hasSelected);
-
-  useEffect(() => {
-    if (hasSelected) setIsOpen(true);
-  }, [hasSelected]);
-
-  // Group sessions by Track Name for this player
-  const trackGroups = useMemo(() => {
-    const groups = {};
-    (player.sessions || []).forEach(s => {
-      const track = s.track_name || 'Unknown Track';
-      if (!groups[track]) groups[track] = [];
-      groups[track].push(s);
-    });
-    return groups;
-  }, [player.sessions]);
-
-  const sessionsCount = player.sessions?.length || 0;
-  const tracksCount = Object.keys(trackGroups).length;
-
-  return (
-    <div className="flex flex-col bg-zinc-950 border-l-4 border-sky-500 border-y border-r border-zinc-800 rounded-xl overflow-hidden shadow-lg min-w-0">
-      {/* Player Header Card */}
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-between items-center px-3.5 py-3 cursor-pointer font-extrabold text-xs transition-colors min-w-0 active:scale-[0.99] min-h-[46px] ${
-          isOpen ? 'bg-zinc-800/90 text-zinc-100' : 'hover:bg-zinc-800/60 text-zinc-100'
-        }`}
-      >
-        <span className="flex items-center gap-2.5 min-w-0 truncate">
-          <User size={16} className="text-sky-400 flex-none" />
-          <span className="text-sky-100 font-extrabold text-xs sm:text-sm truncate">{player.name}</span>
-        </span>
-        <div className="flex items-center gap-2 flex-none ml-1">
-          <span className="text-[10px] font-mono text-sky-300 bg-sky-500/15 px-2 py-0.5 rounded-full border border-sky-500/25 font-bold">
-            {tracksCount} tracks · {sessionsCount} sess
-          </span>
-          {isOpen ? <ChevronDown size={16} className="text-sky-400" /> : <ChevronRight size={16} className="text-zinc-400" />}
-        </div>
-      </div>
-      
-      {/* Tracks List Level 2 */}
-      {isOpen && (
-        <div className="flex flex-col p-2 bg-black/60 min-w-0 gap-1.5">
-          {sessionsCount === 0 ? (
-            <div className="px-4 py-2 text-xs text-zinc-500 italic">No sessions yet.</div>
-          ) : (
-            Object.entries(trackGroups).map(([trackName, sessions]) => (
-              <TrackItem 
-                key={trackName} 
-                trackName={trackName} 
-                sessions={sessions} 
-                player={player} 
-                selectedLapId={selectedLapId} 
-                setSelectedLap={setSelectedLap} 
-                onSelectLap={onSelectLap}
-              />
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
-});
-
-// --- Sectors Widget Component ---
-
-const SectorsWidget = React.memo(function SectorsWidget({ selectedLap, players }) {
-  const [sortBy, setSortBy] = useState('order');
-
-  const displaySectors = useMemo(() => {
-    if (!selectedLap?.sectors?.length) return [];
-    
-    let bestLap = null;
-    const safePlayers = players || [];
-    const player = safePlayers.find(p => p.id === selectedLap.player_id);
-    if (player) {
-      (player.sessions || []).filter(s => s.track_name === selectedLap.track_name).forEach(s => {
-        (s.laps || []).filter(l => l.lap_time > 0).forEach(l => {
-          if (!bestLap || l.lap_time < bestLap.lap_time) bestLap = l;
-        });
-      });
-    }
-    
-    const mapped = selectedLap.sectors.map(sector => {
-      let delta = null;
-      if (bestLap && bestLap.id !== selectedLap.id) {
-        const bestSec = bestLap.sectors.find(s => s.sector_number === sector.sector_number);
-        if (bestSec) delta = sector.sector_time - bestSec.sector_time;
-      }
-      return { ...sector, delta };
-    });
-
-    return mapped.sort((a, b) => {
-      if (sortBy === 'time') return a.sector_time - b.sector_time;
-      if (sortBy === 'delta') return (a.delta ?? Infinity) - (b.delta ?? Infinity);
-      return a.sector_number - b.sector_number;
-    });
-  }, [selectedLap, players, sortBy]);
-
-  if (!selectedLap?.sectors?.length) return null;
-
-  return (
-    <div className="p-3 border-t border-zinc-800 bg-zinc-950 flex-none flex flex-col min-w-0">
-      <div className="flex justify-between items-center mb-2 min-w-0">
-        <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-bold m-0">Sectors</h3>
-        <div className="flex gap-1 text-xs">
-          <button 
-            onClick={() => setSortBy('order')} 
-            className={`px-2 py-1 rounded cursor-pointer font-bold ${sortBy === 'order' ? 'bg-zinc-800 text-zinc-100 border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            #
-          </button>
-          <button 
-            onClick={() => setSortBy('time')} 
-            className={`px-2 py-1 rounded cursor-pointer font-bold ${sortBy === 'time' ? 'bg-zinc-800 text-zinc-100 border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            Time
-          </button>
-          <button 
-            onClick={() => setSortBy('delta')} 
-            className={`px-2 py-1 rounded cursor-pointer font-bold ${sortBy === 'delta' ? 'bg-zinc-800 text-zinc-100 border border-zinc-700' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            Δ
-          </button>
-        </div>
-      </div>
-      
-      <div className="flex flex-col gap-1 overflow-y-auto max-h-[140px] custom-scrollbar pr-1">
-        {displaySectors.map(s => (
-          <div key={s.id || s.sector_number} className="flex justify-between items-center text-xs bg-zinc-900 px-3 py-1.5 rounded-md border border-zinc-800/80 min-w-0">
-            <span className="text-zinc-400 font-bold">Sector {s.sector_number}</span>
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-zinc-200 font-bold">{s.sector_time.toFixed(2)}s</span>
-              {s.delta !== null && (
-                <span className={`font-mono text-xs font-bold ${s.delta <= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {s.delta > 0 ? '+' : ''}{s.delta.toFixed(2)}s
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-});
-
-// --- Live Telemetry Panel ---
-
-const LiveStreamPanel = () => {
-  const liveLapData = useLiveStore(state => state.liveLapData);
-  const isStreaming = useLiveStore(state => state.isStreaming);
-  const latestPoint = liveLapData[liveLapData.length - 1];
-
-  return (
-    <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto custom-scrollbar min-w-0">
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-bold m-0">Live Stream</h2>
-        {isStreaming ? (
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-            LIVE
-          </span>
-        ) : (
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 text-xs font-medium">
-            OFFLINE
-          </span>
-        )}
-      </div>
-
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3">
-        <div className="text-xs text-zinc-400 flex justify-between items-center">
-          <span>Collector Status</span>
-          <span className={`font-semibold flex items-center gap-1.5 ${isStreaming ? 'text-green-400' : 'text-zinc-500'}`}>
-            {isStreaming ? '🟢 iRacing Streaming' : '⚪ Waiting for iRacing...'}
-          </span>
-        </div>
-        <div className="text-xs text-zinc-400 flex justify-between items-center">
-          <span>Buffered Points</span>
-          <span className="font-mono text-zinc-100 font-bold">{liveLapData.length}</span>
-        </div>
-        {isStreaming && latestPoint && (
-          <>
-            <div className="text-xs text-zinc-400 flex justify-between items-center">
-              <span>Live Speed</span>
-              <span className="font-mono text-red-400 font-bold">{latestPoint.speed?.toFixed(1)} km/h</span>
-            </div>
-            <div className="text-xs text-zinc-400 flex justify-between items-center">
-              <span>Track Position</span>
-              <span className="font-mono text-sky-400 font-bold">{((latestPoint.lap_dist_pct || 0) * 100).toFixed(1)}%</span>
-            </div>
-          </>
-        )}
-      </div>
-
-      {!isStreaming && (
-        <div className="text-xs text-amber-400/90 leading-relaxed bg-amber-500/10 p-3.5 rounded-xl border border-amber-500/20">
-          ⚠️ <strong>iRacing isn't running or collector is idle.</strong><br/>
-          Start iRacing live collector script (<code>run.bat</code> or <code>dev/run_dev.bat</code>) to view live telemetry stream.
-        </div>
-      )}
-    </div>
-  );
-};
-
-// --- System & Parameters Panel ---
-
-const SystemPanel = () => {
-  const { data: systemInfo, isLoading, isError } = useSystemInfoQuery();
-
-  return (
-    <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto custom-scrollbar min-w-0">
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-bold m-0">System Parameters</h2>
-        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-bold">
-          v0.1.0
-        </span>
-      </div>
-
-      {isLoading ? (
-        <div className="text-xs text-zinc-500 animate-pulse">Loading system statistics...</div>
-      ) : isError || !systemInfo ? (
-        <div className="text-xs text-red-500">Failed to connect to server</div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {/* Server Connection Card */}
-          <div className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 flex flex-col gap-2.5">
-            <span className="text-xs uppercase tracking-wider text-zinc-500 font-bold">Server Infrastructure</span>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400">Backend API</span>
-              <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Online
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400">Database</span>
-              <span className="font-mono text-zinc-300 font-bold">{systemInfo.database}</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400">API Key Security</span>
-              <span className={`font-bold ${systemInfo.auth_enabled ? 'text-emerald-400' : 'text-amber-400'}`}>
-                {systemInfo.auth_enabled ? '🔒 Active' : '🔓 Dev Mode'}
-              </span>
-            </div>
-          </div>
-
-          {/* Last Uploaded Session Card */}
-          <div className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 flex flex-col gap-2.5">
-            <span className="text-xs uppercase tracking-wider text-zinc-500 font-bold">Last Session Upload</span>
-            {systemInfo.last_upload ? (
-              <>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-400">Track</span>
-                  <span className="font-bold text-zinc-100">{systemInfo.last_upload.track_name}</span>
-                </div>
-                {systemInfo.last_upload.created_at && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-zinc-400">Uploaded</span>
-                    <span className="text-zinc-300 font-mono">
-                      {new Date(systemInfo.last_upload.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-400">Driver</span>
-                  <span className="text-zinc-200 font-bold">{systemInfo.last_upload.player_name}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-400">Laps Uploaded</span>
-                  <span className="font-mono text-sky-400 font-bold">{systemInfo.last_upload.total_laps} laps</span>
-                </div>
-              </>
-            ) : (
-              <div className="text-xs text-zinc-500 italic">No telemetry sessions uploaded yet</div>
-            )}
-          </div>
-
-          {/* Database Stats Card */}
-          <div className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 flex flex-col gap-2">
-            <span className="text-xs uppercase tracking-wider text-zinc-500 font-bold">Storage Metrics</span>
-            <div className="grid grid-cols-3 gap-2 text-center mt-1">
-              <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800/80">
-                <div className="text-xs text-zinc-500">Drivers</div>
-                <div className="text-base font-bold font-mono text-zinc-100">{systemInfo.total_players}</div>
-              </div>
-              <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800/80">
-                <div className="text-xs text-zinc-500">Sessions</div>
-                <div className="text-base font-bold font-mono text-sky-400">{systemInfo.total_sessions}</div>
-              </div>
-              <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800/80">
-                <div className="text-xs text-zinc-500">Laps</div>
-                <div className="text-base font-bold font-mono text-purple-400">{systemInfo.total_laps}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// --- Main Sidebar Component ---
+import { LiveStreamPanel } from './sidebar/LiveStreamPanel';
+import { SystemPanel } from './sidebar/SystemPanel';
+import { FilterControls } from './sidebar/FilterControls';
+import { PlayerItem } from './sidebar/PlayerItem';
+import { SectorsWidget } from './sidebar/SectorsWidget';
 
 export const Sidebar = React.memo(function Sidebar() {
   const activeTab = useAppStore(state => state.activeTab);
@@ -707,7 +168,7 @@ export const Sidebar = React.memo(function Sidebar() {
               setActiveTab('live');
               if (!isOpen) toggleSidebar();
             }} 
-            className={`cursor-pointer text-xl flex justify-center border-l-2 py-2 transition-colors ${
+            className={`cursor-pointer text-xl flex justify-center border-l-2 py-1 transition-colors ${
               activeTab === 'live' ? 'border-red-500 text-red-500' : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
           >
@@ -730,33 +191,33 @@ export const Sidebar = React.memo(function Sidebar() {
         </div>
       </div>
 
-      {/* Expanded Content Area */}
+      {/* Expanded Content Area (Full width on Mobile) */}
       <div className={`flex-1 flex-col overflow-hidden min-w-0 ${isOpen ? 'flex' : 'hidden'}`}>
         
-        {/* MOBILE TOP BAR (High-Touch Target Segmented Tabs + Close Button) */}
-        <div className="flex md:hidden items-center justify-between p-3 bg-zinc-950 border-b border-zinc-800 flex-none gap-2 min-h-[52px]">
+        {/* MOBILE TOP BAR (Segmented Tabs + Close Button) */}
+        <div className="flex md:hidden items-center justify-between p-4 bg-zinc-950 border-b border-zinc-800 flex-none gap-3 min-h-[60px]">
           {/* Segmented Top Tabs */}
-          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 flex-1">
+          <div className="flex items-center gap-2 bg-zinc-900 p-1.5 rounded-xl border border-zinc-800 flex-1">
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 ${
-                activeTab === 'history' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm' : 'text-zinc-400'
+              className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
+                activeTab === 'history' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm font-extrabold' : 'text-zinc-400'
               }`}
             >
               <Timer size={16} /> History
             </button>
             <button
               onClick={() => setActiveTab('live')}
-              className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 ${
-                activeTab === 'live' ? 'bg-red-500/20 text-red-400 border border-red-500/40 shadow-sm' : 'text-zinc-400'
+              className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
+                activeTab === 'live' ? 'bg-red-500/20 text-red-400 border border-red-500/40 shadow-sm font-extrabold' : 'text-zinc-400'
               }`}
             >
               <Radio size={16} /> Live
             </button>
             <button
               onClick={() => setActiveTab('system')}
-              className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 ${
-                activeTab === 'system' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm' : 'text-zinc-400'
+              className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
+                activeTab === 'system' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm font-extrabold' : 'text-zinc-400'
               }`}
             >
               <Settings size={16} /> System
@@ -766,120 +227,34 @@ export const Sidebar = React.memo(function Sidebar() {
           {/* Close Drawer Button */}
           <button
             onClick={toggleSidebar}
-            className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 flex-none min-w-[42px] min-h-[42px] flex items-center justify-center active:scale-95"
+            className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 flex-none min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
             title="Close Drawer"
           >
-            <X size={20} />
+            <X size={22} />
           </button>
         </div>
 
         {activeTab === 'history' ? (
           <>
-            {/* Filter & Search Header Controls */}
-            <div className="p-3 bg-zinc-950 border-b border-zinc-800 flex-none flex flex-col gap-2.5 min-w-0">
-              <div className="flex justify-between items-center min-w-0">
-                <h2 className="text-xs uppercase tracking-wider text-zinc-400 font-extrabold m-0 truncate">Telemetry Explorer</h2>
-                <span className="text-xs font-mono text-zinc-400 flex-none font-bold">
-                  {processedPlayers.reduce((acc, p) => acc + (p.sessions?.length || 0), 0)} sessions
-                </span>
-              </div>
-
-              {/* Instant Search Bar */}
-              <div className="relative flex items-center min-w-0">
-                <Search size={15} className="absolute left-3 text-zinc-500" />
-                <input
-                  type="text"
-                  placeholder="Search driver, track, car..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 text-xs rounded-xl pl-9 pr-8 py-2 outline-none focus:border-sky-500 transition-colors min-h-[40px]"
-                />
-                {searchQuery && (
-                  <button 
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 text-zinc-400 hover:text-zinc-200 p-1 cursor-pointer"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-
-              {/* Dropdown Filters (3 Columns: Driver, Track, Car) */}
-              <div className="grid grid-cols-3 gap-1.5 min-w-0">
-                {/* Driver Filter */}
-                <select
-                  value={filterPlayer}
-                  onChange={(e) => setFilterPlayer(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-lg px-2 py-2 outline-none focus:border-sky-500 cursor-pointer truncate min-h-[38px] font-semibold"
-                  title="Filter by Driver"
-                >
-                  <option value="all">Drivers ({uniquePlayers.length})</option>
-                  {uniquePlayers.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-
-                {/* Track Filter */}
-                <select
-                  value={filterTrack}
-                  onChange={(e) => setFilterTrack(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-lg px-2 py-2 outline-none focus:border-sky-500 cursor-pointer truncate min-h-[38px] font-semibold"
-                  title="Filter by Track"
-                >
-                  <option value="all">Tracks ({uniqueTracks.length})</option>
-                  {uniqueTracks.map(t => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-
-                {/* Car Filter */}
-                <select
-                  value={filterCar}
-                  onChange={(e) => setFilterCar(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-lg px-2 py-2 outline-none focus:border-sky-500 cursor-pointer truncate min-h-[38px] font-semibold"
-                  title="Filter by Car"
-                >
-                  <option value="all">Cars ({uniqueCars.length})</option>
-                  {uniqueCars.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Sort Pills */}
-              <div className="flex items-center justify-between text-xs mt-0.5 min-w-0">
-                <span className="text-zinc-400 font-bold flex-none">Sort:</span>
-                <div className="flex gap-1.5 flex-none">
-                  <button 
-                    onClick={() => setSortBy('newest')} 
-                    className={`px-2.5 py-1.5 rounded-lg font-mono text-xs transition-colors cursor-pointer min-h-[32px] ${
-                      sortBy === 'newest' ? 'bg-zinc-800 text-sky-400 font-bold border border-zinc-700' : 'text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    Newest
-                  </button>
-                  <button 
-                    onClick={() => setSortBy('oldest')} 
-                    className={`px-2.5 py-1.5 rounded-lg font-mono text-xs transition-colors cursor-pointer min-h-[32px] ${
-                      sortBy === 'oldest' ? 'bg-zinc-800 text-sky-400 font-bold border border-zinc-700' : 'text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    Oldest
-                  </button>
-                  <button 
-                    onClick={() => setSortBy('fastest')} 
-                    className={`px-2.5 py-1.5 rounded-lg font-mono text-xs transition-colors cursor-pointer min-h-[32px] ${
-                      sortBy === 'fastest' ? 'bg-zinc-800 text-purple-400 font-bold border border-zinc-700' : 'text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    Fastest
-                  </button>
-                </div>
-              </div>
-            </div>
+            <FilterControls
+              processedPlayers={processedPlayers}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              filterPlayer={filterPlayer}
+              setFilterPlayer={setFilterPlayer}
+              filterTrack={filterTrack}
+              setFilterTrack={setFilterTrack}
+              filterCar={filterCar}
+              setFilterCar={setFilterCar}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              uniquePlayers={uniquePlayers}
+              uniqueTracks={uniqueTracks}
+              uniqueCars={uniqueCars}
+            />
 
             {/* History Tree List */}
-            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar min-w-0">
+            <div className="flex-1 overflow-y-auto custom-scrollbar min-w-0" style={{ padding: '16px 20px' }}>
               {isLoading ? (
                 <div className="text-xs text-zinc-500 animate-pulse">Loading history tree...</div>
               ) : isError ? (
@@ -889,7 +264,7 @@ export const Sidebar = React.memo(function Sidebar() {
                   No matching sessions found
                 </div>
               ) : (
-                <div className="flex flex-col gap-3 min-w-0">
+                <div className="flex flex-col gap-3.5 min-w-0">
                   {processedPlayers.map(player => (
                     <PlayerItem 
                       key={player.id} 
@@ -905,7 +280,7 @@ export const Sidebar = React.memo(function Sidebar() {
 
             {/* Ideal Lap Section */}
             {idealLap && (
-              <div className="p-3 border-t border-zinc-800 bg-black/10 flex-none min-w-0">
+              <div className="border-t border-zinc-800 bg-black/10 flex-none min-w-0" style={{ padding: '14px 20px' }}>
                  <div className="flex justify-between items-center min-w-0">
                     <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0 truncate">Theoretical Best</h3>
                     <span className="font-mono font-bold text-sky-400 text-base flex-none">
