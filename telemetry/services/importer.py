@@ -103,7 +103,7 @@ def import_ibt_to_db(file_path: str, db_session_factory):
                     current_lap.lap_time = -1.0  # Outlap
                 else:
                     current_lap.lap_time = lap_last_lap_time
-                db.commit()
+                db.flush()
 
                 current_sector_time = lap_last_lap_time - sector_start_time
 
@@ -113,7 +113,7 @@ def import_ibt_to_db(file_path: str, db_session_factory):
                     sector_time=current_sector_time,
                 )
                 db.add(new_sector)
-                db.commit()
+                db.flush()
 
                 current_sector_id = 0
                 sector_start_time = 0.0
@@ -144,7 +144,7 @@ def import_ibt_to_db(file_path: str, db_session_factory):
                         sector_time=current_sector_time,
                     )
                     db.add(new_sector)
-                    db.commit()
+                    db.flush()
 
                     current_sector_id = next_sector_id
                     sector_start_time = lap_current_lap_time
