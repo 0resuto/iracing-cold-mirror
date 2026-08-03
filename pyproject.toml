@@ -15,9 +15,13 @@ dependencies = [
     "httpx",
     "python-multipart",
     "pyirsdk",
-    "pytest",
     "websockets",
     "tqdm"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
 ]
 
 [build-system]

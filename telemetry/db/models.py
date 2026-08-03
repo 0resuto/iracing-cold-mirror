@@ -22,7 +22,7 @@ class Session(Base):
     id = Column(Integer, primary_key=True, index=True)
     player_id = Column(Integer, ForeignKey("players.id"), nullable=False, index=True)
     player = relationship("Player", back_populates="sessions")
-    track_name = Column(String)
+    track_name = Column(String, nullable=False)
     car_name = Column(String, nullable=True)
     start_time = Column(DateTime, nullable=True, default=datetime.utcnow)
     duration_seconds = Column(Float, nullable=True, default=0.0)
@@ -35,7 +35,7 @@ class Lap(Base):
 
     id = Column(Integer, primary_key=True)
     session_id = Column(Integer, ForeignKey("sessions.id"), nullable=False, index=True)
-    lap_number = Column(Integer)
+    lap_number = Column(Integer, nullable=False)
     lap_time = Column(Float, default=0.0, index=True)
 
     session = relationship("Session", back_populates="laps")
@@ -48,8 +48,8 @@ class Sector(Base):
 
     id = Column(Integer, primary_key=True)
     lap_id = Column(Integer, ForeignKey("laps.id"), nullable=False, index=True)
-    sector_number = Column(Integer)
-    sector_time = Column(Float)
+    sector_number = Column(Integer, nullable=False)
+    sector_time = Column(Float, nullable=False)
 
     lap = relationship("Lap", back_populates="sectors")
 
@@ -58,15 +58,15 @@ class Telemetry(Base):
     __tablename__ = "telemetry"
 
     id = Column(Integer, primary_key=True)
-    lap_id = Column(Integer, ForeignKey("laps.id"), index=True)
-    session_time = Column(Float, index=True)
-    speed = Column(Float)  # Speed (km/h)
-    rpm = Column(Integer)  # Engine RPM
-    gear = Column(Integer)  # Current gear
-    throttle = Column(Float)  # Throttle input (0.0 to 1.0)
-    brake = Column(Float)  # Brake input (0.0 to 1.0)
-    wheel_angle = Column(Float)  # Steering wheel angle (rad)
-    lap_dist_pct = Column(Float)  # Lap distance percentage (0.0 to 1.0)
+    lap_id = Column(Integer, ForeignKey("laps.id"), nullable=False, index=True)
+    session_time = Column(Float, nullable=False, index=True)
+    speed = Column(Float, nullable=False)  # Speed (km/h)
+    rpm = Column(Integer, nullable=False)  # Engine RPM
+    gear = Column(Integer, nullable=False)  # Current gear
+    throttle = Column(Float, nullable=False)  # Throttle input (0.0 to 1.0)
+    brake = Column(Float, nullable=False)  # Brake input (0.0 to 1.0)
+    wheel_angle = Column(Float, nullable=False)  # Steering wheel angle (rad)
+    lap_dist_pct = Column(Float, nullable=False)  # Lap distance percentage (0.0 to 1.0)
 
     lat = Column(Float, nullable=True)  # GPS Latitude
     lon = Column(Float, nullable=True)  # GPS Longitude
