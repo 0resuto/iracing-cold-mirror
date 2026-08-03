@@ -31,14 +31,56 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def import_ibt_to_db(file_path: str, db_session_factory):
-    """
-    Parses an iRacing .ibt telemetry file and imports its data into PostgreSQL.
+def _get_or_create_player(db, player_name: str) -> Player:
+    player = db.query(Player).filter_by(name=player_name).first()
+    if not player:
+        player = Player(name=player_name)
+        db.add(player)
+        db.flush()
+    return player
 
-    Reads historical telemetry data frame by frame, grouping it into sessions,
-    laps, and sectors. Uses file hashing to prevent duplicate imports and
-    inserts data in batches to optimize database performance.
-    """
+
+def _create_session(
+    db, player_id: int, track_name: str, car_name: str, file_hash: str
+) -> RacingSession:
+    session = RacingSession(
+        track_name=track_name, player_id=player_id, car_name=car_name, file_hash=file_hash
+    )
+    db.add(session)
+    db.flush()
+    return session
+
+
+def _build_telemetry(lap_id: int, session_time: float, data: dict) -> Telemetry:
+    return Telemetry(
+        lap_id=lap_id,
+        session_time=session_time,
+        speed=data["speed"],
+        rpm=data["rpm"],
+        gear=data["gear"],
+        throttle=data["throttle"],
+        brake=data["brake"],
+        wheel_angle=data["wheel_angle"],
+        lap_dist_pct=data.get("lap_dist_pct"),
+        lat=data.get("lat"),
+        lon=data.get("lon"),
+        lat_accel=data.get("g_lat"),
+        long_accel=data.get("g_lon"),
+        yaw_rate=data.get("yaw_rate"),
+        velocity_x=data.get("vx"),
+        velocity_z=data.get("vz"),
+        slip_angle=data.get("slip_angle"),
+        lf_speed=data.get("lf_speed"),
+        rf_speed=data.get("rf_speed"),
+        lr_speed=data.get("lr_speed"),
+        rr_speed=data.get("rr_speed"),
+        abs_active=data.get("abs_active"),
+        tc_active=data.get("tc_active"),
+        wheel_lock=data.get("wheel_lock"),
+    )
+
+
+def import_ibt_to_db(file_path: str, db_session_factory):
     reader = IBTReader(file_path=file_path, loop=False)
     db = db_session_factory()
 
@@ -63,17 +105,8 @@ def import_ibt_to_db(file_path: str, db_session_factory):
         track_name = getattr(reader, "track_name", "Unknown Track")
         car_name = getattr(reader, "car_name", "Unknown Car")
 
-        player = db.query(Player).filter_by(name=player_name).first()
-
-        if not player:
-            player = Player(name=player_name)
-            db.add(player)
-            db.commit()
-
-        current_session = RacingSession(
-            track_name=track_name, player_id=player.id, car_name=car_name, file_hash=file_hash
-        )
-        db.add(current_session)
+        player = _get_or_create_player(db, player_name)
+        current_session = _create_session(db, player.id, track_name, car_name, file_hash)
         db.commit()
 
         # Read first frame to determine initial iRacing lap number (0 for Outlap, 1 for Lap 1)
@@ -152,34 +185,7 @@ def import_ibt_to_db(file_path: str, db_session_factory):
             last_lap_dist_pct = data["lap_dist_pct"]
             lap_last_lap_time = lap_current_lap_time
 
-            new_data = Telemetry(
-                lap_id=current_lap.id,
-                session_time=lap_current_lap_time,
-                speed=data["speed"],
-                rpm=data["rpm"],
-                gear=data["gear"],
-                throttle=data["throttle"],
-                brake=data["brake"],
-                wheel_angle=data["wheel_angle"],
-                lap_dist_pct=data.get("lap_dist_pct"),
-                lat=data.get("lat"),
-                lon=data.get("lon"),
-                lat_accel=data.get("g_lat"),
-                long_accel=data.get("g_lon"),
-                yaw_rate=data.get("yaw_rate"),
-                velocity_x=data.get("vx"),
-                velocity_z=data.get("vz"),
-                slip_angle=data.get("slip_angle"),
-                lf_speed=data.get("lf_speed"),
-                rf_speed=data.get("rf_speed"),
-                lr_speed=data.get("lr_speed"),
-                rr_speed=data.get("rr_speed"),
-                abs_active=data.get("abs_active"),
-                tc_active=data.get("tc_active"),
-                wheel_lock=data.get("wheel_lock"),
-            )
-
-            batch.append(new_data)
+            batch.append(_build_telemetry(current_lap.id, lap_current_lap_time, data))
 
             if len(batch) >= 10000:
                 db.bulk_save_objects(batch)

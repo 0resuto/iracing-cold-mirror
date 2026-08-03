@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:16
     container_name: iracing-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-iracing}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-iracing_local}
@@ -19,14 +20,21 @@ services:
   redis:
     image: redis:alpine
     container_name: iracing-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
 
   api:
     build:
       context: .
       dockerfile: deploy/Dockerfile
     container_name: iracing-api
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
@@ -37,11 +45,12 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
 
   frontend:
     build: ./frontend
     container_name: iracing-frontend
+    restart: unless-stopped
     ports:
       - "8080:80"
     depends_on:
