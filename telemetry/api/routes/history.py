@@ -1,8 +1,10 @@
 import os
+import shutil
 import tempfile
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy import func, text
+from sqlalchemy.orm import Session as DBSession
 from sqlalchemy.orm import selectinload
 
 from telemetry.api.deps import get_db, verify_api_key
@@ -29,7 +31,7 @@ router = APIRouter()
     tags=["Laps"],
     summary="Get lap telemetry",
 )
-def get_lap_telemetry(lap_id: int, db=Depends(get_db), max_points: int = 2000):
+def get_lap_telemetry(lap_id: int, db: DBSession = Depends(get_db), max_points: int = 2000):
     total = db.query(func.count(Telemetry.id)).filter(Telemetry.lap_id == lap_id).scalar()
     if total == 0:
         return []
@@ -63,7 +65,7 @@ def get_lap_telemetry(lap_id: int, db=Depends(get_db), max_points: int = 2000):
     tags=["Players"],
     summary="Get best lap",
 )
-def get_best_lap(player_id: int, track_name: str, db=Depends(get_db)):
+def get_best_lap(player_id: int, track_name: str, db: DBSession = Depends(get_db)):
     best_lap = (
         db.query(Lap)
         .join(Session)
@@ -84,7 +86,7 @@ def get_best_lap(player_id: int, track_name: str, db=Depends(get_db)):
     tags=["Players"],
     summary="Get ideal lap",
 )
-def get_ideal_lap(player_id: int, track_name: str, db=Depends(get_db)):
+def get_ideal_lap(player_id: int, track_name: str, db: DBSession = Depends(get_db)):
     best_sectors = (
         db.query(Sector.sector_number, func.min(Sector.sector_time).label("best_time"))
         .join(Lap)
@@ -118,7 +120,7 @@ def get_ideal_lap(player_id: int, track_name: str, db=Depends(get_db)):
     tags=["Laps"],
     summary="Get delta between two laps",
 )
-def get_lap_delta(lap_id: int, reference_lap_id: int, db=Depends(get_db)):
+def get_lap_delta(lap_id: int, reference_lap_id: int, db: DBSession = Depends(get_db)):
     """
     Calculates the time delta between a given lap and a reference lap.
 
@@ -153,7 +155,7 @@ def get_lap_delta(lap_id: int, reference_lap_id: int, db=Depends(get_db)):
     tags=["Players"],
     summary="Get all players history",
 )
-def get_history(skip: int = 0, limit: int = Query(10, le=100), db=Depends(get_db)):
+def get_history(skip: int = 0, limit: int = Query(10, le=100), db: DBSession = Depends(get_db)):
     players = (
         db.query(Player).options(selectinload(Player.sessions)).offset(skip).limit(limit).all()
     )
@@ -171,8 +173,7 @@ def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only .ibt files are allowed")
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ibt") as tmp:
-        while chunk := file.file.read(1024 * 1024):
-            tmp.write(chunk)
+        shutil.copyfileobj(file.file, tmp)
         tmp_path = tmp.name
 
     try:
@@ -194,7 +195,7 @@ def upload_file(file: UploadFile = File(...)):
     tags=["System"],
     summary="Get system information",
 )
-def get_system_info(db=Depends(get_db)):
+def get_system_info(db: DBSession = Depends(get_db)):
     total_players = db.query(func.count(Player.id)).scalar() or 0
     total_sessions = db.query(func.count(Session.id)).scalar() or 0
     total_laps = db.query(func.count(Lap.id)).scalar() or 0
@@ -205,7 +206,11 @@ def get_system_info(db=Depends(get_db)):
             "session_id": last_session.id,
             "track_name": last_session.track_name or "Unknown Track",
             "player_name": last_session.player.name if last_session.player else "Unknown Player",
-            "total_laps": len(last_session.laps) if last_session.laps else 0,
+            "total_laps": db.query(func.count(Lap.id))
+            .filter(Lap.session_id == last_session.id)
+            .scalar()
+            if last_session
+            else 0,
             "created_at": last_session.created_at,
         }
     return SystemInfoResponse(

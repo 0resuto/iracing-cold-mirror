@@ -55,7 +55,7 @@ class IBTReader:
 
             split_info = session_info.get("SplitTimeInfo", {})
             self.sectors = split_info.get("Sectors", [])
-            # sectors will look like: [{"SectorNum": 0, "SectorStartPct": 0.0}, ...]
+
         except Exception as e:
             print(f"Warning: Could not parse session info YAML: {e}")
 
@@ -125,3 +125,7 @@ class IBTReader:
     def set_lap_dist_pct(self, pct):
         # Ignore, we just replay sequentially
         pass
+
+    def close(self):
+        if hasattr(self.ibt, "close"):
+            self.ibt.close()

@@ -8,7 +8,7 @@ from telemetry.api.app import app
 from telemetry.api.deps import get_db
 from telemetry.db import Base
 
-# Use in-memory SQLite for fast, isolated tests
+# Currently using in-memory SQLite for simplicity and speed in local development.
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(

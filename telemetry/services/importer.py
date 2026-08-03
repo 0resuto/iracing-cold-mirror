@@ -80,6 +80,46 @@ def _build_telemetry(lap_id: int, session_time: float, data: dict) -> Telemetry:
     )
 
 
+def _handle_lap_transition(
+    db,
+    data,
+    current_lap,
+    lap_last_lap_time,
+    sector_start_time,
+    current_sector_id,
+    current_lap_num,
+    current_session,
+):
+    if lap_last_lap_time < 15.0 or lap_last_lap_time == 0.0:
+        current_lap.lap_time = -1.0
+    else:
+        current_lap.lap_time = lap_last_lap_time
+    db.flush()
+    current_sector_time = lap_last_lap_time - sector_start_time
+    new_sector = Sector(
+        lap_id=current_lap.id,
+        sector_number=current_sector_id,
+        sector_time=current_sector_time,
+    )
+    db.add(new_sector)
+    db.flush()
+
+    iracing_lap = data.get("lap")
+    if iracing_lap is not None and iracing_lap > current_lap_num:
+        new_lap_num = iracing_lap
+    else:
+        new_lap_num = current_lap_num + 1
+    new_lap = RacingLap(session_id=current_session.id, lap_number=new_lap_num, lap_time=0.0)
+    db.add(new_lap)
+    db.commit()
+    return (
+        new_lap,
+        0,
+        0.0,
+        new_lap_num,
+    )
+
+
 def import_ibt_to_db(file_path: str, db_session_factory):
     reader = IBTReader(file_path=file_path, loop=False)
     db = db_session_factory()
@@ -129,46 +169,27 @@ def import_ibt_to_db(file_path: str, db_session_factory):
         while data is not None:
             pbar.update(1)
             lap_current_lap_time = data.get("session_time", 0.0)
+            lap_dist_pct = data.get("lap_dist_pct", 0.0)
 
-            if last_lap_dist_pct > 0.8 and data["lap_dist_pct"] < 0.2:
-                # If lap duration is less than 15s (e.g. spawned near finish line), treat as Outlap (-1.0)
-                if lap_last_lap_time < 15.0 or lap_last_lap_time == 0.0:
-                    current_lap.lap_time = -1.0  # Outlap
-                else:
-                    current_lap.lap_time = lap_last_lap_time
-                db.flush()
-
-                current_sector_time = lap_last_lap_time - sector_start_time
-
-                new_sector = Sector(
-                    lap_id=current_lap.id,
-                    sector_number=current_sector_id,
-                    sector_time=current_sector_time,
+            if last_lap_dist_pct > 0.8 and lap_dist_pct < 0.2:
+                current_lap, current_sector_id, sector_start_time, current_lap_num = (
+                    _handle_lap_transition(
+                        db,
+                        data,
+                        current_lap,
+                        lap_last_lap_time,
+                        sector_start_time,
+                        current_sector_id,
+                        current_lap_num,
+                        current_session,
+                    )
                 )
-                db.add(new_sector)
-                db.flush()
-
-                current_sector_id = 0
-                sector_start_time = 0.0
-
-                # Use iRacing's official lap number if available, otherwise increment
-                iracing_lap = data.get("lap")
-                if iracing_lap is not None and iracing_lap > current_lap_num:
-                    current_lap_num = iracing_lap
-                else:
-                    current_lap_num += 1
-
-                current_lap = RacingLap(
-                    session_id=current_session.id, lap_number=current_lap_num, lap_time=0.0
-                )
-                db.add(current_lap)
-                db.commit()
 
             next_sector_id = current_sector_id + 1
 
             if len(sectors) > 1 and next_sector_id < len(sectors):
                 next_sector_start_time = sectors[next_sector_id]["SectorStartPct"]
-                if data["lap_dist_pct"] >= next_sector_start_time:
+                if lap_dist_pct >= next_sector_start_time:
                     current_sector_time = lap_current_lap_time - sector_start_time
 
                     new_sector = Sector(
@@ -182,7 +203,7 @@ def import_ibt_to_db(file_path: str, db_session_factory):
                     current_sector_id = next_sector_id
                     sector_start_time = lap_current_lap_time
 
-            last_lap_dist_pct = data["lap_dist_pct"]
+            last_lap_dist_pct = lap_dist_pct
             lap_last_lap_time = lap_current_lap_time
 
             batch.append(_build_telemetry(current_lap.id, lap_current_lap_time, data))
@@ -206,6 +227,7 @@ def import_ibt_to_db(file_path: str, db_session_factory):
 
         db.commit()
         logger.info("Import completed!")
+        return True
 
     except Exception as e:
         db.rollback()
@@ -216,3 +238,4 @@ def import_ibt_to_db(file_path: str, db_session_factory):
         if pbar:
             pbar.close()
         db.close()
+        reader.close()

@@ -36,15 +36,16 @@ def calculate_delta(cur_telemetry, ref_telemetry):
             p1 = ref_telemetry[j - 1]
             p2 = ref_telemetry[j]
             dist_diff = p2.lap_dist_pct - p1.lap_dist_pct
-
             if dist_diff > 0:
                 ratio = (cur.lap_dist_pct - p1.lap_dist_pct) / dist_diff
                 ref_time_abs = p1.session_time + ratio * (p2.session_time - p1.session_time)
             else:
                 ref_time_abs = p2.session_time
+        else:
+            ref_time_abs = ref_telemetry[0].session_time
 
-            cur_elapsed = cur.session_time - cur_start_time
-            ref_elapsed = ref_time_abs - ref_start_time
+        cur_elapsed = cur.session_time - cur_start_time
+        ref_elapsed = ref_time_abs - ref_start_time
 
-            deltas.append({"lap_dist_pct": cur.lap_dist_pct, "delta": cur_elapsed - ref_elapsed})
+        deltas.append({"lap_dist_pct": cur.lap_dist_pct, "delta": cur_elapsed - ref_elapsed})
     return deltas

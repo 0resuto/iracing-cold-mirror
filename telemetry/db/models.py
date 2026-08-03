@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
@@ -24,10 +24,10 @@ class Session(Base):
     player = relationship("Player", back_populates="sessions")
     track_name = Column(String, nullable=False)
     car_name = Column(String, nullable=True)
-    start_time = Column(DateTime, nullable=True, default=datetime.utcnow)
+    start_time = Column(DateTime, nullable=True, default=lambda: datetime.now(timezone.utc))
     duration_seconds = Column(Float, nullable=True, default=0.0)
     laps = relationship("Lap", back_populates="session", cascade="all, delete-orphan")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Lap(Base):

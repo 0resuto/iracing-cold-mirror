@@ -2,6 +2,7 @@ import json
 import logging
 import time
 
+from websockets.exceptions import WebSocketException
 from websockets.sync.client import connect
 
 from telemetry.config import settings
@@ -83,6 +84,6 @@ def run(reader):
         except KeyboardInterrupt:
             logger.info("Stopped by user")
             break
-        except Exception as e:
+        except (ConnectionError, WebSocketException) as e:
             logger.error(f"Connection lost: {e}. Reconnecting in 2s...")
             time.sleep(2)
