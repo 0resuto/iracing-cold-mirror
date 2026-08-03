@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Brush
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Brush
 } from 'recharts';
 import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
+import { TelemetrySubChart } from './TelemetrySubChart';
 
 const FastDot = (props) => {
   const { cx, cy, stroke, fill } = props;
@@ -437,156 +438,54 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
           </div>
         )}
 
-        {/* Speed Chart */}
-        {visibleCharts.speed && (
-          <div className="flex-1 min-h-[130px] flex flex-col relative group min-w-0">
-            <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">SPEED (km/h)</div>
-            <div className="flex-1 mt-3">
-              <ResponsiveContainer width="100%" height="100%">
-              <LineChart 
-                data={zoomedData} 
-                syncId="telemetry"
-                syncMethod="value"
-                margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
-                onMouseEnter={() => { activeChartRef.current = 'speed'; }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
-                <YAxis domain={[0, dataMax => Math.ceil(((dataMax || 200) * 1.05) / 10) * 10]} stroke="#a1a1aa" fontSize={9} tickCount={5} width={35} />
-                <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="speed" activeChartRef={activeChartRef} />} />
-                <Line type="linear" dataKey="speed" stroke="#ef4444" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={<FastDot />} />
-                <Line type="linear" dataKey="ref_speed" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
-                {sectorBoundaries.map((pct, i) => (
-                  <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Throttle Chart */}
-        {visibleCharts.throttle && (
-          <div className="flex-1 min-h-[90px] flex flex-col relative group min-w-0">
-            <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">THROTTLE (%)</div>
-            <div className="flex-1 mt-3">
-              <ResponsiveContainer width="100%" height="100%">
-              <AreaChart 
-                data={zoomedData} 
-                syncId="telemetry"
-                syncMethod="value"
-                margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
-                onMouseEnter={() => { activeChartRef.current = 'throttle'; }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
-                <YAxis domain={[0, 1]} stroke="#a1a1aa" fontSize={9} tickCount={3} tickFormatter={v => (v*100).toFixed(0)} width={35} />
-                <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="throttle" activeChartRef={activeChartRef} />} />
-                <Area type="linear" dataKey="throttle" stroke="#22c55e" fill="#22c55e" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
-                <Line type="linear" dataKey="ref_throttle" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
-                <Area type="step" dataKey="tc_active" stroke="none" fill="#eab308" fillOpacity={0.15} isAnimationActive={false} activeDot={false} />
-                {sectorBoundaries.map((pct, i) => (
-                  <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
-                ))}
-              </AreaChart>
-            </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Brake Chart */}
-        {visibleCharts.brake && (
-          <div className="flex-1 min-h-[90px] flex flex-col relative group min-w-0">
-            <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">BRAKE (%)</div>
-            <div className="flex-1 mt-3">
-              <ResponsiveContainer width="100%" height="100%">
-              <AreaChart 
-                data={zoomedData} 
-                syncId="telemetry"
-                syncMethod="value"
-                margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
-                onMouseEnter={() => { activeChartRef.current = 'brake'; }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
-                <YAxis domain={[0, 1]} stroke="#a1a1aa" fontSize={9} tickCount={3} tickFormatter={v => (v*100).toFixed(0)} width={35} />
-                <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="brake" activeChartRef={activeChartRef} />} />
-                <Area type="linear" dataKey="brake" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
-                <Line type="linear" dataKey="ref_brake" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
-                <Area type="step" dataKey="abs_active" stroke="none" fill="#38bdf8" fillOpacity={0.2} isAnimationActive={false} activeDot={false} />
-                <Area type="step" dataKey="wheel_lock" stroke="none" fill="#ef4444" fillOpacity={0.3} isAnimationActive={false} activeDot={false} />
-                {sectorBoundaries.map((pct, i) => (
-                  <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
-                ))}
-              </AreaChart>
-            </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Steering Chart */}
-        {visibleCharts.steering && (
-          <div className="flex-1 min-h-[90px] flex flex-col relative group min-w-0">
-            <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">STEERING (deg)</div>
-            <div className="flex-1 mt-3">
-              <ResponsiveContainer width="100%" height="100%">
-              <LineChart 
-                data={zoomedData} 
-                syncId="telemetry"
-                syncMethod="value"
-                margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
-                onMouseEnter={() => { activeChartRef.current = 'wheel'; }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis dataKey="lap_dist_pct" hide type="number" domain={['dataMin', 'dataMax']} />
-                <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={9} tickCount={3} width={35} />
-                <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="wheel" activeChartRef={activeChartRef} />} />
-                <Line type="linear" dataKey="wheel_angle" stroke="#f4f4f5" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={<FastDot />} />
-                <Line type="linear" dataKey="ref_wheel_angle" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
-                {sectorBoundaries.map((pct, i) => (
-                  <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Slip Angle Chart */}
-        {visibleCharts.slip && (
-          <div className="flex-1 min-h-[90px] flex flex-col relative group min-w-0">
-            <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">SLIP ANGLE (deg)</div>
-            <div className="flex-1 mt-3">
-              <ResponsiveContainer width="100%" height="100%">
-              <AreaChart 
-                data={zoomedData} 
-                syncId="telemetry"
-                syncMethod="value"
-                margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
-                onMouseEnter={() => { activeChartRef.current = 'slip'; }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis 
-                  dataKey="lap_dist_pct" 
-                  stroke="#a1a1aa" 
-                  type="number"
-                  domain={['dataMin', 'dataMax']}
-                  tickFormatter={(val) => (val * 100).toFixed(0) + '%'}
-                  fontSize={9}
-                  minTickGap={30}
-                />
-                <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={9} tickCount={3} width={35} />
-                <Tooltip isAnimationActive={false} content={<CustomTooltip chartId="slip" activeChartRef={activeChartRef} />} />
-                <Area type="linear" dataKey="slip_angle" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
-                <Line type="linear" dataKey="ref_slip_angle" stroke="#71717a" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
-                {sectorBoundaries.map((pct, i) => (
-                  <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
-                ))}
-              </AreaChart>
-            </ResponsiveContainer>
-            </div>
-          </div>
-        )}
+        {/* Chart Configuration Array */}
+        {[
+          {
+            id: 'speed', title: 'SPEED (km/h)', dataKey: 'speed', refDataKey: 'ref_speed',
+            stroke: 'var(--color-accent-red)', type: 'line-speed', domain: [0, dataMax => Math.ceil(((dataMax || 200) * 1.05) / 10) * 10],
+            minHeight: 130
+          },
+          {
+            id: 'throttle', title: 'THROTTLE (%)', dataKey: 'throttle', refDataKey: 'ref_throttle',
+            stroke: 'var(--color-accent-green)', type: 'area', domain: [0, 1], tickFormatter: v => (v*100).toFixed(0),
+            minHeight: 90, extraAreas: [{ dataKey: 'tc_active', fill: 'var(--color-accent-yellow)' }]
+          },
+          {
+            id: 'brake', title: 'BRAKE (%)', dataKey: 'brake', refDataKey: 'ref_brake',
+            stroke: 'var(--color-accent-red)', type: 'area', domain: [0, 1], tickFormatter: v => (v*100).toFixed(0),
+            minHeight: 90, extraAreas: [{ dataKey: 'abs_active', fill: 'var(--color-accent-blue)', opacity: 0.2 }, { dataKey: 'wheel_lock', fill: 'var(--color-accent-red)', opacity: 0.3 }]
+          },
+          {
+            id: 'steering', title: 'STEERING (deg)', dataKey: 'wheel_angle', refDataKey: 'ref_wheel_angle',
+            stroke: 'var(--color-text-main)', type: 'line', domain: ['auto', 'auto'],
+            minHeight: 90
+          },
+          {
+            id: 'slip', title: 'SLIP ANGLE (deg)', dataKey: 'slip_angle', refDataKey: 'ref_slip_angle',
+            stroke: 'var(--color-accent-blue)', type: 'area', domain: ['auto', 'auto'],
+            minHeight: 90, showXAxis: true
+          }
+        ].map(chart => visibleCharts[chart.id] && (
+          <TelemetrySubChart
+            key={chart.id}
+            title={chart.title}
+            data={zoomedData}
+            chartId={chart.id}
+            activeChartRef={activeChartRef}
+            sectorBoundaries={sectorBoundaries}
+            CustomTooltip={CustomTooltip}
+            FastDot={FastDot}
+            dataKey={chart.dataKey}
+            refDataKey={chart.refDataKey}
+            stroke={chart.stroke}
+            type={chart.type}
+            domain={chart.domain}
+            tickFormatter={chart.tickFormatter}
+            minHeight={chart.minHeight}
+            showXAxis={chart.showXAxis}
+            extraAreas={chart.extraAreas}
+          />
+        ))}
 
       </div>
     </div>

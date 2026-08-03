@@ -136,15 +136,15 @@ export const Sidebar = React.memo(function Sidebar() {
   }, [rawPlayers, selectedLapId, setSelectedLap]);
 
   return (
-    <div className="flex h-full w-full bg-zinc-900 min-w-0">
+    <div className="flex h-full w-full bg-bg-surface min-w-0">
       
       {/* Left Icon Navigation Bar (DESKTOP ONLY) */}
-      <div className="hidden md:flex w-16 min-w-[64px] border-r border-zinc-800 flex-col items-center py-4 bg-zinc-950 flex-none z-10">
+      <div className="hidden md:flex w-16 min-w-[64px] border-r border-border-strong flex-col items-center py-4 bg-bg-base flex-none z-10">
         {/* Toggle Sidebar Arrow Button */}
         <button 
           onClick={toggleSidebar} 
           title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-          className="p-3 rounded-xl hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-all flex items-center justify-center cursor-pointer mt-1 mb-10 w-12 h-12 border border-transparent hover:border-zinc-800 active:scale-95"
+          className="p-3 rounded-xl hover:bg-bg-surface text-text-muted hover:text-text-main transition-all flex items-center justify-center cursor-pointer mt-1 mb-10 w-12 h-12 border border-transparent hover:border-border-strong active:scale-95"
         >
           {isOpen ? <ChevronLeft size={26} strokeWidth={2.5} /> : <ChevronRight size={26} strokeWidth={2.5} />}
         </button>
@@ -158,7 +158,7 @@ export const Sidebar = React.memo(function Sidebar() {
               if (!isOpen) toggleSidebar();
             }} 
             className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'history' ? 'border-sky-400 text-sky-400 font-bold' : 'border-transparent text-zinc-500 hover:text-zinc-300'
+              activeTab === 'history' ? 'border-accent-blue text-accent-blue font-bold' : 'border-transparent text-text-muted hover:text-text-main'
             }`}
           >
             <Timer size={24} />
@@ -172,7 +172,7 @@ export const Sidebar = React.memo(function Sidebar() {
               if (!isOpen) toggleSidebar();
             }} 
             className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'live' ? 'border-red-500 text-red-500 font-bold' : 'border-transparent text-zinc-500 hover:text-zinc-300'
+              activeTab === 'live' ? 'border-accent-red text-accent-red font-bold' : 'border-transparent text-text-muted hover:text-text-main'
             }`}
           >
             <Radio size={24} />
@@ -186,7 +186,7 @@ export const Sidebar = React.memo(function Sidebar() {
               if (!isOpen) toggleSidebar();
             }} 
             className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'system' ? 'border-emerald-400 text-emerald-400 font-bold' : 'border-transparent text-zinc-500 hover:text-zinc-300'
+              activeTab === 'system' ? 'border-accent-green text-accent-green font-bold' : 'border-transparent text-text-muted hover:text-text-main'
             }`}
           >
             <Settings size={24} />
@@ -198,13 +198,13 @@ export const Sidebar = React.memo(function Sidebar() {
       <div className={`flex-1 flex-col overflow-hidden min-w-0 ${isOpen ? 'flex' : 'hidden'}`}>
         
         {/* MOBILE TOP BAR (Segmented Tabs + Close Button) */}
-        <div className="flex md:hidden items-center justify-between bg-zinc-950 border-b border-zinc-800 flex-none gap-3 min-h-[60px]" style={{ padding: '16px 20px' }}>
+        <div className="flex md:hidden items-center justify-between bg-bg-base border-b border-border-strong flex-none gap-3 min-h-[60px]" style={{ padding: '16px 20px' }}>
           {/* Segmented Top Tabs */}
-          <div className="flex items-center gap-2 bg-zinc-900 p-1.5 rounded-xl border border-zinc-800 flex-1">
+          <div className="flex items-center gap-2 bg-bg-surface p-1.5 rounded-xl border border-border-strong flex-1">
             <button
               onClick={() => setActiveTab('history')}
               className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                activeTab === 'history' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm font-extrabold' : 'text-zinc-400'
+                activeTab === 'history' ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/40 shadow-sm font-extrabold' : 'text-text-muted'
               }`}
             >
               <Timer size={16} /> History
@@ -212,7 +212,7 @@ export const Sidebar = React.memo(function Sidebar() {
             <button
               onClick={() => setActiveTab('live')}
               className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                activeTab === 'live' ? 'bg-red-500/20 text-red-400 border border-red-500/40 shadow-sm font-extrabold' : 'text-zinc-400'
+                activeTab === 'live' ? 'bg-accent-red/20 text-accent-red border border-accent-red/40 shadow-sm font-extrabold' : 'text-text-muted'
               }`}
             >
               <Radio size={16} /> Live
@@ -220,7 +220,7 @@ export const Sidebar = React.memo(function Sidebar() {
             <button
               onClick={() => setActiveTab('system')}
               className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                activeTab === 'system' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm font-extrabold' : 'text-zinc-400'
+                activeTab === 'system' ? 'bg-accent-green/20 text-accent-green border border-accent-green/40 shadow-sm font-extrabold' : 'text-text-muted'
               }`}
             >
               <Settings size={16} /> System
@@ -230,7 +230,7 @@ export const Sidebar = React.memo(function Sidebar() {
           {/* Close Drawer Button */}
           <button
             onClick={toggleSidebar}
-            className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 flex-none min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
+            className="p-2.5 rounded-xl bg-bg-surface border border-border-strong text-text-muted hover:text-text-main flex-none min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
             title="Close Drawer"
           >
             <X size={22} />

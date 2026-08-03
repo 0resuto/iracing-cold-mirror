@@ -357,12 +357,12 @@ export const TrackMap = React.memo(function TrackMap() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
       <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 className="panel-title" style={{ margin: 0 }}>Track Position (Scroll to Zoom)</h2>
+        <h2 className="text-xs uppercase tracking-wider text-text-muted font-extrabold m-0">Track Position (Scroll to Zoom)</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <select 
             value={colorMode}
             onChange={(e) => setColorMode(e.target.value)}
-            style={{ background: 'var(--card-bg)', color: 'var(--text-main)', border: '1px solid var(--card-border)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', outline: 'none' }}
+            className="bg-bg-surface text-text-main border border-border-strong px-2 py-1 rounded-md text-xs cursor-pointer outline-none focus:border-accent-blue font-mono font-semibold"
           >
             <option value="default">Default</option>
             <option value="speed">Speed</option>
@@ -371,20 +371,20 @@ export const TrackMap = React.memo(function TrackMap() {
         </div>
       </div>
       
-      <div style={{ flex: 1, width: '100%', position: 'relative', overflow: 'hidden', backgroundColor: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--card-border)', marginTop: '8px' }}>
+      <div className="flex-1 w-full relative overflow-hidden bg-bg-surface/60 backdrop-blur-md rounded-xl border border-white/5 mt-2 shadow-lg">
         {isLive && (!lapData || lapData.length === 0) ? (
           <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-3">
             <span className="w-6 h-6 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin"></span>
             <span>Waiting for live GPS data...</span>
           </div>
         ) : lapTime === undefined || lapTime === null ? (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+          <div className="w-full h-full flex items-center justify-center text-text-muted text-sm font-mono tracking-widest">
             Select a lap to view map
           </div>
         ) : svgData ? (
           <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
             {colorMode !== 'default' && (
-              <div className="absolute bottom-3 left-3 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 px-3 py-1.5 rounded-md text-[10px] text-zinc-300 flex items-center gap-2 font-mono shadow-md z-10 pointer-events-none">
+              <div className="absolute bottom-3 left-3 bg-bg-base/90 backdrop-blur-md border border-border-strong px-3 py-1.5 rounded-md text-[10px] text-zinc-300 flex items-center gap-2 font-mono shadow-md z-10 pointer-events-none">
                 {colorMode === 'speed' ? (
                   <>
                     <span className="text-red-400 font-bold">Slow</span>
@@ -410,7 +410,7 @@ export const TrackMap = React.memo(function TrackMap() {
                   className="adaptive-path"
                   d={svgData.basePath} 
                   fill="none" 
-                  stroke="var(--text-muted)" 
+                  stroke="var(--color-text-muted)" 
                   strokeWidth="4" 
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -437,7 +437,7 @@ export const TrackMap = React.memo(function TrackMap() {
                     className="adaptive-path"
                     d={svgData.lapPath} 
                     fill="none" 
-                    stroke="var(--accent-red)" 
+                    stroke="var(--color-accent-red)" 
                     strokeWidth={getStrokeWidth()}
                     strokeLinecap="round"
                     strokeLinejoin="round" 
@@ -452,8 +452,8 @@ export const TrackMap = React.memo(function TrackMap() {
                     cx={boundary.x} 
                     cy={boundary.y} 
                     r="5" 
-                    fill="var(--card-bg)" 
-                    stroke="var(--accent-blue)" 
+                    fill="var(--color-bg-surface)" 
+                    stroke="var(--color-accent-blue)" 
                     strokeWidth="3" 
                   />
                 ))}
@@ -465,8 +465,8 @@ export const TrackMap = React.memo(function TrackMap() {
                       {/* Velocity Vector (shows true direction of travel) */}
                       {carState.speed > 5 && (
                         <g transform={`rotate(${carState.travelAngle})`}>
-                          <line x1="0" y1="0" x2="40" y2="0" stroke="var(--accent-blue)" strokeWidth="3" strokeDasharray="4 4" />
-                          <polygon points="40,-4 48,0 40,4" fill="var(--accent-blue)" />
+                          <line x1="0" y1="0" x2="40" y2="0" stroke="var(--color-accent-blue)" strokeWidth="3" strokeDasharray="4 4" />
+                          <polygon points="40,-4 48,0 40,4" fill="var(--color-accent-blue)" />
                         </g>
                       )}
 
@@ -475,7 +475,7 @@ export const TrackMap = React.memo(function TrackMap() {
                         {/* Car shape */}
                         <path 
                           d="M -12 -7 L 6 -7 L 12 -2 L 12 2 L 6 7 L -12 7 Z" 
-                          fill="var(--accent-red)" 
+                          fill="var(--color-accent-red)" 
                           stroke="white" 
                           strokeWidth="2" 
                         />
@@ -489,15 +489,14 @@ export const TrackMap = React.memo(function TrackMap() {
             </svg>
           </div>
         ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+          <div className="w-full h-full flex items-center justify-center text-text-muted text-sm font-mono tracking-widest">
             No GPS data available for this lap
           </div>
         )}
       </div>
       
-      <div style={{ marginTop: '16px', fontSize: '14px', color: 'var(--text-muted)', textAlign: 'center' }}>
-        Progress: {(progress * 100).toFixed(1)}% <br/>
-        <span style={{ fontSize: '12px' }}>Time: {displayTime.toFixed(1)}s / {lapTime ? lapTime.toFixed(1) : '0.0'}s</span>
+      <div className="mt-4 text-sm text-text-muted text-center font-mono font-bold bg-bg-surface/50 border border-white/5 px-4 py-1.5 rounded-full shadow-sm">
+        Progress: {(progress * 100).toFixed(1)}% <span className="mx-2 text-border-strong">|</span> <span className="text-xs">Time: {displayTime.toFixed(1)}s / {lapTime ? lapTime.toFixed(1) : '0.0'}s</span>
       </div>
     </div>
   );

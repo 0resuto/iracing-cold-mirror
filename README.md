@@ -84,6 +84,7 @@ iracing-telemetry/
 │   ├── collector/           # Live memory reader and Redis streamer
 │   ├── db/                  # SQLAlchemy models and database setup
 │   └── services/            # Core business logic (delta math, ibt import)
+├── tests/                   # Pytest suite (Backend APIs & Mock data importers)
 ├── docker-compose.yml       # Production infrastructure orchestrator
 ├── README.md
 ├── run.bat                  # Client Control Panel (Gaming PC)
@@ -96,6 +97,7 @@ iracing-telemetry/
 - **Frontend**: React 19, Vite, Zustand, Recharts, Tailwind CSS
 - **Proxy / Web Server**: Nginx
 - **Telemetry Parsing**: pyirsdk, PyYAML
+- **Testing**: Pytest, Vitest, React Testing Library, unittest.mock
 
 ---
 
