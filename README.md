@@ -9,20 +9,20 @@
 ![Dashboard Preview](https://cloud.markyarovikov.ru/apps/files_sharing/publicpreview/2jj8CnzrMBNK8SM?file=/&fileId=29787&x=1680&y=1050&a=true&etag=df020ca8587e59d837d65e37015a43ce)
 
 A telemetry analytics platform for iRacing. 
-This project collects live telemetry data directly from iRacing, stores historic sessions, and provides a web interface for lap analysis, delta comparisons, and sector breakdowns.
+This project collects live telemetry data from iRacing, stores historic sessions in a relational database, and provides a web interface for lap analysis and data visualization.
 
 ## Features
-- **Live Telemetry Streaming**: Real-time car telemetry dashboard streaming directly from the iRacing simulator.
-- **Session Auto-Sync**: Background agent that automatically detects and uploads `.ibt` telemetry files after sessions.
-- **Delta Analysis**: Real-time delta calculations between your current lap and your reference best lap.
-- **Ideal Lap Calculation**: Automatically stitches together your best sectors to calculate your theoretical perfect lap.
-- **Interactive Track Map**: Dynamic track layout with real-time car position, heading angle, slip vector, and telemetry heatmaps.
-- **API Security**: Token-based authorization for session upload endpoints.
-- **System Monitoring**: Built-in dashboard panel to view server status, storage metrics, and session activity.
+- **Asynchronous Telemetry Import**: The server processes large `.ibt` binary files using FastAPI BackgroundTasks to prevent HTTP proxy timeouts. The client agent polls a dedicated status endpoint to retrieve real-time parsing progress.
+- **Data Pipeline**: The parser extracts binary telemetry, calculates wheel physics (slip angles, acceleration vectors), and bulk-inserts data into PostgreSQL using SQLAlchemy to ensure high throughput.
+- **Live Telemetry Streaming**: Real-time car telemetry streaming directly from the iRacing simulator via WebSocket.
+- **Session Auto-Sync**: Background Python agent that uses `watchdog` to monitor directory changes and automatically upload new `.ibt` telemetry files upon session completion.
+- **Delta Analysis**: Server-side time delta calculations between current lap and reference lap telemetry points by mapping distance percentages.
+- **API Security**: Token-based authorization for session upload endpoints and WebSocket connections.
+- **System Monitoring**: Endpoints providing server status, storage metrics, and database row counts.
 
 ## System Architecture
 
-The project is built with a decoupled Client-Server architecture:
+The project uses a decoupled Client-Server architecture:
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '14px' }}}%%

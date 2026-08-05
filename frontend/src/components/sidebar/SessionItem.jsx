@@ -39,36 +39,35 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
       {/* Session Header Card */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        style={{ padding: '8px 10px' }}
-        className={`flex flex-col gap-1 cursor-pointer rounded-xl border-l-4 border-emerald-500 border-y border-r border-emerald-500/30 transition-all active:scale-[0.99] min-h-[36px] relative z-10 ${
+        className={`px-2.5 py-2 flex flex-col gap-1 cursor-pointer rounded-xl border-l-4 border-emerald-500 border-y border-r border-emerald-500/30 transition-all active:scale-[0.99] min-h-[36px] relative z-10 ${
           isOpen
-            ? 'bg-zinc-900 text-zinc-100 shadow-md'
-            : 'bg-zinc-900/60 hover:bg-zinc-900/80 text-zinc-300'
+            ? 'bg-brand-60 text-brand-10 shadow-md'
+            : 'glass hover:glass text-brand-10/80'
         }`}
       >
         <div className="flex items-center justify-between text-xs sm:text-sm font-bold min-w-0">
           <div className="flex items-center gap-2 min-w-0 truncate pr-2">
             <Calendar size={15} className="text-emerald-400 flex-none" />
-            <span className="truncate text-zinc-100 font-bold">{date}</span>
-            {timeRange && <span className="text-xs font-mono text-zinc-400 font-normal truncate">({timeRange})</span>}
+            <span className="truncate text-brand-10 font-bold">{date}</span>
+            {timeRange && <span className="text-xs font-mono text-brand-10/60 font-normal truncate">({timeRange})</span>}
           </div>
           <div className="flex items-center gap-2 flex-none ml-1">
-            <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-200 border border-zinc-700">
+            <span className="text-[11px] font-mono font-bold text-brand-10/60">
               {laps.length} laps
             </span>
-            {isOpen ? <ChevronDown size={18} className="text-emerald-400" /> : <ChevronRight size={18} className="text-zinc-400" />}
+            {isOpen ? <ChevronDown size={18} className="text-emerald-400" /> : <ChevronRight size={18} className="text-brand-10/60" />}
           </div>
         </div>
 
         {/* Sub-info: Car & Duration */}
         <div className="flex items-center justify-between text-xs min-w-0 gap-2 mt-0.5">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-mono text-xs truncate flex-1 min-w-0 font-semibold">
+          <span className="inline-flex items-center gap-1.5 text-brand-10/80 font-mono text-xs truncate flex-1 min-w-0 font-semibold">
             <Car size={13} className="flex-none text-emerald-400" />
             <span className="truncate">{carName}</span>
           </span>
           {duration && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-mono text-zinc-400 flex-none font-medium">
-              <Clock size={12} className="text-zinc-500" />
+            <span className="inline-flex items-center gap-1.5 text-xs font-mono text-brand-10/60 flex-none font-medium">
+              <Clock size={12} className="text-brand-10/40" />
               {duration}
             </span>
           )}
@@ -77,15 +76,15 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
 
       {/* Laps List Level 4 */}
       {isOpen && (
-        <div className="relative flex flex-col my-1 bg-black/40 rounded-r-xl min-w-0" style={{ marginLeft: '4px' }}>
+        <div className="relative flex flex-col my-1 bg-black/40 rounded-r-xl min-w-0 ml-1">
           {/* Vertical Guide Line extending 10px UP under Session Header */}
           <div 
             className="absolute top-[-10px] bottom-1 w-1 bg-emerald-500/70 rounded-full pointer-events-none" 
             style={{ left: '-4px', zIndex: 0 }}
           />
-          <div className="flex flex-col gap-1 relative z-10 min-w-0 py-1" style={{ paddingLeft: '4px', paddingRight: '4px' }}>
+          <div className="flex flex-col gap-1 relative z-10 min-w-0 py-1 px-1">
             {laps.length === 0 ? (
-              <div className="px-4 py-2 text-xs text-zinc-500 italic">No laps recorded.</div>
+              <div className="px-4 py-2 text-xs text-brand-10/40 italic">No laps recorded.</div>
             ) : (
               <>
                 {visibleLaps.map(lap => (
@@ -103,8 +102,7 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
                 {hiddenCount > 0 && (
                   <button
                     onClick={() => setShowAllLaps(true)}
-                    style={{ padding: '8px 16px' }}
-                    className="mt-1 text-xs text-sky-400 hover:text-sky-300 font-mono text-left cursor-pointer transition-colors font-bold min-h-[38px]"
+                    className="px-4 py-2 mt-1 text-xs text-brand-30/80 hover:text-brand-30/90 font-mono text-left cursor-pointer transition-colors font-bold min-h-[38px]"
                   >
                     + Show {hiddenCount} more laps
                   </button>

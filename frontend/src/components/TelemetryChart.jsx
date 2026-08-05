@@ -56,8 +56,8 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
   // On mobile, render a compact translucent summary at top of screen to avoid covering the chart
   if (isMobile) {
     return (
-      <div className="bg-zinc-900/95 border border-zinc-700/80 p-2 text-xs z-[100] rounded-lg shadow-lg backdrop-blur-md max-w-[280px]">
-        <div className="flex justify-between font-bold text-zinc-100 border-b border-zinc-800 pb-1 mb-1">
+      <div className="glass border border-brand-60/80 p-2 text-xs z-[100] rounded-lg shadow-lg backdrop-blur-md max-w-[280px]">
+        <div className="flex justify-between font-bold text-brand-10 border-b border-brand-60 pb-1 mb-1">
           <span>Dist: {(data.lap_dist_pct * 100).toFixed(1)}%</span>
           {hasRef && (
             <span className={timeDelta <= 0 ? 'text-green-400' : 'text-red-400'}>
@@ -69,7 +69,7 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
           <span className="text-red-400">Spd: {data.speed?.toFixed(1)}</span>
           <span className="text-green-400">Thr: {data.throttle?.toFixed(2)}</span>
           <span className="text-red-500">Brk: {data.brake?.toFixed(2)}</span>
-          <span className="text-zinc-200">Str: {data.wheel_angle?.toFixed(2)}</span>
+          <span className="text-brand-10/90">Str: {data.wheel_angle?.toFixed(2)}</span>
         </div>
       </div>
     );
@@ -77,8 +77,8 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
 
   // Desktop floating tooltip
   return (
-    <div className="bg-zinc-900 border border-zinc-800 p-2 text-xs z-[100] rounded-md shadow-xl backdrop-blur-md bg-opacity-90 min-w-[150px]">
-      <p className="m-0 font-bold text-zinc-100 mb-1.5 flex justify-between">
+    <div className="bg-brand-60 border border-brand-60 p-2 text-xs z-[100] rounded-md shadow-xl backdrop-blur-md bg-opacity-90 min-w-[150px]">
+      <p className="m-0 font-bold text-brand-10 mb-1.5 flex justify-between">
         <span>Dist: {(data.lap_dist_pct * 100).toFixed(1)}%</span>
         {hasRef && (
           <span className={`ml-3 ${timeDelta <= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -88,34 +88,34 @@ const CustomTooltip = ({ active, payload, chartId, activeChartRef }) => {
       </p>
       <div className="grid grid-cols-[auto_auto] gap-x-4 gap-y-1">
         <span className="text-red-500 font-mono">Speed: {data.speed?.toFixed(1)}</span>
-        <span className="text-zinc-500 font-mono">Ref: {data.ref_speed?.toFixed(1)}</span>
+        <span className="text-brand-10/40 font-mono">Ref: {data.ref_speed?.toFixed(1)}</span>
         
         <span className="text-green-500 font-mono">Thr: {data.throttle?.toFixed(2)}</span>
-        <span className="text-zinc-500 font-mono">Ref: {data.ref_throttle?.toFixed(2)}</span>
+        <span className="text-brand-10/40 font-mono">Ref: {data.ref_throttle?.toFixed(2)}</span>
         
         <span className="text-red-500 font-mono">Brk: {data.brake?.toFixed(2)}</span>
-        <span className="text-zinc-500 font-mono">Ref: {data.ref_brake?.toFixed(2)}</span>
+        <span className="text-brand-10/40 font-mono">Ref: {data.ref_brake?.toFixed(2)}</span>
 
-        <span className="text-zinc-100 font-mono">Str: {data.wheel_angle?.toFixed(2)}</span>
-        <span className="text-zinc-500 font-mono">Ref: {data.ref_wheel_angle?.toFixed(2)}</span>
+        <span className="text-brand-10 font-mono">Str: {data.wheel_angle?.toFixed(2)}</span>
+        <span className="text-brand-10/40 font-mono">Ref: {data.ref_wheel_angle?.toFixed(2)}</span>
 
-        <span className="text-sky-400 font-mono">Slip: {data.slip_angle?.toFixed(2)}</span>
-        <span className="text-zinc-500 font-mono">Ref: {data.ref_slip_angle?.toFixed(2)}</span>
+        <span className="text-brand-30/80 font-mono">Slip: {data.slip_angle?.toFixed(2)}</span>
+        <span className="text-brand-10/40 font-mono">Ref: {data.ref_slip_angle?.toFixed(2)}</span>
       </div>
       
       {/* Flags */}
       {(data.abs_active > 0 || data.tc_active > 0 || data.wheel_lock > 0) && (
         <div className="mt-2.5 flex gap-1.5">
-          {data.abs_active > 0 && <span className="bg-sky-500 text-white px-1.5 py-0.5 rounded-sm font-bold text-[9px] tracking-wider">ABS</span>}
+          {data.abs_active > 0 && <span className="bg-brand-30 text-brand-10 px-1.5 py-0.5 rounded-sm font-bold text-[9px] tracking-wider">ABS</span>}
           {data.tc_active > 0 && <span className="bg-yellow-500 text-black px-1.5 py-0.5 rounded-sm font-bold text-[9px] tracking-wider">TC</span>}
-          {data.wheel_lock > 0 && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded-sm font-bold text-[9px] tracking-wider">LOCK</span>}
+          {data.wheel_lock > 0 && <span className="bg-red-500 text-brand-10 px-1.5 py-0.5 rounded-sm font-bold text-[9px] tracking-wider">LOCK</span>}
         </div>
       )}
     </div>
   );
 };
 
-const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChartRef, setBrushRange }) => {
+const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChartRef }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart 
@@ -135,6 +135,19 @@ const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChar
         {sectorBoundaries.map((pct, i) => (
           <ReferenceLine key={`sector-${i}`} x={pct} stroke="#52525b" strokeDasharray="3 3" opacity={0.4} />
         ))}
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+});
+
+const DeltaBrushOverlay = React.memo(({ mergedData, setBrushRange }) => {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart 
+        data={mergedData} 
+        margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
+      >
+        <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
         <Brush 
           dataKey="lap_dist_pct" 
           height={20} 
@@ -143,9 +156,10 @@ const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChar
           tickFormatter={() => ''} 
           onChange={(e) => {
             if (e && typeof e.startIndex === 'number' && typeof e.endIndex === 'number') {
-              React.startTransition(() => {
+              if (window.__brushTimeout) clearTimeout(window.__brushTimeout);
+              window.__brushTimeout = setTimeout(() => {
                 setBrushRange([e.startIndex, e.endIndex]);
-              });
+              }, 250);
             }
           }} 
         />
@@ -225,6 +239,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         session_time: p1.session_time + (p2.session_time - p1.session_time) * t,
         lap_dist_pct: pct,
         speed: p1.speed + (p2.speed - p1.speed) * t,
+        rpm: (p1.rpm || 0) + ((p2.rpm || 0) - (p1.rpm || 0)) * t,
+        gear: t < 0.5 ? (p1.gear || 0) : (p2.gear || 0),
         throttle: p1.throttle + (p2.throttle - p1.throttle) * t,
         brake: p1.brake + (p2.brake - p1.brake) * t,
         steering_angle: p1.steering_angle + (p2.steering_angle - p1.steering_angle) * t,
@@ -325,27 +341,27 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
   if (!lapData?.length) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-zinc-500 font-mono text-xs tracking-widest">NO TELEMETRY DATA AVAILABLE</p>
+        <p className="text-brand-10/40 font-mono text-xs tracking-widest">NO TELEMETRY DATA AVAILABLE</p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-950 p-2 sm:p-4 min-w-0">
+    <div className="flex-1 flex flex-col h-full bg-brand-bg p-2 sm:p-4 min-w-0">
       {/* Controls Header (High Tap Targets for Mobile) */}
-      <div className="flex flex-wrap justify-between items-center mb-3 pb-3 border-b border-zinc-800 flex-none gap-2 min-w-0">
+      <div className="flex flex-wrap justify-between items-center mb-3 pb-3 border-b border-brand-60 flex-none gap-2 min-w-0">
         <div className="flex items-center gap-2 flex-wrap min-h-[38px]">
             {selectedLap ? (
               <div className="flex items-center gap-2 flex-none">
-                <span className="text-xs sm:text-sm font-bold text-zinc-100 flex-none">
+                <span className="text-xs sm:text-sm font-bold text-brand-10 flex-none">
                   Lap {selectedLap.lap_number}
                 </span>
-                <span className="bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold flex-none">
+                <span className="bg-brand-30/15 text-brand-30/90 border border-brand-30/30 px-3 py-0.5 rounded-full text-[11px] font-mono font-bold flex-none">
                   {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Outlap'}
                 </span>
               </div>
             ) : (
-              <h2 className="text-xs uppercase tracking-wider text-zinc-300 font-extrabold m-0 flex-none">Telemetry Analysis</h2>
+              <h2 className="text-xs uppercase tracking-wider text-brand-10/80 font-extrabold m-0 flex-none">Telemetry Analysis</h2>
             )}
             {availableLaps.length > 0 && (() => {
                 let bestLapId = null;
@@ -358,17 +374,17 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 });
                 return (
                     <div className="flex items-center gap-1.5 flex-none">
-                        <span className="text-xs text-zinc-400 font-bold">Ref:</span>
+                        <span className="text-xs text-brand-10/60 font-bold">Ref:</span>
                         <select 
                             value={activeRefId || ''} 
                             onChange={e => setReferenceLapId(parseInt(e.target.value))}
-                            className="bg-zinc-900 text-zinc-100 border border-zinc-800 px-2 py-1 rounded-lg text-xs cursor-pointer outline-none focus:border-sky-500 font-mono truncate max-w-[170px] min-h-[28px] font-semibold"
+                            className="bg-brand-60 text-brand-10 border border-brand-60 px-2 py-1 rounded-lg text-xs cursor-pointer outline-none focus:border-brand-30 font-mono truncate max-w-[170px] min-h-[28px] font-semibold"
                         >
                             {availableLaps.map(l => (
                                 <option 
                                     key={l.id} 
                                     value={l.id}
-                                    className={l.id === bestLapId ? 'text-purple-400 font-bold' : 'text-inherit'}
+                                    className={l.id === bestLapId ? 'text-brand-30/80 font-bold' : 'text-inherit'}
                                 >
                                     Lap {l.lap_number} ({l.lap_time.toFixed(2)}s)
                                 </option>
@@ -384,20 +400,20 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
           {brushRange && (
             <button 
               onClick={() => setBrushRange(null)}
-              className="bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 px-2.5 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1 cursor-pointer flex-none min-h-[28px] font-bold active:scale-95"
+              className="bg-brand-30/20 hover:bg-brand-30/30 text-brand-30/90 border border-brand-30/40 px-2.5 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1 cursor-pointer flex-none min-h-[28px] font-bold active:scale-95"
             >
               <span>🔍</span> Reset
             </button>
           )}
 
           {/* Toggle Pills */}
-          <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 flex-none flex-wrap">
+          <div className="flex items-center gap-1 bg-brand-60 border border-brand-60 rounded-lg p-0.5 flex-none flex-wrap">
             {[
               { id: 'speed', label: 'SPD', color: 'text-red-400' },
               { id: 'throttle', label: 'THR', color: 'text-green-400' },
               { id: 'brake', label: 'BRK', color: 'text-red-500' },
-              { id: 'steering', label: 'STR', color: 'text-zinc-200' },
-              { id: 'slip', label: 'SLIP', color: 'text-sky-400' },
+              { id: 'steering', label: 'STR', color: 'text-brand-10/90' },
+              { id: 'slip', label: 'SLIP', color: 'text-brand-30/80' },
               { id: 'delta', label: 'Δ', color: 'text-amber-400' }
             ].map(c => (
               <button
@@ -405,8 +421,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 onClick={() => toggleChart(c.id)}
                 className={`px-2 py-1 rounded-md text-xs font-mono transition-all cursor-pointer min-h-[26px] min-w-[32px] flex items-center justify-center active:scale-95 ${
                   visibleCharts[c.id]
-                    ? `${c.color} bg-zinc-800 font-extrabold border border-zinc-700 shadow-sm`
-                    : 'text-zinc-500 hover:text-zinc-300 bg-transparent border border-transparent'
+                    ? `${c.color} bg-brand-60 font-extrabold border border-brand-60 shadow-sm`
+                    : 'text-brand-10/40 hover:text-brand-10/80 bg-transparent border border-transparent'
                 }`}
                 title={`Toggle ${c.id} chart`}
               >
@@ -419,21 +435,28 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       
       {/* Charts Scroll Container */}
       <div 
-        className="w-full flex-1 flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-1 min-w-0"
+        className="w-full flex-1 flex flex-col gap-3 overflow-x-hidden overflow-y-auto custom-scrollbar pr-1 min-w-0"
         onMouseEnter={() => setIsUserHovering(true)}
         onMouseLeave={() => setIsUserHovering(false)}
       >
         {/* Delta Chart */}
         {visibleCharts.delta && deltaData?.length > 0 && (
           <div className="flex-none h-28 flex flex-col relative group min-w-0">
-            <div className="absolute left-10 top-0 text-[9px] text-zinc-500 font-bold tracking-widest z-10 group-hover:text-zinc-300 transition-colors">DELTA (s)</div>
-            <div className="flex-1 mt-3">
-              <DeltaMinimapChart 
-                mergedData={mergedData} 
-                sectorBoundaries={sectorBoundaries} 
-                activeChartRef={activeChartRef} 
-                setBrushRange={setBrushRange} 
-              />
+            <div className="absolute left-10 top-0 text-[9px] text-brand-10/40 font-bold tracking-widest z-10 group-hover:text-brand-10/80 transition-colors">DELTA (s)</div>
+            <div className="flex-1 mt-3 relative">
+              <div className="absolute inset-0">
+                <DeltaMinimapChart 
+                  mergedData={mergedData} 
+                  sectorBoundaries={sectorBoundaries} 
+                  activeChartRef={activeChartRef} 
+                />
+              </div>
+              <div className="absolute inset-0 pointer-events-none [&_.recharts-brush]:pointer-events-auto">
+                <DeltaBrushOverlay 
+                  mergedData={mergedData} 
+                  setBrushRange={setBrushRange} 
+                />
+              </div>
             </div>
           </div>
         )}
@@ -457,7 +480,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
           },
           {
             id: 'steering', title: 'STEERING (deg)', dataKey: 'wheel_angle', refDataKey: 'ref_wheel_angle',
-            stroke: 'var(--color-text-main)', type: 'line', domain: ['auto', 'auto'],
+            stroke: 'var(--color-brand-10)', type: 'line', domain: ['auto', 'auto'],
             minHeight: 90
           },
           {

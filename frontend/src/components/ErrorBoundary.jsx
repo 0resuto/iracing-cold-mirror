@@ -17,14 +17,14 @@ export class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-screen flex flex-col items-center justify-center bg-zinc-950 text-zinc-100 p-6 text-center">
+        <div className="w-full h-screen flex flex-col items-center justify-center bg-brand-bg text-brand-10 p-6 text-center">
           <h2 className="text-xl font-bold text-red-500 mb-2">Something went wrong</h2>
-          <p className="text-zinc-400 text-sm max-w-md mb-4">
+          <p className="text-brand-10/60 text-sm max-w-md mb-4">
             An unexpected error occurred while rendering telemetry visuals.
           </p>
           <button 
             onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold rounded-md transition-colors"
+            className="px-4 py-2 bg-brand-60 hover:bg-brand-60/80 text-xs font-semibold rounded-md transition-colors"
           >
             Reload Page
           </button>

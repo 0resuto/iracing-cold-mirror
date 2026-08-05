@@ -15,23 +15,22 @@ export const LapItem = React.memo(function LapItem({ lap, player, trackName, sel
   return (
     <div
       onClick={handleClick}
-      style={{ padding: '4px 10px' }}
-      className={`group flex justify-between items-center my-0.5 text-xs cursor-pointer rounded-lg transition-all min-h-[32px] active:scale-[0.98] ${
+      className={`px-2.5 py-1 group flex justify-between items-center my-0.5 text-xs cursor-pointer rounded-lg transition-all min-h-[32px] active:scale-[0.98] ${
         isSelected
-          ? 'bg-sky-500/25 text-sky-200 font-bold border-l-4 border-sky-400 shadow-md'
-          : 'hover:bg-zinc-800/70 text-zinc-300 hover:text-zinc-100 border-l-2 border-transparent'
+          ? 'bg-brand-30/25 text-brand-10 font-bold border-l-4 border-brand-30/80 shadow-md'
+          : 'hover:bg-brand-60/70 text-brand-10/80 hover:text-brand-10 border-l-2 border-transparent'
       }`}
     >
       <div className="flex items-center gap-3 min-w-0 pr-2">
-        <Timer size={16} className={isSelected ? 'text-sky-400 flex-none' : 'text-zinc-500 group-hover:text-zinc-400 flex-none'} />
+        <Timer size={16} className={isSelected ? 'text-brand-30/80 flex-none' : 'text-brand-10/40 group-hover:text-brand-10/60 flex-none'} />
         <span className="truncate font-semibold text-xs sm:text-sm">{lapLabel}</span>
         {isBest && (
-          <span className="flex items-center gap-1 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-500/25 text-purple-300 border border-purple-500/40 flex-none">
-            <Award size={11} /> BEST
+          <span className="flex items-center gap-1 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-brand-30/25 text-brand-10 border border-brand-30/40 flex-none">
+            BEST
           </span>
         )}
       </div>
-      <span className={`font-mono font-bold text-xs sm:text-sm flex-none ml-2 pr-1 ${isBest ? 'text-purple-400' : isSelected ? 'text-sky-300' : 'text-zinc-300'}`}>
+      <span className={`font-mono font-bold text-xs sm:text-sm flex-none ml-2 pr-1 ${isBest ? 'text-brand-30/80' : isSelected ? 'text-brand-30/90' : 'text-brand-10/80'}`}>
         {timeText}
       </span>
     </div>

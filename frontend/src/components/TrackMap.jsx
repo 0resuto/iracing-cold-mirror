@@ -355,14 +355,14 @@ export const TrackMap = React.memo(function TrackMap() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
-      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 className="text-xs uppercase tracking-wider text-text-muted font-extrabold m-0">Track Position (Scroll to Zoom)</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div className="flex flex-col items-center h-full">
+      <div className="w-full flex justify-between items-center px-4 pt-3 pb-1">
+        <h2 className="text-xs uppercase tracking-wider text-brand-10/60 font-extrabold m-0">Track Position (Scroll to Zoom)</h2>
+        <div className="flex items-center gap-2">
           <select 
             value={colorMode}
             onChange={(e) => setColorMode(e.target.value)}
-            className="bg-bg-surface text-text-main border border-border-strong px-2 py-1 rounded-md text-xs cursor-pointer outline-none focus:border-accent-blue font-mono font-semibold"
+            className="bg-brand-60 text-brand-10 border border-brand-60 px-2 py-1 rounded-md text-xs cursor-pointer outline-none focus:border-accent-blue font-mono font-semibold"
           >
             <option value="default">Default</option>
             <option value="speed">Speed</option>
@@ -371,20 +371,20 @@ export const TrackMap = React.memo(function TrackMap() {
         </div>
       </div>
       
-      <div className="flex-1 w-full relative overflow-hidden bg-bg-surface/60 backdrop-blur-md rounded-xl border border-white/5 mt-2 shadow-lg">
+      <div className="flex-1 w-full relative overflow-hidden bg-brand-60/60 backdrop-blur-md rounded-xl border border-white/5 mt-2 shadow-lg">
         {isLive && (!lapData || lapData.length === 0) ? (
-          <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-3">
-            <span className="w-6 h-6 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin"></span>
+          <div className="w-full h-full flex flex-col items-center justify-center text-brand-10/40 gap-3">
+            <span className="w-6 h-6 border-2 border-brand-60 border-t-zinc-400 rounded-full animate-spin"></span>
             <span>Waiting for live GPS data...</span>
           </div>
         ) : lapTime === undefined || lapTime === null ? (
-          <div className="w-full h-full flex items-center justify-center text-text-muted text-sm font-mono tracking-widest">
+          <div className="w-full h-full flex items-center justify-center text-brand-10/60 text-sm font-mono tracking-widest">
             Select a lap to view map
           </div>
         ) : svgData ? (
-          <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
+          <div className="w-full h-full absolute top-0 left-0">
             {colorMode !== 'default' && (
-              <div className="absolute bottom-3 left-3 bg-bg-base/90 backdrop-blur-md border border-border-strong px-3 py-1.5 rounded-md text-[10px] text-zinc-300 flex items-center gap-2 font-mono shadow-md z-10 pointer-events-none">
+              <div className="absolute bottom-3 left-3 bg-brand-bg/90 backdrop-blur-md border border-brand-60 px-3 py-1.5 rounded-md text-[10px] text-brand-10/80 flex items-center gap-2 font-mono shadow-md z-10 pointer-events-none">
                 {colorMode === 'speed' ? (
                   <>
                     <span className="text-red-400 font-bold">Slow</span>
@@ -452,7 +452,7 @@ export const TrackMap = React.memo(function TrackMap() {
                     cx={boundary.x} 
                     cy={boundary.y} 
                     r="5" 
-                    fill="var(--color-bg-surface)" 
+                    fill="var(--color-brand-60)" 
                     stroke="var(--color-accent-blue)" 
                     strokeWidth="3" 
                   />
@@ -489,13 +489,13 @@ export const TrackMap = React.memo(function TrackMap() {
             </svg>
           </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-text-muted text-sm font-mono tracking-widest">
+          <div className="w-full h-full flex items-center justify-center text-brand-10/60 text-sm font-mono tracking-widest">
             No GPS data available for this lap
           </div>
         )}
       </div>
       
-      <div className="mt-4 text-sm text-text-muted text-center font-mono font-bold bg-bg-surface/50 border border-white/5 px-4 py-1.5 rounded-full shadow-sm">
+      <div className="mt-4 text-sm text-brand-10/60 text-center font-mono font-bold bg-brand-60/50 border border-white/5 px-4 py-1.5 rounded-full shadow-sm">
         Progress: {(progress * 100).toFixed(1)}% <span className="mx-2 text-border-strong">|</span> <span className="text-xs">Time: {displayTime.toFixed(1)}s / {lapTime ? lapTime.toFixed(1) : '0.0'}s</span>
       </div>
     </div>

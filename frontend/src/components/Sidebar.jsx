@@ -136,15 +136,15 @@ export const Sidebar = React.memo(function Sidebar() {
   }, [rawPlayers, selectedLapId, setSelectedLap]);
 
   return (
-    <div className="flex h-full w-full bg-bg-surface min-w-0">
+    <div className="flex h-full w-full bg-brand-60 min-w-0">
       
       {/* Left Icon Navigation Bar (DESKTOP ONLY) */}
-      <div className="hidden md:flex w-16 min-w-[64px] border-r border-border-strong flex-col items-center py-4 bg-bg-base flex-none z-10">
+      <div className="hidden md:flex w-16 min-w-[64px] border-r border-brand-60 flex-col items-center py-4 bg-brand-bg flex-none z-10">
         {/* Toggle Sidebar Arrow Button */}
         <button 
           onClick={toggleSidebar} 
           title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-          className="p-3 rounded-xl hover:bg-bg-surface text-text-muted hover:text-text-main transition-all flex items-center justify-center cursor-pointer mt-1 mb-10 w-12 h-12 border border-transparent hover:border-border-strong active:scale-95"
+          className="p-3 rounded-xl hover:bg-brand-60 text-brand-10/60 hover:text-brand-10 transition-all flex items-center justify-center cursor-pointer mt-1 mb-10 w-12 h-12 border border-transparent hover:border-brand-60 active:scale-95"
         >
           {isOpen ? <ChevronLeft size={26} strokeWidth={2.5} /> : <ChevronRight size={26} strokeWidth={2.5} />}
         </button>
@@ -158,7 +158,7 @@ export const Sidebar = React.memo(function Sidebar() {
               if (!isOpen) toggleSidebar();
             }} 
             className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'history' ? 'border-accent-blue text-accent-blue font-bold' : 'border-transparent text-text-muted hover:text-text-main'
+              activeTab === 'history' ? 'border-accent-blue text-accent-blue font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
             }`}
           >
             <Timer size={24} />
@@ -172,7 +172,7 @@ export const Sidebar = React.memo(function Sidebar() {
               if (!isOpen) toggleSidebar();
             }} 
             className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'live' ? 'border-accent-red text-accent-red font-bold' : 'border-transparent text-text-muted hover:text-text-main'
+              activeTab === 'live' ? 'border-accent-red text-accent-red font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
             }`}
           >
             <Radio size={24} />
@@ -186,7 +186,7 @@ export const Sidebar = React.memo(function Sidebar() {
               if (!isOpen) toggleSidebar();
             }} 
             className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'system' ? 'border-accent-green text-accent-green font-bold' : 'border-transparent text-text-muted hover:text-text-main'
+              activeTab === 'system' ? 'border-accent-green text-accent-green font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
             }`}
           >
             <Settings size={24} />
@@ -198,13 +198,13 @@ export const Sidebar = React.memo(function Sidebar() {
       <div className={`flex-1 flex-col overflow-hidden min-w-0 ${isOpen ? 'flex' : 'hidden'}`}>
         
         {/* MOBILE TOP BAR (Segmented Tabs + Close Button) */}
-        <div className="flex md:hidden items-center justify-between bg-bg-base border-b border-border-strong flex-none gap-3 min-h-[60px]" style={{ padding: '16px 20px' }}>
+        <div className="flex md:hidden items-center justify-between bg-brand-bg border-b border-brand-60 flex-none gap-3 min-h-[60px] px-5 py-4">
           {/* Segmented Top Tabs */}
-          <div className="flex items-center gap-2 bg-bg-surface p-1.5 rounded-xl border border-border-strong flex-1">
+          <div className="flex items-center gap-2 bg-brand-60 p-1.5 rounded-xl border border-brand-60 flex-1">
             <button
               onClick={() => setActiveTab('history')}
               className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                activeTab === 'history' ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/40 shadow-sm font-extrabold' : 'text-text-muted'
+                activeTab === 'history' ? 'bg-transparent text-accent-blue border border-accent-blue/40 shadow-sm font-extrabold' : 'text-brand-10/60'
               }`}
             >
               <Timer size={16} /> History
@@ -212,7 +212,7 @@ export const Sidebar = React.memo(function Sidebar() {
             <button
               onClick={() => setActiveTab('live')}
               className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                activeTab === 'live' ? 'bg-accent-red/20 text-accent-red border border-accent-red/40 shadow-sm font-extrabold' : 'text-text-muted'
+                activeTab === 'live' ? 'bg-transparent text-accent-red border border-accent-red/40 shadow-sm font-extrabold' : 'text-brand-10/60'
               }`}
             >
               <Radio size={16} /> Live
@@ -220,7 +220,7 @@ export const Sidebar = React.memo(function Sidebar() {
             <button
               onClick={() => setActiveTab('system')}
               className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                activeTab === 'system' ? 'bg-accent-green/20 text-accent-green border border-accent-green/40 shadow-sm font-extrabold' : 'text-text-muted'
+                activeTab === 'system' ? 'bg-transparent text-accent-green border border-accent-green/40 shadow-sm font-extrabold' : 'text-brand-10/60'
               }`}
             >
               <Settings size={16} /> System
@@ -230,7 +230,7 @@ export const Sidebar = React.memo(function Sidebar() {
           {/* Close Drawer Button */}
           <button
             onClick={toggleSidebar}
-            className="p-2.5 rounded-xl bg-bg-surface border border-border-strong text-text-muted hover:text-text-main flex-none min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
+            className="p-2.5 rounded-xl bg-brand-60 border border-brand-60 text-brand-10/60 hover:text-brand-10 flex-none min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
             title="Close Drawer"
           >
             <X size={22} />
@@ -257,13 +257,13 @@ export const Sidebar = React.memo(function Sidebar() {
             />
 
             {/* History Tree List */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar min-w-0" style={{ padding: '12px 0' }}>
+            <div className="flex-1 overflow-y-auto custom-scrollbar min-w-0 py-3">
               {isLoading ? (
-                <div className="text-xs text-zinc-500 animate-pulse">Loading history tree...</div>
+                <div className="text-xs text-brand-10/40 animate-pulse">Loading history tree...</div>
               ) : isError ? (
                 <div className="text-xs text-red-500">Failed to load history</div>
               ) : processedPlayers.length === 0 ? (
-                <div className="text-xs text-zinc-500 text-center py-6 border border-dashed border-zinc-800 rounded-lg">
+                <div className="text-xs text-brand-10/40 text-center py-6 border border-dashed border-brand-60 rounded-lg">
                   No matching sessions found
                 </div>
               ) : (
@@ -283,10 +283,10 @@ export const Sidebar = React.memo(function Sidebar() {
 
             {/* Ideal Lap Section */}
             {idealLap && (
-              <div className="border-t border-zinc-800 bg-black/10 flex-none min-w-0" style={{ padding: '6px 20px' }}>
+              <div className="border-t border-brand-60 bg-black/10 flex-none min-w-0 px-5 py-1.5">
                  <div className="flex justify-between items-center min-w-0">
-                    <h3 className="text-xs uppercase tracking-wider text-zinc-400 font-semibold m-0 truncate">Theoretical Best</h3>
-                    <span className="font-mono font-bold text-sky-400 text-xs flex-none">
+                    <h3 className="text-xs uppercase tracking-wider text-brand-10/60 font-semibold m-0 truncate">Theoretical Best</h3>
+                    <span className="font-mono font-bold text-brand-30/80 text-xs flex-none">
                       {idealLap.ideal_lap_time.toFixed(2)}s
                     </span>
                  </div>
