@@ -29,8 +29,12 @@ import_statuses = {}
 
 
 def process_file_in_background(tmp_path: str, task_id: str):
+    def update_progress(current, total):
+        if total > 0:
+            import_statuses[task_id] = {"status": "processing", "progress": (current / total) * 100}
+
     try:
-        success = import_ibt_to_db(tmp_path, SessionLocal)
+        success = import_ibt_to_db(tmp_path, SessionLocal, progress_callback=update_progress)
         if success:
             import_statuses[task_id] = {"status": "done"}
         else:

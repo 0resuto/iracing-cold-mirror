@@ -120,7 +120,7 @@ def _handle_lap_transition(
     )
 
 
-def import_ibt_to_db(file_path: str, db_session_factory):
+def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None):
     reader = IBTReader(file_path=file_path, loop=False)
     db = db_session_factory()
 
@@ -166,8 +166,15 @@ def import_ibt_to_db(file_path: str, db_session_factory):
         pbar = tqdm(total=total_samples, desc="Importing IBT telemetry", unit="frames")
 
         data = first_data
+        frames_processed = 0
+
         while data is not None:
             pbar.update(1)
+            frames_processed += 1
+
+            if progress_callback and frames_processed % 5000 == 0:
+                progress_callback(frames_processed, total_samples)
+
             lap_current_lap_time = data.get("session_time", 0.0)
             lap_dist_pct = data.get("lap_dist_pct", 0.0)
 
