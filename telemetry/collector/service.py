@@ -1,5 +1,6 @@
 import json
 import logging
+import sys
 import time
 
 from websockets.exceptions import WebSocketException
@@ -31,6 +32,8 @@ def run(reader):
         try:
             with connect(ws_url) as ws:
                 logger.info("Connected to server")
+
+                packet_count = 0
 
                 while True:
                     data = reader.read()
@@ -80,6 +83,11 @@ def run(reader):
                     }
 
                     ws.send(json.dumps(live_data))
+
+                    packet_count += 1
+                    if packet_count % 60 == 0:
+                        sys.stdout.write(".")
+                        sys.stdout.flush()
 
         except KeyboardInterrupt:
             logger.info("Stopped by user")

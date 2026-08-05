@@ -1,4 +1,6 @@
 import os
+import sys
+import threading
 import time
 
 import httpx
@@ -6,6 +8,17 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from telemetry.config import settings
+
+
+def spinner_task(stop_event):
+    spinner = ["|", "/", "-", "\\"]
+    i = 0
+    while not stop_event.is_set():
+        sys.stdout.write(f"\r  -> Processing... {spinner[i % 4]} ")
+        sys.stdout.flush()
+        time.sleep(0.1)
+        i += 1
+    sys.stdout.write("\r" + " " * 30 + "\r")
 
 
 def send_file_to_server(file_path: str):
@@ -29,8 +42,15 @@ def send_file_to_server(file_path: str):
                 "  -> Server is processing the file (Parsing IBT & saving to DB). This may take several minutes, please wait..."
             )
 
-            # Отключаем таймаут! Запрос будет висеть, пока сервер не закончит парсить и сохранять всё в БД.
-            response = httpx.post(upload_url, files=files, headers=headers, timeout=None)
+            stop_event = threading.Event()
+            spinner_thread = threading.Thread(target=spinner_task, args=(stop_event,))
+            spinner_thread.start()
+
+            try:
+                response = httpx.post(upload_url, files=files, headers=headers, timeout=None)
+            finally:
+                stop_event.set()
+                spinner_thread.join()
 
             if response.status_code == 200:
                 print(f"  [OK] Successfully uploaded and processed: {file_name}")
