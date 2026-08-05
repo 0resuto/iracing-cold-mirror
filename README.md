@@ -6,7 +6,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)
 
-![Dashboard Preview](https://cloud.markyarovikov.ru/apps/files_sharing/publicpreview/2jj8CnzrMBNK8SM?file=/&fileId=29787&x=1680&y=1050&a=true&etag=df020ca8587e59d837d65e37015a43ce)
+![Dashboard Preview](https://cloud.markyarovikov.ru/apps/files_sharing/publicpreview/xypexLCq4NYbQya?file=/&fileId=29847&x=2560&y=1440&a=true&etag=fc7ef136decf81df5d484ce4506a1473)
 
 A telemetry analytics platform for iRacing. 
 This project collects live telemetry data from iRacing, stores historic sessions in a relational database, and provides a web interface for lap analysis and data visualization.
