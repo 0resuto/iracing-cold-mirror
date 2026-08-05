@@ -121,7 +121,7 @@ def _handle_lap_transition(
 
 
 def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None):
-    reader = IBTReader(file_path=file_path, loop=False)
+    reader = IBTReader(file_path=file_path)
     db = db_session_factory()
 
     file_hash = get_file_hash(file_path)

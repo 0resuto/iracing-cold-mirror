@@ -7,10 +7,9 @@ from telemetry.physics import calculate_wheel_physics
 
 
 class IBTReader:
-    def __init__(self, file_path="dev/telemetry.ibt", loop=True):
+    def __init__(self, file_path="dev/telemetry.ibt"):
         self.ibt = irsdk.IBT()
         self.ibt.open(file_path)
-        self.loop = loop
 
         # Calculate total samples
         session_time = self.ibt.get_all("SessionTime")
@@ -59,15 +58,15 @@ class IBTReader:
         except Exception as e:
             print(f"Warning: Could not parse session info YAML: {e}")
 
+    def reset(self):
+        self.current_idx = 0
+
     def read(self):
         if self.num_samples == 0:
             return None
 
         if self.current_idx >= self.num_samples:
-            if not self.loop:
-                return None
-            else:
-                self.current_idx = 0
+            return None
 
         idx = self.current_idx
         data = {}
