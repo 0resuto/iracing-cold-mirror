@@ -1,8 +1,9 @@
 import os
 import shutil
 import tempfile
+import uuid
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy.orm import selectinload
@@ -23,6 +24,22 @@ from telemetry.services.delta import calculate_delta
 from telemetry.services.importer import import_ibt_to_db
 
 router = APIRouter()
+
+import_statuses = {}
+
+
+def process_file_in_background(tmp_path: str, task_id: str):
+    try:
+        success = import_ibt_to_db(tmp_path, SessionLocal)
+        if success:
+            import_statuses[task_id] = {"status": "done"}
+        else:
+            import_statuses[task_id] = {"status": "skipped", "message": "File already imported"}
+    except Exception as e:
+        import_statuses[task_id] = {"status": "error", "message": str(e)}
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 @router.get(
@@ -168,7 +185,9 @@ def get_history(skip: int = 0, limit: int = Query(10, le=100), db: DBSession = D
     summary="Upload and import .ibt telemetry file",
     dependencies=[Depends(verify_api_key)],
 )
-def upload_file(file: UploadFile = File(...)):
+def upload_file(
+    file: UploadFile = File(...), background_tasks: BackgroundTasks = BackgroundTasks()
+):
     if not file.filename.endswith(".ibt"):
         raise HTTPException(status_code=400, detail="Only .ibt files are allowed")
 
@@ -176,17 +195,26 @@ def upload_file(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, tmp)
         tmp_path = tmp.name
 
-    try:
-        success = import_ibt_to_db(tmp_path, SessionLocal)
+    task_id = str(uuid.uuid4())
+    import_statuses[task_id] = {"status": "processing"}
+    background_tasks.add_task(process_file_in_background, tmp_path, task_id)
+    return {"status": "accepted", "task_id": task_id}
 
-        if not success:
-            return {"status": "skipped", "message": "File already imported"}
-        return {"status": "success", "message": "Session imported successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+
+@router.get(
+    "/sessions/upload/{task_id}",
+    tags=["Session"],
+    summary="Check upload status",
+)
+def get_upload_status(task_id: str):
+    status_info = import_statuses.get(task_id)
+    if not status_info:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if status_info["status"] in ["done", "error", "skipped"]:
+        import_statuses.pop(task_id, None)
+
+    return status_info
 
 
 @router.get(

@@ -47,7 +47,46 @@ def send_file_to_server(file_path: str):
             spinner_thread.start()
 
             try:
-                response = httpx.post(upload_url, files=files, headers=headers, timeout=None)
+                response = httpx.post(upload_url, files=files, headers=headers, timeout=120.0)
+
+                if response.status_code == 200:
+                    data = response.json()
+
+                    if data.get("status") == "accepted":
+                        task_id = data.get("task_id")
+
+                        while True:
+                            status_url = f"{settings.server_url}/api/sessions/upload/{task_id}"
+                            status_response = httpx.get(status_url, headers=headers)
+
+                            if status_response.status_code == 200:
+                                status_data = status_response.json()
+                                current_status = status_data.get("status")
+
+                                if current_status == "done":
+                                    sys.stdout.write("\r" + " " * 40 + "\r")
+                                    print(f"  [OK] Successfully processed: {file_name}")
+                                    break
+                                elif current_status == "skipped":
+                                    sys.stdout.write("\r" + " " * 40 + "\r")
+                                    print(f"  [SKIP] File already imported: {file_name}")
+                                    break
+                                elif current_status == "error":
+                                    sys.stdout.write("\r" + " " * 40 + "\r")
+                                    print(
+                                        f"  [ERROR] Processing failed: {status_data.get('message')}"
+                                    )
+                                    break
+
+                            time.sleep(1.0)
+                    else:
+                        print(f"  [ERROR] Unknown response: {data}")
+
+                elif response.status_code == 413:
+                    print(f"  [ERROR] File too large (413). Size: {file_size_mb:.2f} MB")
+                else:
+                    print(f"  [ERROR] Server error [{response.status_code}]: {response.text}")
+
             finally:
                 stop_event.set()
                 spinner_thread.join()
