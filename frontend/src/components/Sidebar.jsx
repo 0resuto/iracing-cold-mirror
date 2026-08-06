@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Timer, Radio, Settings, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { LiveStreamPanel } from './sidebar/LiveStreamPanel';
@@ -10,8 +11,13 @@ import { PlayerItem } from './sidebar/PlayerItem';
 import { SectorsWidget } from './sidebar/SectorsWidget';
 
 export const Sidebar = React.memo(function Sidebar() {
-  const activeTab = useAppStore(state => state.activeTab);
-  const setActiveTab = useAppStore(state => state.setActiveTab);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
+  
+  const isHistory = pathname === '/history';
+  const isLive = pathname === '/live';
+  const isSystem = pathname === '/system';
   const selectedLap = useAppStore(state => state.selectedLap);
   const setSelectedLap = useAppStore(state => state.setSelectedLap);
   const isOpen = useAppStore(state => state.isSidebarOpen);
@@ -154,11 +160,11 @@ export const Sidebar = React.memo(function Sidebar() {
           <div 
             title="History" 
             onClick={() => {
-              setActiveTab('history');
+              navigate('/history');
               if (!isOpen) toggleSidebar();
             }} 
             className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'history' ? 'border-accent-blue text-accent-blue font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
+              isHistory ? 'border-accent-blue text-accent-blue font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
             }`}
           >
             <Timer size={24} />
@@ -168,11 +174,11 @@ export const Sidebar = React.memo(function Sidebar() {
           <div 
             title="Live Telemetry" 
             onClick={() => {
-              setActiveTab('live');
+              navigate('/live');
               if (!isOpen) toggleSidebar();
             }} 
             className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'live' ? 'border-accent-red text-accent-red font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
+              isLive ? 'border-accent-red text-accent-red font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
             }`}
           >
             <Radio size={24} />
@@ -182,11 +188,11 @@ export const Sidebar = React.memo(function Sidebar() {
           <div 
             title="System & Parameters" 
             onClick={() => {
-              setActiveTab('system');
+              navigate('/system');
               if (!isOpen) toggleSidebar();
             }} 
             className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              activeTab === 'system' ? 'border-accent-green text-accent-green font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
+              isSystem ? 'border-accent-green text-accent-green font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
             }`}
           >
             <Settings size={24} />
@@ -199,28 +205,27 @@ export const Sidebar = React.memo(function Sidebar() {
         
         {/* MOBILE TOP BAR (Segmented Tabs + Close Button) */}
         <div className="flex md:hidden items-center justify-between bg-brand-bg border-b border-brand-60 flex-none gap-3 min-h-[60px] px-5 py-4">
-          {/* Segmented Top Tabs */}
           <div className="flex items-center gap-2 bg-brand-60 p-1.5 rounded-xl border border-brand-60 flex-1">
             <button
-              onClick={() => setActiveTab('history')}
+              onClick={() => navigate('/history')}
               className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                activeTab === 'history' ? 'bg-transparent text-accent-blue border border-accent-blue/40 shadow-sm font-extrabold' : 'text-brand-10/60'
+                isHistory ? 'bg-transparent text-accent-blue border border-accent-blue/40 shadow-sm font-extrabold' : 'text-brand-10/60'
               }`}
             >
               <Timer size={16} /> History
             </button>
             <button
-              onClick={() => setActiveTab('live')}
+              onClick={() => navigate('/live')}
               className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                activeTab === 'live' ? 'bg-transparent text-accent-red border border-accent-red/40 shadow-sm font-extrabold' : 'text-brand-10/60'
+                isLive ? 'bg-transparent text-accent-red border border-accent-red/40 shadow-sm font-extrabold' : 'text-brand-10/60'
               }`}
             >
               <Radio size={16} /> Live
             </button>
             <button
-              onClick={() => setActiveTab('system')}
+              onClick={() => navigate('/system')}
               className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                activeTab === 'system' ? 'bg-transparent text-accent-green border border-accent-green/40 shadow-sm font-extrabold' : 'text-brand-10/60'
+                isSystem ? 'bg-transparent text-accent-green border border-accent-green/40 shadow-sm font-extrabold' : 'text-brand-10/60'
               }`}
             >
               <Settings size={16} /> System
@@ -237,7 +242,7 @@ export const Sidebar = React.memo(function Sidebar() {
           </button>
         </div>
 
-        {activeTab === 'history' ? (
+        {isHistory ? (
           <>
             <FilterControls
               processedPlayers={processedPlayers}
@@ -296,11 +301,11 @@ export const Sidebar = React.memo(function Sidebar() {
             {/* Sectors Widget */}
             <SectorsWidget selectedLap={selectedLap} players={rawPlayers} />
           </>
-        ) : activeTab === 'live' ? (
+        ) : isLive ? (
           <LiveStreamPanel />
-        ) : (
+        ) : isSystem ? (
           <SystemPanel />
-        )}
+        ) : null}
 
       </div>
     </div>

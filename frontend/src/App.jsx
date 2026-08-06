@@ -7,10 +7,17 @@ import { StatsWidget } from './components/StatsWidget';
 import { useAppStore } from './store/useAppStore';
 import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
 import { Toaster } from 'react-hot-toast';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2 } from 'lucide-react';
 
-function App() {
-  const activeTab = useAppStore(state => state.activeTab);
+function AppContent() {
+  const location = useLocation();
+  const pathname = location.pathname;
+  
+  const isLive = pathname === '/live';
+  const isSystem = pathname === '/system';
+  const isHistory = pathname === '/history';
+
   const selectedLap = useAppStore(state => state.selectedLap);
   const isSidebarOpen = useAppStore(state => state.isSidebarOpen);
   const toggleSidebar = useAppStore(state => state.toggleSidebar);
@@ -19,8 +26,8 @@ function App() {
   // Mobile View Tab state
   const [mobileView, setMobileView] = useState('charts'); // 'charts' | 'map' | 'stats'
 
-  // Initialize live telemetry websocket when activeTab is 'live'
-  useLiveTelemetryWS(activeTab === 'live');
+  // Initialize live telemetry websocket when on '/live' route
+  useLiveTelemetryWS(isLive);
 
   return (
     <div className="w-full h-screen flex overflow-hidden bg-brand-bg text-brand-10 relative font-sans">
@@ -59,7 +66,7 @@ function App() {
         <div className="flex items-center justify-between flex-none pb-2.5 border-b border-brand-60/80 gap-2.5 w-full min-w-0">
           
           {/* View Switcher Buttons on Mobile (Charts, Map, Stats) - Takes flex-1 width */}
-          {(activeTab === 'history' || activeTab === 'live') && (
+          {(isHistory || isLive) && (
             <div className="grid grid-cols-3 gap-1 glass p-1 rounded-xl border border-brand-60/90 md:hidden flex-1 shadow-inner min-w-0">
               <button
                 onClick={() => setMobileView('charts')}
@@ -111,7 +118,7 @@ function App() {
         </div>
 
         {/* Main Content Body */}
-        {activeTab === 'system' ? (
+        {isSystem ? (
           <div className="flex-1 flex flex-col items-center justify-center text-brand-10/60 gap-4 glass rounded-xl border border-brand-60/60 p-6">
             <div className="w-14 h-14 rounded-full bg-brand-60 border border-brand-60 flex items-center justify-center text-2xl">
               <Settings size={28} className="text-brand-10/40" />
@@ -138,7 +145,7 @@ function App() {
               </div>
             </div>
           </div>
-        ) : (!selectedLap && activeTab !== 'live') ? (
+        ) : (!selectedLap && !isLive) ? (
           <div className="flex-1 flex flex-col items-center justify-center text-brand-10/40 gap-4 glass rounded-xl border border-brand-60/60 p-6">
             <div className="w-14 h-14 rounded-full bg-brand-60 border border-brand-60 flex items-center justify-center">
               <svg className="w-7 h-7 text-brand-30/80/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -162,7 +169,7 @@ function App() {
           <div className="flex flex-1 gap-4 md:gap-6 min-h-0 w-full overflow-hidden flex-col md:flex-row">
               {/* Telemetry Charts (Visible on desktop or when mobileView === 'charts') */}
               <div className={`flex-[2] min-w-0 flex flex-col h-full ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
-                {activeTab === 'live' ? <LiveTelemetryChart /> : <TelemetryChart />}
+                {isLive ? <LiveTelemetryChart /> : <TelemetryChart />}
               </div>
               
               {/* Track Map & Stats Column (Visible on desktop or when mobileView === 'map' / 'stats') */}
@@ -185,9 +192,19 @@ function App() {
               </div>
           </div>
         )}
-
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/history" replace />} />
+        <Route path="/*" element={<AppContent />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

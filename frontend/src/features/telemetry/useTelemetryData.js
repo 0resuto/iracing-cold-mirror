@@ -3,12 +3,14 @@ import { useAppStore } from '../../store/useAppStore';
 import { useLiveStore } from '../../store/useLiveStore';
 import { useLapTelemetryQuery, useLapDeltaQuery, useHistoryQuery } from '../../api/queries';
 
+import { useLocation } from 'react-router-dom';
+
 export function useTelemetryData() {
-  const activeTab = useAppStore((state) => state.activeTab);
+  const location = useLocation();
   const selectedLap = useAppStore((state) => state.selectedLap);
   const referenceLapId = useAppStore((state) => state.referenceLapId);
 
-  const isLive = activeTab === 'live';
+  const isLive = location.pathname === '/live';
 
   const { data: playersData = [] } = useHistoryQuery();
   const players = playersData;
