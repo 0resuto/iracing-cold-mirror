@@ -174,6 +174,15 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
   const setReferenceLapId = useAppStore(state => state.setReferenceLapId);
   const { lapData, referenceData, deltaData, selectedLap, activeRefId, players } = useTelemetryData();
 
+  useEffect(() => {
+    return () => {
+      if (window.__brushTimeout) {
+        clearTimeout(window.__brushTimeout);
+        window.__brushTimeout = null;
+      }
+    };
+  }, []);
+
   const availableLaps = useMemo(() => {
       if (!selectedLap || !players) return [];
       const player = players.find(p => p.id === selectedLap.player_id);

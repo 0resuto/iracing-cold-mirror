@@ -19,6 +19,7 @@ export function useLiveTelemetryWS(isLiveActive) {
     if (!isLiveActive) {
       clearLiveData();
       useLiveStore.setState({ isStreaming: false });
+      useAppStore.getState().setHoveredData(null);
       return;
     }
 
@@ -59,6 +60,7 @@ export function useLiveTelemetryWS(isLiveActive) {
 
     const connectWS = () => {
       if (ws) {
+        ws.onclose = null;
         ws.close();
       }
       ws = new WebSocket(WS_URL);
@@ -125,6 +127,7 @@ export function useLiveTelemetryWS(isLiveActive) {
       clearInterval(flushInterval);
       clearInterval(statusCheckInterval);
       clearTimeout(reconnectTimeout);
+      bufferRef.current = [];
       if (ws) {
         // Remove onclose to prevent auto-reconnect when intentionally unmounting
         ws.onclose = null; 

@@ -46,10 +46,12 @@ export function useTelemetryData() {
   const { data: staticLapData = [] } = useLapTelemetryQuery(selectedLap?.id, isLive);
   const liveLapData = useLiveStore((state) => state.liveLapData);
   
-  const { data: referenceData = [] } = useLapTelemetryQuery(activeRefId, false);
-  const { data: deltaData = [] } = useLapDeltaQuery(isLive ? null : selectedLap?.id, activeRefId);
+  const { data: rawReferenceData = [] } = useLapTelemetryQuery(isLive ? null : activeRefId, isLive);
+  const { data: rawDeltaData = [] } = useLapDeltaQuery(isLive ? null : selectedLap?.id, activeRefId);
 
   const lapData = isLive ? liveLapData : staticLapData;
+  const referenceData = isLive ? [] : rawReferenceData;
+  const deltaData = isLive ? [] : rawDeltaData;
 
   return { lapData, referenceData, deltaData, selectedLap, activeRefId, players, isLive };
 }

@@ -392,27 +392,24 @@ export const TrackMap = React.memo(function TrackMap() {
         zoomKRef.current = transform.k;
         d3Selection.select(gRef.current).attr('transform', transform);
         
-        // Чем больше зум (transform.k), тем тоньше визуальная линия:
         const visualThickness = BASE_THICKNESS / Math.sqrt(transform.k);
         const svgStrokeWidth = visualThickness / transform.k;
-        
         const visualRadius = (BASE_THICKNESS * 2) / Math.sqrt(transform.k);
         const svgRadius = visualRadius / transform.k;
 
-        d3Selection.select(gRef.current).selectAll('.adaptive-path')
-          .attr('stroke-width', svgStrokeWidth);
-        d3Selection.select(gRef.current).selectAll('.adaptive-circle')
-          .attr('stroke-width', (visualThickness / 2) / transform.k)
-          .attr('r', svgRadius);
-        d3Selection.select(gRef.current).select('.car-scale')
-          .attr('transform', `scale(${1 / transform.k})`);
+        if (gRef.current) {
+          gRef.current.style.setProperty('--path-stroke', svgStrokeWidth);
+          gRef.current.style.setProperty('--circle-stroke', (visualThickness / 2) / transform.k);
+          gRef.current.style.setProperty('--circle-r', svgRadius);
+          gRef.current.style.setProperty('--car-scale', 1 / transform.k);
+        }
       });
 
       svg.call(zoomBehaviorRef.current);
     }
 
-    // Initial center is handled by viewBox, reset zoom when track layout changes (only if not live to avoid jumping)
-    if (!isLiveRef.current) {
+    // Initial center is handled by viewBox, reset zoom when track layout changes or leaving live mode
+    if (!isLive) {
       svg.call(zoomBehaviorRef.current.transform, zoomIdentity);
     }
     
@@ -421,7 +418,7 @@ export const TrackMap = React.memo(function TrackMap() {
       svg.on('.zoom', null);
       zoomBehaviorRef.current = null;
     };
-  }, [svgData?.basePath]);
+  }, [svgData?.basePath, isLive]);
 
   // Auto-center map on car during live telemetry
   useEffect(() => {
@@ -507,7 +504,7 @@ export const TrackMap = React.memo(function TrackMap() {
                   d={svgData.basePath} 
                   fill="none" 
                   stroke="var(--color-text-muted)" 
-                  strokeWidth="4" 
+                  style={{ strokeWidth: 'var(--path-stroke, 4px)' }}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -521,7 +518,7 @@ export const TrackMap = React.memo(function TrackMap() {
                         className="adaptive-path"
                         d={seg.d}
                         stroke={seg.color}
-                        strokeWidth={getStrokeWidth()}
+                        style={{ strokeWidth: 'var(--path-stroke, 4px)' }}
                         fill="none"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -534,7 +531,7 @@ export const TrackMap = React.memo(function TrackMap() {
                     d={svgData.lapPath} 
                     fill="none" 
                     stroke="var(--color-accent-red)" 
-                    strokeWidth={getStrokeWidth()}
+                    style={{ strokeWidth: 'var(--path-stroke, 4px)' }}
                     strokeLinecap="round"
                     strokeLinejoin="round" 
                   />
@@ -547,17 +544,16 @@ export const TrackMap = React.memo(function TrackMap() {
                     className="adaptive-circle" 
                     cx={boundary.x} 
                     cy={boundary.y} 
-                    r="5" 
                     fill="var(--color-brand-60)" 
                     stroke="var(--color-accent-blue)" 
-                    strokeWidth="3" 
+                    style={{ r: 'var(--circle-r, 5px)', strokeWidth: 'var(--circle-stroke, 3px)' }}
                   />
                 ))}
 
                 {/* Car Position and Vectors */}
                 {carState.isValid && (
                   <g transform={`translate(${carState.x}, ${carState.y})`}>
-                    <g className="car-scale">
+                    <g className="car-scale" style={{ transform: 'scale(var(--car-scale, 1))' }}>
                       {/* Velocity Vector (shows true direction of travel) */}
                       {carState.speed > 5 && (
                         <g transform={`rotate(${carState.travelAngle})`}>

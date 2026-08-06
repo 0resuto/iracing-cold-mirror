@@ -116,11 +116,13 @@ export const LiveTelemetryChart = React.memo(function LiveTelemetryChart() {
 
     const draw = (state) => {
       const liveLapData = state.liveLapData;
-      if (!speedPlotRef.current || !inputsPlotRef.current || !liveLapData || liveLapData.length === 0) return;
+      if (!liveLapData || liveLapData.length === 0) return;
 
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       
       animationFrameId = requestAnimationFrame(() => {
+        if (!speedPlotRef.current || !inputsPlotRef.current) return;
+
         const len = liveLapData.length;
         const time = new Array(len);
         const speed = new Array(len);
