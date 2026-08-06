@@ -57,7 +57,7 @@ function App() {
         <div className="flex items-center justify-between flex-none pb-2.5 border-b border-brand-60/80 gap-2.5 w-full min-w-0">
           
           {/* View Switcher Buttons on Mobile (Charts, Map, Stats) - Takes flex-1 width */}
-          {selectedLap && activeTab === 'history' && (
+          {(activeTab === 'history' || activeTab === 'live') && (
             <div className="grid grid-cols-3 gap-1 glass p-1 rounded-xl border border-brand-60/90 md:hidden flex-1 shadow-inner min-w-0">
               <button
                 onClick={() => setMobileView('charts')}

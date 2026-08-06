@@ -34,14 +34,20 @@ export function useLiveTelemetryWS(isLiveActive) {
     }, 1000);
 
     // Batch flush interval (flushes buffer every 50ms -> 20Hz update rate)
+    const MAX_LIVE_DISPLAY_POINTS = 600; // ~30 seconds of rolling window at 20Hz
     const flushInterval = setInterval(() => {
       if (bufferRef.current.length > 0) {
         const batch = bufferRef.current;
         bufferRef.current = [];
 
-        useLiveStore.setState((state) => ({
-          liveLapData: [...state.liveLapData, ...batch]
-        }));
+        useLiveStore.setState((state) => {
+          const updated = [...state.liveLapData, ...batch];
+          return {
+            liveLapData: updated.length > MAX_LIVE_DISPLAY_POINTS 
+              ? updated.slice(-MAX_LIVE_DISPLAY_POINTS) 
+              : updated
+          };
+        });
       }
     }, 50);
 

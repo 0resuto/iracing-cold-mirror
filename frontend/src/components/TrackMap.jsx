@@ -3,6 +3,7 @@ import * as d3Selection from 'd3-selection';
 import { zoom as d3Zoom, zoomIdentity } from 'd3-zoom';
 import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
+import trackPaths from '../assets/track_paths.json';
 
 export const TrackMap = React.memo(function TrackMap() {
   const [colorMode, setColorMode] = useState('default');
@@ -300,6 +301,46 @@ export const TrackMap = React.memo(function TrackMap() {
     return Object.entries(pathsByColor).map(([color, d]) => ({ color, d }));
   }, [lapGpsPoints, svgData, colorMode, deltaData]);
 
+  const trackId = useMemo(() => {
+    if (isLive && lapData && lapData.length > 0 && lapData[0].track_id) return String(lapData[0].track_id);
+    if (hoveredData && hoveredData.track_id) return String(hoveredData.track_id);
+    return null;
+  }, [isLive, lapData, hoveredData]);
+
+  const fallbackPathD = (!svgData && trackId && trackPaths[trackId]) ? trackPaths[trackId] : null;
+
+  const fallbackPathRef = useRef(null);
+  const [fallbackBBox, setFallbackBBox] = useState(null);
+  const [fallbackCarPos, setFallbackCarPos] = useState({ x: 0, y: 0, travelAngle: 0, isValid: false });
+
+  // Update bounding box for SVG viewbox calculation
+  useEffect(() => {
+    if (fallbackPathRef.current && fallbackPathD) {
+      setFallbackBBox(fallbackPathRef.current.getBBox());
+    } else {
+      setFallbackBBox(null);
+    }
+  }, [fallbackPathD]);
+
+  // Update car position on fallback path
+  useEffect(() => {
+    if (fallbackPathRef.current && fallbackBBox && fallbackPathD) {
+      try {
+        const len = fallbackPathRef.current.getTotalLength();
+        if (len > 0) {
+          const pt = fallbackPathRef.current.getPointAtLength(progress * len);
+          const pt2 = fallbackPathRef.current.getPointAtLength(Math.min((progress + 0.001) * len, len));
+          const dx = pt2.x - pt.x;
+          const dy = pt2.y - pt.y;
+          const travelAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+          setFallbackCarPos({ x: pt.x, y: pt.y, travelAngle, isValid: true });
+        }
+      } catch (e) {
+        setFallbackCarPos({ x: 0, y: 0, travelAngle: 0, isValid: false });
+      }
+    }
+  }, [progress, fallbackBBox, fallbackPathD]);
+
   const svgRef = useRef(null);
   const gRef = useRef(null);
   const zoomKRef = useRef(1);
@@ -488,9 +529,41 @@ export const TrackMap = React.memo(function TrackMap() {
               </g>
             </svg>
           </div>
+        ) : fallbackPathD ? (
+          <div className="w-full h-full absolute top-0 left-0">
+            <svg width="100%" height="100%" viewBox={fallbackBBox ? `${fallbackBBox.x - 50} ${fallbackBBox.y - 50} ${fallbackBBox.width + 100} ${fallbackBBox.height + 100}` : "0 0 1000 1000"} preserveAspectRatio="xMidYMid meet">
+              <g>
+                <path
+                  ref={fallbackPathRef}
+                  d={fallbackPathD}
+                  fill="none"
+                  stroke="var(--color-text-muted)"
+                  strokeWidth={fallbackBBox ? Math.max(1, fallbackBBox.width / 200) : 4}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                
+                {fallbackCarPos.isValid && (
+                  <g transform={`translate(${fallbackCarPos.x}, ${fallbackCarPos.y}) rotate(${fallbackCarPos.travelAngle})`}>
+                    <path 
+                      d="M -12 -7 L 6 -7 L 12 -2 L 12 2 L 6 7 L -12 7 Z" 
+                      fill="var(--color-accent-red)" 
+                      stroke="white" 
+                      strokeWidth={fallbackBBox ? Math.max(1, fallbackBBox.width / 800) : 2} 
+                      transform={fallbackBBox ? `scale(${Math.max(1, fallbackBBox.width / 500)})` : "scale(1)"}
+                    />
+                  </g>
+                )}
+              </g>
+            </svg>
+            <div className="absolute top-3 left-3 bg-brand-bg/90 backdrop-blur-md border border-brand-60 px-3 py-1.5 rounded-md text-[10px] text-brand-10/80 font-mono shadow-md pointer-events-none">
+              SVG Map (No GPS)
+            </div>
+          </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-brand-10/60 text-sm font-mono tracking-widest">
-            No GPS data available for this lap
+          <div className="w-full h-full flex flex-col items-center justify-center text-brand-10/60 text-sm font-mono tracking-widest text-center px-4">
+            <span className="text-accent-red mb-2">Track data is missing</span>
+            <span className="text-xs">No GPS or SVG map available for this track</span>
           </div>
         )}
       </div>

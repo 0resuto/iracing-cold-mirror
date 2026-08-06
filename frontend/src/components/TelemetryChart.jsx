@@ -438,6 +438,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         className="w-full flex-1 flex flex-col gap-3 overflow-x-hidden overflow-y-auto custom-scrollbar pr-1 min-w-0"
         onMouseEnter={() => setIsUserHovering(true)}
         onMouseLeave={() => setIsUserHovering(false)}
+        onTouchStart={() => setIsUserHovering(true)}
+        onTouchEnd={() => setIsUserHovering(false)}
       >
         {/* Delta Chart */}
         {visibleCharts.delta && deltaData?.length > 0 && (
