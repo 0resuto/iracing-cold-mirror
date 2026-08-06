@@ -12,6 +12,11 @@ export const TrackMap = React.memo(function TrackMap() {
   const { lapData, referenceData, deltaData, selectedLap, isLive } = useTelemetryData();
   const lapTime = selectedLap ? selectedLap.lap_time : null;
 
+  const isLiveRef = useRef(isLive);
+  useEffect(() => {
+    isLiveRef.current = isLive;
+  }, [isLive]);
+
   let progress = 0;
   let displayTime = 0;
 
@@ -99,7 +104,7 @@ export const TrackMap = React.memo(function TrackMap() {
     let lapPath = null;
     if (lapGpsPoints) {
       const scaledLap = lapGpsPoints.map(p => projectToScreen(p.lon, p.lat));
-      lapPath = scaledLap.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+      lapPath = scaledLap.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
     }
 
     return { 
@@ -372,7 +377,12 @@ export const TrackMap = React.memo(function TrackMap() {
 
     if (!zoomBehaviorRef.current) {
       zoomBehaviorRef.current = d3Zoom()
-      .scaleExtent([0.5, 20])
+      .scaleExtent([0.1, 20])
+      .filter((event) => {
+        if (event.type === 'wheel') return true;
+        if (isLiveRef.current) return false; // Disable panning in live mode
+        return !event.ctrlKey && event.button !== 2; // Default D3 behavior
+      })
       .wheelDelta((event) => {
         // Default d3 wheelDelta formula multiplied by 2 for doubled sensitivity
         return -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 0.002) * 2;
@@ -401,8 +411,10 @@ export const TrackMap = React.memo(function TrackMap() {
       svg.call(zoomBehaviorRef.current);
     }
 
-    // Initial center is handled by viewBox, reset zoom when track layout changes
-    svg.call(zoomBehaviorRef.current.transform, zoomIdentity);
+    // Initial center is handled by viewBox, reset zoom when track layout changes (only if not live to avoid jumping)
+    if (!isLiveRef.current) {
+      svg.call(zoomBehaviorRef.current.transform, zoomIdentity);
+    }
     
     // Cleanup on unmount
     return () => {
@@ -410,6 +422,18 @@ export const TrackMap = React.memo(function TrackMap() {
       zoomBehaviorRef.current = null;
     };
   }, [svgData?.basePath]);
+
+  // Auto-center map on car during live telemetry
+  useEffect(() => {
+    if (isLive && carState.isValid && svgRef.current && zoomBehaviorRef.current && svgData) {
+      const svg = d3Selection.select(svgRef.current);
+      const k = zoomKRef.current;
+      const tx = svgData.vbWidth / 2 - carState.x * k;
+      const ty = svgData.vbHeight / 2 - carState.y * k;
+      
+      svg.call(zoomBehaviorRef.current.transform, zoomIdentity.translate(tx, ty).scale(k));
+    }
+  }, [carState.x, carState.y, isLive, svgData]);
 
   const getStrokeWidth = () => {
     const BASE_THICKNESS = 4;

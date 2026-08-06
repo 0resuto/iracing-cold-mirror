@@ -1,17 +1,162 @@
-import React from 'react';
-import {
-  ComposedChart, LineChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts';
+import React, { useEffect, useRef } from 'react';
+import uPlot from 'uplot';
+import 'uplot/dist/uPlot.min.css';
 import { useLiveStore } from '../store/useLiveStore';
 import { useAppStore } from '../store/useAppStore';
 
-export const LiveTelemetryChart = React.memo(function LiveTelemetryChart() {
-  const liveLapData = useLiveStore(state => state.liveLapData);
-  const isStreaming = useLiveStore(state => state.isStreaming);
-  const steeringMaxDeg = useAppStore(state => state.steeringMax);
-  const maxRef = React.useRef({ speed: 50 });
+const THEME = {
+  grid: 'rgba(255, 255, 255, 0.15)',
+  text: '#a1a1aa',
+  speed: '#EF4444',
+  throttle: '#10B981',
+  brake: '#EF4444',
+  steering: '#eaeaea',
+};
 
-  if (!liveLapData || liveLapData.length === 0) {
+export const LiveTelemetryChart = React.memo(function LiveTelemetryChart() {
+  const speedContainerRef = useRef(null);
+  const inputsContainerRef = useRef(null);
+  
+  const isStreaming = useLiveStore(state => state.isStreaming);
+  const isEmpty = useLiveStore(state => state.liveLapData.length === 0);
+  
+  const speedPlotRef = useRef(null);
+  const inputsPlotRef = useRef(null);
+
+  // Initialize uPlot instances once when the containers mount
+  useEffect(() => {
+    if (!speedContainerRef.current || !inputsContainerRef.current) return;
+
+    const getSize = (el) => ({
+      width: el.clientWidth,
+      height: el.clientHeight,
+    });
+
+    const commonOpts = {
+      legend: { show: false },
+      cursor: { show: false },
+      axes: [
+        { show: false }, // X axis hidden
+      ]
+    };
+
+    const speedOpts = {
+      ...commonOpts,
+      ...getSize(speedContainerRef.current),
+      scales: {
+        x: { time: false },
+        y: { auto: true, range: (u, min, max) => {
+          if (max == null) max = 0;
+          return [0, Math.max(50, Math.ceil(max * 1.1 / 10) * 10)];
+        }}
+      },
+      axes: [
+        { show: false },
+        { stroke: THEME.text, grid: { stroke: THEME.grid, dash: [3, 3] }, size: 35, font: "9px Inter" }
+      ],
+      series: [
+        {}, // X
+        { stroke: THEME.speed, width: 2 }
+      ]
+    };
+
+    const inputsOpts = {
+      ...commonOpts,
+      ...getSize(inputsContainerRef.current),
+      scales: {
+        x: { time: false },
+        pedals: { range: [0, 1] },
+        steering: { range: [-180, 180] } // Default, updated dynamically later
+      },
+      axes: [
+        { show: false },
+        { scale: 'pedals', stroke: THEME.text, grid: { stroke: THEME.grid, dash: [3, 3] }, size: 35, font: "9px Inter", values: (u, vals) => vals.map(v => (v*100).toFixed(0)) },
+        { scale: 'steering', side: 1, stroke: THEME.steering, grid: { show: false }, size: 35, font: "9px Inter" }
+      ],
+      series: [
+        {}, // X
+        { scale: 'pedals', stroke: THEME.throttle, fill: 'rgba(16, 185, 129, 0.15)', width: 1.5 }, // Throttle
+        { scale: 'pedals', stroke: THEME.brake, fill: 'rgba(239, 68, 68, 0.25)', width: 1.5 }, // Brake
+        { scale: 'steering', stroke: THEME.steering, width: 1.5 } // Steering
+      ]
+    };
+
+    const speedPlot = new uPlot(speedOpts, [[], []], speedContainerRef.current);
+    const inputsPlot = new uPlot(inputsOpts, [[], [], [], []], inputsContainerRef.current);
+
+    speedPlotRef.current = speedPlot;
+    inputsPlotRef.current = inputsPlot;
+
+    // Handle resize
+    const ro = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (entry.target === speedContainerRef.current && speedPlotRef.current) {
+          speedPlotRef.current.setSize(getSize(speedContainerRef.current));
+        } else if (entry.target === inputsContainerRef.current && inputsPlotRef.current) {
+          inputsPlotRef.current.setSize(getSize(inputsContainerRef.current));
+        }
+      }
+    });
+    
+    ro.observe(speedContainerRef.current);
+    ro.observe(inputsContainerRef.current);
+
+    return () => {
+      ro.disconnect();
+      if (speedPlotRef.current) speedPlotRef.current.destroy();
+      if (inputsPlotRef.current) inputsPlotRef.current.destroy();
+      speedPlotRef.current = null;
+      inputsPlotRef.current = null;
+    };
+  }, [isEmpty]); // Re-run initialization when we switch from empty to having data
+
+  // Direct subscription to Zustand to bypass React renders for 30Hz updates
+  useEffect(() => {
+    let animationFrameId;
+
+    const draw = (state) => {
+      const liveLapData = state.liveLapData;
+      if (!speedPlotRef.current || !inputsPlotRef.current || !liveLapData || liveLapData.length === 0) return;
+
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      
+      animationFrameId = requestAnimationFrame(() => {
+        const len = liveLapData.length;
+        const time = new Array(len);
+        const speed = new Array(len);
+        const thr = new Array(len);
+        const brk = new Array(len);
+        const str = new Array(len);
+
+        for (let i = 0; i < len; i++) {
+          const d = liveLapData[i];
+          time[i] = d.session_time !== undefined ? d.session_time : i;
+          speed[i] = d.speed || 0;
+          thr[i] = d.throttle || 0;
+          brk[i] = d.brake || 0;
+          str[i] = d.wheel_angle_deg || 0;
+        }
+
+        // Dynamically update steering scale from AppStore
+        const maxStr = useAppStore.getState().steeringMax;
+        inputsPlotRef.current.setScale('steering', { min: -maxStr, max: maxStr });
+
+        speedPlotRef.current.setData([time, speed]);
+        inputsPlotRef.current.setData([time, thr, brk, str]);
+      });
+    };
+
+    const unsubscribe = useLiveStore.subscribe(draw);
+    // Manually trigger first draw
+    draw(useLiveStore.getState());
+
+    return () => {
+      unsubscribe();
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, [isEmpty]);
+
+  if (isEmpty) {
     return (
       <div className="flex-1 flex items-center justify-center bg-brand-bg h-full">
         <p className="text-brand-10/40 font-mono text-xs tracking-widest animate-pulse">
@@ -20,16 +165,6 @@ export const LiveTelemetryChart = React.memo(function LiveTelemetryChart() {
       </div>
     );
   }
-
-  let { speed } = maxRef.current;
-  for (const d of liveLapData) {
-    if (d.speed && d.speed > speed) speed = d.speed;
-  }
-  
-  if (speed > maxRef.current.speed) maxRef.current.speed = speed;
-
-  const steeringDomain = [-steeringMaxDeg, steeringMaxDeg];
-  const speedDomain = [0, Math.ceil(speed * 1.1 / 10) * 10];
 
   return (
     <div className="flex-1 flex flex-col h-full bg-brand-bg p-2 sm:p-4 min-w-0">
@@ -44,50 +179,19 @@ export const LiveTelemetryChart = React.memo(function LiveTelemetryChart() {
         
         {/* Speed Chart */}
         <div className="flex-1 min-h-[150px] flex flex-col relative group min-w-0">
-          <div className="absolute left-10 top-0 text-[9px] text-[#a1a1aa] font-bold tracking-widest z-10">SPEED (km/h)</div>
-          <div className="flex-1 mt-3">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={liveLapData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.15)" vertical={false} />
-                <XAxis dataKey="session_time" hide type="number" domain={['dataMin', 'dataMax']} />
-                <YAxis domain={speedDomain} stroke="#a1a1aa" fontSize={9} tickCount={5} width={35} />
-                <Line type="step" dataKey="speed" stroke="var(--color-accent-red)" strokeWidth={2} dot={false} isAnimationActive={false} activeDot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <div className="absolute left-10 top-0 text-[9px] text-[#a1a1aa] font-bold tracking-widest z-10 pointer-events-none">SPEED (km/h)</div>
+          <div className="flex-1 mt-3" ref={speedContainerRef} />
         </div>
 
         {/* Combined Inputs Chart */}
         <div className="flex-[2] min-h-[220px] flex flex-col relative group min-w-0">
-          <div className="absolute left-10 top-0 text-[9px] text-[#a1a1aa] font-bold tracking-widest z-10 flex gap-4">
+          <div className="absolute left-10 top-0 text-[9px] text-[#a1a1aa] font-bold tracking-widest z-10 flex gap-4 pointer-events-none">
             <span>INPUTS</span>
             <span className="text-green-500">THR</span>
             <span className="text-red-500">BRK</span>
             <span className="text-brand-10">STR</span>
           </div>
-          <div className="flex-1 mt-3">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={liveLapData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.15)" vertical={false} yAxisId="left" />
-                <XAxis dataKey="session_time" hide type="number" domain={['dataMin', 'dataMax']} />
-                
-                {/* Left Y-Axis for Pedals (0-1) */}
-                <YAxis yAxisId="left" domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} stroke="#a1a1aa" fontSize={9} tickFormatter={v => (v*100).toFixed(0)} width={35} />
-                
-                {/* Right Y-Axis for Steering (-deg to deg) */}
-                <YAxis yAxisId="right" orientation="right" domain={steeringDomain} stroke="var(--color-brand-10)" fontSize={9} tickCount={3} width={35} />
-                
-                {/* Throttle */}
-                <Area yAxisId="left" type="step" dataKey="throttle" stroke="var(--color-accent-green)" fill="var(--color-accent-green)" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} activeDot={false} />
-                
-                {/* Brake */}
-                <Area yAxisId="left" type="step" dataKey="brake" stroke="var(--color-accent-red)" fill="var(--color-accent-red)" fillOpacity={0.25} strokeWidth={1.5} isAnimationActive={false} activeDot={false} />
-                
-                {/* Steering */}
-                <Line yAxisId="right" type="step" dataKey="wheel_angle_deg" stroke="var(--color-brand-10)" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
+          <div className="flex-1 mt-3" ref={inputsContainerRef} />
         </div>
 
       </div>
