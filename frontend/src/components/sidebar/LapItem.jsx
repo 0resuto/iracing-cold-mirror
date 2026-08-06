@@ -1,14 +1,14 @@
 import React from 'react';
 import { Timer, Award } from 'lucide-react';
 
-export const LapItem = React.memo(function LapItem({ lap, player, trackName, selectedLapId, bestLapId, setSelectedLap, onSelectLap }) {
+export const LapItem = React.memo(function LapItem({ lap, player, trackName, selectedLapId, bestLapId, setSelectedLap, onSelectLap, carName }) {
   const isSelected = selectedLapId === lap.id;
   const isBest = lap.id === bestLapId;
   const timeText = lap.lap_time > 0 ? `${lap.lap_time.toFixed(2)}s` : 'Outlap';
   const lapLabel = lap.lap_number === 0 ? 'Outlap' : `Lap ${lap.lap_number}`;
 
   const handleClick = () => {
-    setSelectedLap({ ...lap, player_id: player.id, track_name: trackName });
+    setSelectedLap({ ...lap, player_id: player.id, track_name: trackName, car_name: carName });
     if (onSelectLap) onSelectLap();
   };
 

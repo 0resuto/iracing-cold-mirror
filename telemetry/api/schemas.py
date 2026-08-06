@@ -75,6 +75,7 @@ class LapResponse(BaseModel):
 class SessionResponse(BaseModel):
     id: int = Field(..., description="Unique identifier for the session")
     track_name: str = Field(..., description="Name of the track")
+    track_id: int | None = Field(None, description="ID of the track")
     car_name: str | None = Field(None, description="Name of the car used")
     start_time: datetime | None = Field(None, description="Session start time")
     duration_seconds: float | None = Field(0.0, description="Session duration in seconds")

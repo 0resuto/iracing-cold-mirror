@@ -23,6 +23,7 @@ export function useLiveTelemetryWS(isLiveActive) {
     }
 
     let ws = null;
+    let reconnectTimeout = null;
     lastSessionTimeRef.current = null;
     lastUpdateTimestampRef.current = 0;
 
@@ -56,64 +57,77 @@ export function useLiveTelemetryWS(isLiveActive) {
       }
     }, 33);
 
-    ws = new WebSocket(WS_URL);
+    const connectWS = () => {
+      if (ws) {
+        ws.close();
+      }
+      ws = new WebSocket(WS_URL);
 
-    ws.onmessage = (event) => {
-      try {
-        const newData = JSON.parse(event.data);
-        
-        // Convert radians to degrees for the frontend components to display correctly
-        if (newData.wheel_angle !== undefined && newData.wheel_angle !== null) {
-          newData.wheel_angle_deg = newData.wheel_angle * (180 / Math.PI);
-        }
-
-        if (newData.status === 'waiting for data') {
-          if (useLiveStore.getState().isStreaming) {
-            toast('iRacing is waiting for data...', { icon: '🟡' });
+      ws.onmessage = (event) => {
+        try {
+          const newData = JSON.parse(event.data);
+          
+          if (newData.wheel_angle !== undefined && newData.wheel_angle !== null) {
+            newData.wheel_angle_deg = newData.wheel_angle * (180 / Math.PI);
           }
-          useLiveStore.setState({ isStreaming: false });
-          return;
-        }
 
-        // Deduplication: Filter out duplicate stale Redis snapshots when iRacing isn't generating new data
-        if (newData.session_time !== undefined && newData.session_time === lastSessionTimeRef.current) {
-          return;
-        }
+          if (newData.status === 'waiting for data') {
+            if (useLiveStore.getState().isStreaming) {
+              toast('iRacing is waiting for data...', { icon: '🟡', id: 'waiting-data' });
+            }
+            useLiveStore.setState({ isStreaming: false });
+            return;
+          }
 
-        lastSessionTimeRef.current = newData.session_time;
-        lastUpdateTimestampRef.current = Date.now();
-        if (!useLiveStore.getState().isStreaming) {
-          toast.success('Connected to iRacing Live Telemetry');
+          if (newData.session_time !== undefined && newData.session_time === lastSessionTimeRef.current) {
+            return;
+          }
+
+          lastSessionTimeRef.current = newData.session_time;
+          lastUpdateTimestampRef.current = Date.now();
+          
+          if (!useLiveStore.getState().isStreaming) {
+            toast.success('Connected to iRacing Live Telemetry', { id: 'connected' });
+          }
+          
+          useLiveStore.setState({ isStreaming: true });
+          bufferRef.current.push(newData);
+        } catch (err) {
+          console.error('Live WS parse error:', err);
         }
+      };
+
+      ws.onerror = (err) => {
+        // Prevent noisy errors during React Strict Mode unmounts
+        if (ws.readyState === WebSocket.CLOSING || ws.readyState === WebSocket.CLOSED) return;
         
-        useLiveStore.setState({ isStreaming: true });
+        console.error('Live WS connection error:', err);
+        if (useLiveStore.getState().isStreaming) {
+           toast.error('Lost connection to Telemetry Server', { id: 'lost-conn' });
+        }
+        useLiveStore.setState({ isStreaming: false });
+      };
 
-        // Push new unique telemetry frame into buffer
-        bufferRef.current.push(newData);
-      } catch (err) {
-        console.error('Live WS parse error:', err);
-      }
+      ws.onclose = () => {
+        if (useLiveStore.getState().isStreaming) {
+           toast.error('Connection closed', { id: 'closed-conn' });
+        }
+        useLiveStore.setState({ isStreaming: false });
+        
+        // Auto-reconnect after 2 seconds
+        reconnectTimeout = setTimeout(connectWS, 2000);
+      };
     };
 
-    ws.onerror = (err) => {
-      console.error('Live WS connection error:', err);
-      if (useLiveStore.getState().isStreaming) {
-         toast.error('Lost connection to Telemetry Server');
-      }
-      useLiveStore.setState({ isStreaming: false });
-    };
-
-    ws.onclose = () => {
-      if (useLiveStore.getState().isStreaming) {
-         toast.error('Connection closed');
-      }
-      useLiveStore.setState({ isStreaming: false });
-    };
+    connectWS();
 
     return () => {
       clearInterval(flushInterval);
       clearInterval(statusCheckInterval);
+      clearTimeout(reconnectTimeout);
       if (ws) {
+        // Remove onclose to prevent auto-reconnect when intentionally unmounting
+        ws.onclose = null; 
         ws.close();
       }
       clearLiveData();

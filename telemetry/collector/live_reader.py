@@ -61,6 +61,11 @@ class IRacingLiveReader:
             for driver in driver_info.get("Drivers", []) or []:
                 if driver.get("CarIdx") == driver_car_idx:
                     self.player_name = driver.get("UserName", "Unknown Player")
+                    self.car_name = (
+                        driver.get("CarScreenName")
+                        or driver.get("CarClassShortName")
+                        or "Unknown Car"
+                    )
                     break
         except Exception as exc:
             logger.warning("Could not read iRacing session metadata: %s", exc)
@@ -90,12 +95,12 @@ class IRacingLiveReader:
             "throttle": self._get_val("Throttle"),
             "brake": self._get_val("Brake"),
             "wheel_angle": self._get_val("SteeringWheelAngle"),
+            "track_id": getattr(self, "track_id", None),
             "session_time": self._get_val("SessionTime"),
             "lap": int(self._get_val("Lap", 0)),
             "lap_dist_pct": self._get_val("LapDistPct"),
             "lat": self._get_val("Lat", None),
             "lon": self._get_val("Lon", None),
-            "track_id": self.track_id,
             "yaw": self._get_val("Yaw"),
             "yaw_rate": self._get_val("YawRate"),
             "vx": velocity_x,

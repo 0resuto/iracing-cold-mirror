@@ -97,6 +97,7 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
                     bestLapId={bestLapId} 
                     setSelectedLap={setSelectedLap} 
                     onSelectLap={onSelectLap}
+                    carName={session.car_name}
                   />
                 ))}
                 {hiddenCount > 0 && (

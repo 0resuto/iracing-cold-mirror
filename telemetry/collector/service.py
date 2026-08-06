@@ -56,6 +56,10 @@ def run(reader):
                     last_lap_dist_pct = data["lap_dist_pct"]
 
                     live_data = {
+                        "track_id": getattr(reader, "track_id", None),
+                        "track_name": getattr(reader, "track_name", "Unknown Track"),
+                        "player_name": getattr(reader, "player_name", "Unknown Player"),
+                        "car_name": getattr(reader, "car_name", "Unknown Car"),
                         "lap_number": lap,
                         "speed": data["speed"],
                         "rpm": data["rpm"],

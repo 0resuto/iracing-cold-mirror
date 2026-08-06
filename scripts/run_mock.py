@@ -14,6 +14,22 @@ class MockReader:
     def sectors(self):
         return getattr(self.reader, "sectors", [])
 
+    @property
+    def track_name(self):
+        return getattr(self.reader, "track_name", "Unknown Track")
+
+    @property
+    def track_id(self):
+        return getattr(self.reader, "track_id", None)
+
+    @property
+    def player_name(self):
+        return getattr(self.reader, "player_name", "Unknown Player")
+
+    @property
+    def car_name(self):
+        return getattr(self.reader, "car_name", "Unknown Car")
+
     def read(self):
         data = self.reader.read()
 

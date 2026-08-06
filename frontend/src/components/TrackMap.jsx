@@ -7,6 +7,7 @@ import trackPaths from '../assets/track_paths.json';
 
 export const TrackMap = React.memo(function TrackMap() {
   const [colorMode, setColorMode] = useState('default');
+  const [mapMode, setMapMode] = useState('gps'); // 'gps' | 'schematic'
   const hoveredData = useAppStore((state) => state.hoveredData);
   const { lapData, referenceData, deltaData, selectedLap, isLive } = useTelemetryData();
   const lapTime = selectedLap ? selectedLap.lap_time : null;
@@ -320,10 +321,11 @@ export const TrackMap = React.memo(function TrackMap() {
   const trackId = useMemo(() => {
     if (isLive && lapData && lapData.length > 0 && lapData[0].track_id) return String(lapData[0].track_id);
     if (hoveredData && hoveredData.track_id) return String(hoveredData.track_id);
+    if (selectedLap && selectedLap.track_id) return String(selectedLap.track_id);
     return null;
-  }, [isLive, lapData, hoveredData]);
+  }, [isLive, lapData, hoveredData, selectedLap]);
 
-  const fallbackPathD = (!svgData && trackId && trackPaths[trackId]) ? trackPaths[trackId] : null;
+  const fallbackPathD = (trackId && trackPaths[trackId]) ? trackPaths[trackId] : null;
 
   const fallbackPathRef = useRef(null);
   const [fallbackBBox, setFallbackBBox] = useState(null);
@@ -422,6 +424,14 @@ export const TrackMap = React.memo(function TrackMap() {
         <h2 className="text-xs uppercase tracking-wider text-brand-10/60 font-extrabold m-0">Track Position (Scroll to Zoom)</h2>
         <div className="flex items-center gap-2">
           <select 
+            value={mapMode}
+            onChange={(e) => setMapMode(e.target.value)}
+            className="bg-brand-60 text-brand-10 border border-brand-60 px-2 py-1 rounded-md text-xs cursor-pointer outline-none focus:border-accent-blue font-mono font-semibold"
+          >
+            <option value="gps">GPS</option>
+            <option value="schematic">Schematic</option>
+          </select>
+          <select 
             value={colorMode}
             onChange={(e) => setColorMode(e.target.value)}
             className="bg-brand-60 text-brand-10 border border-brand-60 px-2 py-1 rounded-md text-xs cursor-pointer outline-none focus:border-accent-blue font-mono font-semibold"
@@ -439,12 +449,12 @@ export const TrackMap = React.memo(function TrackMap() {
             <span className="w-6 h-6 border-2 border-brand-60 border-t-zinc-400 rounded-full animate-spin"></span>
             <span>Waiting for live GPS data...</span>
           </div>
-        ) : lapTime === undefined || lapTime === null ? (
+        ) : (!isLive && (lapTime === undefined || lapTime === null)) ? (
           <div className="w-full h-full flex items-center justify-center text-brand-10/60 text-sm font-mono tracking-widest">
             Select a lap to view map
           </div>
-        ) : svgData ? (
-          <div className="w-full h-full absolute top-0 left-0">
+        ) : svgData && mapMode === 'gps' ? (
+          <div className="w-full h-full cursor-grab active:cursor-grabbing absolute top-0 left-0">
             {colorMode !== 'default' && (
               <div className="absolute bottom-3 left-3 bg-brand-bg/90 backdrop-blur-md border border-brand-60 px-3 py-1.5 rounded-md text-[10px] text-brand-10/80 flex items-center gap-2 font-mono shadow-md z-10 pointer-events-none">
                 {colorMode === 'speed' ? (
@@ -578,7 +588,7 @@ export const TrackMap = React.memo(function TrackMap() {
               </g>
             </svg>
             <div className="absolute top-3 left-3 bg-brand-bg/90 backdrop-blur-md border border-brand-60 px-3 py-1.5 rounded-md text-[10px] text-brand-10/80 font-mono shadow-md pointer-events-none">
-              SVG Map (No GPS)
+              {mapMode === 'schematic' ? 'Schematic Map' : 'SVG Map (No GPS)'}
             </div>
           </div>
         ) : (

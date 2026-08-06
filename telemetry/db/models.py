@@ -23,6 +23,7 @@ class Session(Base):
     player_id = Column(Integer, ForeignKey("players.id"), nullable=False, index=True)
     player = relationship("Player", back_populates="sessions")
     track_name = Column(String, nullable=False)
+    track_id = Column(Integer, nullable=True, index=True)
     car_name = Column(String, nullable=True)
     start_time = Column(DateTime, nullable=True, default=lambda: datetime.now(timezone.utc))
     duration_seconds = Column(Float, nullable=True, default=0.0)

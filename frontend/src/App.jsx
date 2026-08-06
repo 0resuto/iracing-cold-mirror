@@ -8,7 +8,8 @@ import { useAppStore } from './store/useAppStore';
 import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
 import { Toaster } from 'react-hot-toast';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2 } from 'lucide-react';
+import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront } from 'lucide-react';
+import { useTelemetryData } from './features/telemetry/useTelemetryData';
 
 function AppContent() {
   const location = useLocation();
@@ -22,6 +23,17 @@ function AppContent() {
   const isSidebarOpen = useAppStore(state => state.isSidebarOpen);
   const toggleSidebar = useAppStore(state => state.toggleSidebar);
   const steeringMax = useAppStore(state => state.steeringMax);
+
+  const { lapData, players } = useTelemetryData();
+
+  const liveInfo = isLive && lapData?.length > 0 ? lapData[lapData.length - 1] : null;
+  const trackName = isLive ? liveInfo?.track_name : selectedLap?.track_name;
+  
+  let playerName = isLive ? liveInfo?.player_name : null;
+  if (!isLive && selectedLap) {
+    playerName = players?.find(p => p.id === selectedLap.player_id)?.name;
+  }
+  const carName = isLive ? liveInfo?.car_name : selectedLap?.car_name;
 
   // Mobile View Tab state
   const [mobileView, setMobileView] = useState('charts'); // 'charts' | 'map' | 'stats'
@@ -63,8 +75,33 @@ function AppContent() {
       <div className="flex-1 flex flex-col h-full overflow-hidden gap-3 sm:gap-4 md:gap-6 bg-brand-bg min-w-0 px-4 py-3">
         
         {/* Header Bar */}
-        <div className="flex items-center justify-between flex-none pb-2.5 border-b border-brand-60/80 gap-2.5 w-full min-w-0">
+        <div className="flex items-center justify-between flex-none pb-2.5 border-b border-brand-60/80 gap-2.5 w-full min-w-0 h-[52px]">
           
+          {/* Session Info (Desktop) */}
+          <div className="hidden md:flex items-center gap-4 text-xs font-semibold text-brand-10/80 flex-1 truncate">
+            {trackName && (
+              <div className="flex items-center gap-1.5 bg-brand-60/40 px-3 py-1.5 rounded-lg border border-brand-60 shadow-sm truncate">
+                <MapPin size={14} className="text-brand-30/80 flex-none" />
+                <span className="truncate">{trackName}</span>
+              </div>
+            )}
+            {playerName && (
+              <div className="flex items-center gap-1.5 bg-brand-60/40 px-3 py-1.5 rounded-lg border border-brand-60 shadow-sm truncate">
+                <User size={14} className="text-brand-30/80 flex-none" />
+                <span className="truncate">{playerName}</span>
+              </div>
+            )}
+            {carName && (
+              <div className="flex items-center gap-1.5 bg-brand-60/40 px-3 py-1.5 rounded-lg border border-brand-60 shadow-sm truncate">
+                <CarFront size={14} className="text-brand-30/80 flex-none" />
+                <span className="truncate">{carName}</span>
+              </div>
+            )}
+            {(!trackName && !playerName && !carName) && (
+              <span className="text-brand-10/40 italic">Waiting for telemetry...</span>
+            )}
+          </div>
+
           {/* View Switcher Buttons on Mobile (Charts, Map, Stats) - Takes flex-1 width */}
           {(isHistory || isLive) && (
             <div className="grid grid-cols-3 gap-1 glass p-1 rounded-xl border border-brand-60/90 md:hidden flex-1 shadow-inner min-w-0">
