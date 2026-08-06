@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 
 from telemetry.collector.ibt_reader import IBTReader
@@ -25,5 +27,12 @@ class MockReader:
         return data
 
 
-mock_reader = MockReader(file_path="dev/telemetry.ibt")
+file_path = "dev/telemetry.ibt"
+
+if not os.path.exists(file_path):
+    print(f"❌ Error: Telemetry file '{file_path}' not found!")
+    print("Please rename your .ibt file in the 'dev' folder to 'telemetry.ibt'.")
+    sys.exit(1)
+
+mock_reader = MockReader(file_path=file_path)
 run(mock_reader)

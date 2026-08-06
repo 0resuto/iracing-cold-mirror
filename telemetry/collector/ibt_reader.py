@@ -85,7 +85,7 @@ class IBTReader:
         data["brake"] = get_val("Brake")
         data["wheel_angle"] = get_val("SteeringWheelAngle")
 
-        data["session_time"] = get_val("LapCurrentLapTime")
+        data["session_time"] = get_val("SessionTime")
         data["lap"] = int(get_val("Lap", 0))
         data["lap_dist_pct"] = get_val("LapDistPct")
         data["lat"] = get_val("Lat")

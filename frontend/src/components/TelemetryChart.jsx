@@ -311,7 +311,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         ref_speed: refPoint?.speed ?? null,
         ref_throttle: refPoint?.throttle ?? null,
         ref_brake: refPoint?.brake ?? null,
-        ref_wheel_angle: refPoint?.wheel_angle ?? null,
+        wheel_angle_deg: point.wheel_angle != null ? point.wheel_angle * (180 / Math.PI) : null,
+        ref_wheel_angle_deg: refPoint?.wheel_angle != null ? refPoint.wheel_angle * (180 / Math.PI) : null,
         ref_slip_angle: refPoint?.slip_angle ?? null,
         ref_elapsed_time: refPoint?.elapsed_time ?? null,
         delta: delta
@@ -481,7 +482,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
             minHeight: 90, extraAreas: [{ dataKey: 'abs_active', fill: 'var(--color-accent-blue)', opacity: 0.2 }, { dataKey: 'wheel_lock', fill: 'var(--color-accent-red)', opacity: 0.3 }]
           },
           {
-            id: 'steering', title: 'STEERING (deg)', dataKey: 'wheel_angle', refDataKey: 'ref_wheel_angle',
+            id: 'steering', title: 'STEERING (deg)', dataKey: 'wheel_angle_deg', refDataKey: 'ref_wheel_angle_deg',
             stroke: 'var(--color-brand-10)', type: 'line', domain: ['auto', 'auto'],
             minHeight: 90
           },

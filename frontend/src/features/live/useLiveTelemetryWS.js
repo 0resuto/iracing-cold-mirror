@@ -33,8 +33,8 @@ export function useLiveTelemetryWS(isLiveActive) {
       useLiveStore.setState({ isStreaming });
     }, 1000);
 
-    // Batch flush interval (flushes buffer every 50ms -> 20Hz update rate)
-    const MAX_LIVE_DISPLAY_POINTS = 600; // ~30 seconds of rolling window at 20Hz
+    // Batch flush interval (flushes buffer every 33ms -> 30Hz update rate for smooth rendering)
+    const MAX_LIVE_DISPLAY_POINTS = 300; // ~10 seconds of rolling window at 30Hz
     const flushInterval = setInterval(() => {
       if (bufferRef.current.length > 0) {
         const batch = bufferRef.current;
@@ -48,14 +48,25 @@ export function useLiveTelemetryWS(isLiveActive) {
               : updated
           };
         });
+
+        const { isUserHovering, setHoveredData } = useAppStore.getState();
+        if (!isUserHovering) {
+          setHoveredData(batch[batch.length - 1]);
+        }
       }
-    }, 50);
+    }, 33);
 
     ws = new WebSocket(WS_URL);
 
     ws.onmessage = (event) => {
       try {
         const newData = JSON.parse(event.data);
+        
+        // Convert radians to degrees for the frontend components to display correctly
+        if (newData.wheel_angle !== undefined && newData.wheel_angle !== null) {
+          newData.wheel_angle_deg = newData.wheel_angle * (180 / Math.PI);
+        }
+
         if (newData.status === 'waiting for data') {
           if (useLiveStore.getState().isStreaming) {
             toast('iRacing is waiting for data...', { icon: '🟡' });
@@ -79,12 +90,6 @@ export function useLiveTelemetryWS(isLiveActive) {
 
         // Push new unique telemetry frame into buffer
         bufferRef.current.push(newData);
-
-        // Automatically update hoveredData if user isn't actively hovering chart
-        const { isUserHovering, setHoveredData } = useAppStore.getState();
-        if (!isUserHovering) {
-          setHoveredData(newData);
-        }
       } catch (err) {
         console.error('Live WS parse error:', err);
       }

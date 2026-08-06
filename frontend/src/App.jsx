@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TelemetryChart } from './components/TelemetryChart';
+import { LiveTelemetryChart } from './components/LiveTelemetryChart';
 import { TrackMap } from './components/TrackMap';
 import { StatsWidget } from './components/StatsWidget';
 import { useAppStore } from './store/useAppStore';
@@ -13,6 +14,7 @@ function App() {
   const selectedLap = useAppStore(state => state.selectedLap);
   const isSidebarOpen = useAppStore(state => state.isSidebarOpen);
   const toggleSidebar = useAppStore(state => state.toggleSidebar);
+  const steeringMax = useAppStore(state => state.steeringMax);
 
   // Mobile View Tab state
   const [mobileView, setMobileView] = useState('charts'); // 'charts' | 'map' | 'stats'
@@ -116,9 +118,24 @@ function App() {
             </div>
             <div className="text-center max-w-md">
               <p className="text-base tracking-wide font-semibold text-brand-10">System Parameters Panel</p>
-              <p className="text-xs text-brand-10/60 mt-2 leading-relaxed">
-                Use the left menu to view live server metrics, database records, API auth status, and last uploaded session details.
-              </p>
+              <div className="mt-8 p-4 border border-brand-60/80 bg-brand-60/20 rounded-xl flex flex-col items-center gap-4">
+                <div className="flex flex-col items-center gap-2">
+                  <label className="text-xs font-bold text-brand-10/80 uppercase tracking-widest">Steering Lock (Degrees)</label>
+                  <p className="text-[10px] text-brand-10/40 -mt-1 mb-2">Total wheel rotation (e.g. 900 = 450° each way)</p>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="number" 
+                      value={steeringMax * 2} 
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val) && val > 0) useAppStore.getState().setSteeringMax(val / 2);
+                      }}
+                      className="bg-brand-bg border border-brand-60 text-brand-10 px-3 py-2 rounded-lg w-24 text-center font-mono font-bold focus:outline-none focus:border-brand-30 transition-colors shadow-inner"
+                      step="10"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         ) : (!selectedLap && activeTab !== 'live') ? (
@@ -145,7 +162,7 @@ function App() {
           <div className="flex flex-1 gap-4 md:gap-6 min-h-0 w-full overflow-hidden flex-col md:flex-row">
               {/* Telemetry Charts (Visible on desktop or when mobileView === 'charts') */}
               <div className={`flex-[2] min-w-0 flex flex-col h-full ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
-                <TelemetryChart />
+                {activeTab === 'live' ? <LiveTelemetryChart /> : <TelemetryChart />}
               </div>
               
               {/* Track Map & Stats Column (Visible on desktop or when mobileView === 'map' / 'stats') */}

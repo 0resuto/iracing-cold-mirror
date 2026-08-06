@@ -92,6 +92,6 @@ def run(reader):
         except KeyboardInterrupt:
             logger.info("Stopped by user")
             break
-        except (ConnectionError, WebSocketException) as e:
+        except (ConnectionError, WebSocketException, TimeoutError) as e:
             logger.error(f"Connection lost: {e}. Reconnecting in 2s...")
             time.sleep(2)

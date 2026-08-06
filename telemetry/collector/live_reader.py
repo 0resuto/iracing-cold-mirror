@@ -90,7 +90,7 @@ class IRacingLiveReader:
             "throttle": self._get_val("Throttle"),
             "brake": self._get_val("Brake"),
             "wheel_angle": self._get_val("SteeringWheelAngle"),
-            "session_time": self._get_val("LapCurrentLapTime", self._get_val("SessionTime")),
+            "session_time": self._get_val("SessionTime"),
             "lap": int(self._get_val("Lap", 0)),
             "lap_dist_pct": self._get_val("LapDistPct"),
             "lat": self._get_val("Lat", None),

@@ -14,4 +14,6 @@ export const useAppStore = create((set) => ({
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   setHoveredData: (data) => set({ hoveredData: data }),
   setIsUserHovering: (isHovering) => set({ isUserHovering: isHovering }),
+  steeringMax: 450,
+  setSteeringMax: (val) => set({ steeringMax: val }),
 }));

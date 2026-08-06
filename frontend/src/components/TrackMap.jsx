@@ -42,8 +42,8 @@ export const TrackMap = React.memo(function TrackMap() {
   }, [lapData]);
 
   const svgData = useMemo(() => {
-    // Используем текущий круг как основу для масштабирования
-    const boundsSource = lapGpsPoints && lapGpsPoints.length > 0 ? lapGpsPoints : refGpsPoints;
+    // Используем текущий круг как основу для масштабирования, но только для исторического режима
+    const boundsSource = (lapGpsPoints && lapGpsPoints.length > 0 && !isLive) ? lapGpsPoints : refGpsPoints;
     if (!boundsSource || boundsSource.length === 0) return null;
 
     let minLon = Infinity, maxLon = -Infinity;
@@ -148,12 +148,28 @@ export const TrackMap = React.memo(function TrackMap() {
       currentData = lapData[0];
     }
 
-    if (!currentData || currentData.lat == null || currentData.lon == null) {
+    if (!currentData || (currentData.lat == null && currentData.lap_dist_pct == null)) {
       return { x: 0, y: 0, travelAngle: 0, headingAngle: 0, isValid: false };
     }
 
-    const px = currentData.lon * svgData.lonScale;
-    const py = currentData.lat;
+    let px, py;
+    if (currentData.lat != null && currentData.lon != null) {
+      px = currentData.lon * svgData.lonScale;
+      py = currentData.lat;
+    } else if (currentData.lap_dist_pct != null && refGpsPoints && refGpsPoints.length > 0) {
+      // Fallback: estimate GPS from reference lap distance when live telemetry lacks GPS coordinates
+      let closest = refGpsPoints[0];
+      let minDiff = Infinity;
+      for (const rp of refGpsPoints) {
+        const diff = Math.abs(rp.lap_dist_pct - currentData.lap_dist_pct);
+        if (diff < minDiff) { minDiff = diff; closest = rp; }
+      }
+      px = closest.lon * svgData.lonScale;
+      py = closest.lat;
+    } else {
+      return { x: 0, y: 0, travelAngle: 0, headingAngle: 0, isValid: false };
+    }
+
     const x = (px - svgData.minX) * svgData.scale + svgData.xOffset;
     const y = svgData.vbHeight - ((py - svgData.minY) * svgData.scale + svgData.yOffset);
 
@@ -344,13 +360,16 @@ export const TrackMap = React.memo(function TrackMap() {
   const svgRef = useRef(null);
   const gRef = useRef(null);
   const zoomKRef = useRef(1);
+  const zoomBehaviorRef = useRef(null);
 
   useEffect(() => {
     if (!svgRef.current || !gRef.current || !svgData) return;
 
     const BASE_THICKNESS = 4; // Общая базовая толщина для простой настройки
+    const svg = d3Selection.select(svgRef.current);
 
-    const zoomBehavior = d3Zoom()
+    if (!zoomBehaviorRef.current) {
+      zoomBehaviorRef.current = d3Zoom()
       .scaleExtent([0.5, 20])
       .wheelDelta((event) => {
         // Default d3 wheelDelta formula multiplied by 2 for doubled sensitivity
@@ -377,16 +396,18 @@ export const TrackMap = React.memo(function TrackMap() {
           .attr('transform', `scale(${1 / transform.k})`);
       });
 
-    const svg = d3Selection.select(svgRef.current);
-    svg.call(zoomBehavior);
+      svg.call(zoomBehaviorRef.current);
+    }
 
-    // Initial center is handled by viewBox, but we can reset zoom if lap changes
-    svg.call(zoomBehavior.transform, zoomIdentity);
-
+    // Initial center is handled by viewBox, reset zoom when track layout changes
+    svg.call(zoomBehaviorRef.current.transform, zoomIdentity);
+    
+    // Cleanup on unmount
     return () => {
       svg.on('.zoom', null);
+      zoomBehaviorRef.current = null;
     };
-  }, [svgData]);
+  }, [svgData?.basePath]);
 
   const getStrokeWidth = () => {
     const BASE_THICKNESS = 4;
