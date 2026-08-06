@@ -77,6 +77,7 @@ def run(reader):
                         "velocity_x": data.get("vx"),
                         "velocity_z": data.get("vz"),
                         "slip_angle": data.get("slip_angle"),
+                        "car_left_right": data.get("car_left_right"),
                         "lf_speed": data.get("lf_speed"),
                         "rf_speed": data.get("rf_speed"),
                         "lr_speed": data.get("lr_speed"),
@@ -84,14 +85,16 @@ def run(reader):
                         "abs_active": data.get("abs_active"),
                         "tc_active": data.get("tc_active"),
                         "wheel_lock": data.get("wheel_lock"),
+                        "grid": data.get("grid", {}),
                     }
 
-                    ws.send(json.dumps(live_data))
-
-                    packet_count += 1
                     if packet_count % 60 == 0:
+                        live_data["session_drivers"] = getattr(reader, "session_drivers", [])
                         sys.stdout.write(".")
                         sys.stdout.flush()
+
+                    ws.send(json.dumps(live_data))
+                    packet_count += 1
 
         except KeyboardInterrupt:
             logger.info("Stopped by user")

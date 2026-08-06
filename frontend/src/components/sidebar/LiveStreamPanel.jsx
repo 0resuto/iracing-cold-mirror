@@ -1,10 +1,11 @@
 import React from 'react';
 import { useLiveStore } from '../../store/useLiveStore';
+import { useAppStore } from '../../store/useAppStore';
 
 export const LiveStreamPanel = () => {
-  const liveLapData = useLiveStore(state => state.liveLapData);
   const isStreaming = useLiveStore(state => state.isStreaming);
-  const latestPoint = liveLapData[liveLapData.length - 1];
+  const columns = useAppStore(state => state.standingsColumns);
+  const toggleColumn = useAppStore(state => state.toggleStandingsColumn);
 
   return (
     <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar min-w-0 p-5">
@@ -29,22 +30,41 @@ export const LiveStreamPanel = () => {
             {isStreaming ? '🟢 iRacing Streaming' : '⚪ Waiting for iRacing...'}
           </span>
         </div>
-        <div className="text-xs text-brand-10/60 flex justify-between items-center">
-          <span>Buffered Points</span>
-          <span className="font-mono text-brand-10 font-bold">{liveLapData.length}</span>
+      </div>
+
+      <div className="bg-brand-bg border border-brand-60 rounded-xl flex flex-col p-4">
+        <h3 className="text-[10px] uppercase tracking-widest text-brand-10/60 font-bold mb-3">Standings Columns</h3>
+        <div className="flex flex-col gap-2">
+          {Object.entries({
+            pos: 'Position',
+            driver: 'Driver Name & License',
+            carName: 'Car Model Name',
+            carClass: 'Car Class',
+            srating: 'Safety Rating',
+            irating: 'iRating',
+            lastLap: 'Last Lap Time',
+            trackPct: 'Track Progress %',
+          }).map(([key, label]) => (
+            <label key={key} className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative flex items-center justify-center">
+                <input 
+                  type="checkbox" 
+                  className="sr-only"
+                  checked={columns[key]}
+                  onChange={() => toggleColumn(key)}
+                />
+                <div className={`w-4 h-4 rounded ${columns[key] ? 'bg-accent-red border-accent-red' : 'bg-brand-60 border-brand-60/80'} border flex items-center justify-center transition-colors group-hover:border-brand-30`}>
+                  {columns[key] && (
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <span className="text-xs text-brand-10/80 group-hover:text-brand-10 transition-colors">{label}</span>
+            </label>
+          ))}
         </div>
-        {isStreaming && latestPoint && (
-          <>
-            <div className="text-xs text-brand-10/60 flex justify-between items-center">
-              <span>Live Speed</span>
-              <span className="font-mono text-red-400 font-bold">{latestPoint.speed?.toFixed(1)} km/h</span>
-            </div>
-            <div className="text-xs text-brand-10/60 flex justify-between items-center">
-              <span>Track Position</span>
-              <span className="font-mono text-brand-30/80 font-bold">{((latestPoint.lap_dist_pct || 0) * 100).toFixed(1)}%</span>
-            </div>
-          </>
-        )}
       </div>
 
       {!isStreaming && (

@@ -40,7 +40,35 @@ class IBTReader:
 
             driver_info = session_info.get("DriverInfo", {})
             drivers = driver_info.get("Drivers", [])
+            self.session_drivers = []
             for d in drivers:
+                self.session_drivers.append(
+                    {
+                        "CarIdx": d.get("CarIdx"),
+                        "UserName": d.get("UserName"),
+                        "CarNumber": d.get("CarNumber"),
+                        "CarClassID": d.get("CarClassID"),
+                        "CarClassShortName": d.get("CarClassShortName"),
+                        "TeamName": d.get("TeamName"),
+                        "IRating": d.get("IRating"),
+                        "LicLevel": d.get("LicLevel"),
+                        "LicSubLevel": d.get("LicSubLevel"),
+                        "LicString": d.get("LicString"),
+                        "LicColor": d.get("LicColor"),
+                        "StartingPosition": d.get("StartingPosition"),
+                        "IsSpectator": d.get("IsSpectator"),
+                        "IsPaceCar": d.get("CarIsPaceCar", d.get("IsPaceCar")),
+                        "CarPath": d.get("CarPath"),
+                        "CarID": d.get("CarID"),
+                        "CarClassRelSpeed": d.get("CarClassRelSpeed"),
+                        "CarClassEstLapTime": d.get("CarClassEstLapTime"),
+                        "CarClassMaxFuelPct": d.get("CarClassMaxFuelPct"),
+                        "CarClassWeightPenalty": d.get("CarClassWeightPenalty"),
+                        "CarClassPowerAdjust": d.get("CarClassPowerAdjust"),
+                        "CarClassDryTireSetLimit": d.get("CarClassDryTireSetLimit"),
+                        "CarClassColor": d.get("CarClassColor"),
+                    }
+                )
                 if d.get("CarIdx") == driver_info.get("DriverCarIdx"):
                     self.player_name = d.get("UserName", "Unknown Player")
                     self.car_name = (
@@ -50,6 +78,37 @@ class IBTReader:
                         or "Unknown Car"
                     )
                     break
+
+            # Inject fake drivers for UI testing of all license classes
+            fake_licenses = [
+                (1, "R 2.45", 0xFC0303, "Rookie Test", 0xFFFFFF),
+                (2, "D 3.20", 0xFC7B03, "D-Class Test", 0x333333),
+                (3, "C 1.99", 0xFCE303, "C-Class Test", 0x00FF00),
+                (4, "B 4.15", 0x03FC3D, "B-Class Test", 0x0000FF),
+                (5, "A 2.99", 0x0345FC, "A-Class Test", 0xFFFF00),
+                (6, "P 3.50", 0x000000, "Pro Test", 0xFF00FF),
+            ]
+
+            start_idx = 100
+            for i, (lvl, string, color, name, car_col) in enumerate(fake_licenses):
+                self.session_drivers.append(
+                    {
+                        "CarIdx": start_idx + i,
+                        "UserName": name,
+                        "CarNumber": f"9{i}",
+                        "CarClassID": 1,
+                        "CarClassShortName": "TEST",
+                        "CarScreenNameShort": f"Car {i+1}",
+                        "TeamName": "Test Team",
+                        "IRating": 1500 + (i * 500),
+                        "LicLevel": lvl,
+                        "LicString": string,
+                        "LicColor": color,
+                        "CarClassColor": car_col,
+                        "IsSpectator": 0,
+                        "IsPaceCar": 0,
+                    }
+                )
 
             split_info = session_info.get("SplitTimeInfo", {})
             self.sectors = split_info.get("Sectors", [])
@@ -111,6 +170,93 @@ class IBTReader:
         data["rf_speed"] = get_val("RFspeed") * 3.6 if "RFspeed" in self.names else data["speed"]
         data["lr_speed"] = get_val("LRspeed") * 3.6 if "LRspeed" in self.names else data["speed"]
         data["rr_speed"] = get_val("RRspeed") * 3.6 if "RRspeed" in self.names else data["speed"]
+        data["car_left_right"] = get_val("CarLeftRight", 0)
+
+        grid_vars = [
+            "CarIdxLap",
+            "CarIdxLapCompleted",
+            "CarIdxLapDistPct",
+            "CarIdxTrackSurface",
+            "CarIdxOnPitRoad",
+            "CarIdxPosition",
+            "CarIdxClassPosition",
+            "CarIdxGate",
+            "CarIdxSessionFlags",
+            "CarIdxF2Time",
+            "CarIdxEstTime",
+            "CarIdxLastLapTime",
+            "CarIdxBestLapTime",
+            "CarIdxSteer",
+            "CarIdxRPM",
+            "CarIdxGear",
+            "CarIdxTireCompound",
+            "CarIdxQualTireCompound",
+            "CarIdxPaceLine",
+            "CarIdxPaceRow",
+            "CarIdxPaceFlags",
+        ]
+
+        raw_arrays = {var: get_val(var, []) for var in grid_vars}
+        surface_arr = raw_arrays["CarIdxTrackSurface"]
+
+        active_cars = {}
+        if isinstance(surface_arr, (list, tuple)):
+            for i in range(len(surface_arr)):
+                if surface_arr[i] > -1:
+                    car_data = {}
+                    for var in grid_vars:
+                        key = var.replace("CarIdx", "")
+                        arr = raw_arrays[var]
+                        car_data[key] = (
+                            arr[i] if isinstance(arr, (list, tuple)) and len(arr) > i else None
+                        )
+
+                    active_cars[str(i)] = car_data
+
+        # IBT telemetry files often don't contain opponent telemetry unless explicitly enabled.
+        # So we inject a fake static opponent if the grid is empty, for UI testing.
+        if not active_cars and self.session_drivers:
+            # Provide fake data for opponents and player
+            # Let player move slowly so opponents can overtake them in tests
+            mock_player_pct = (self.current_idx * 0.0002) % 1.0
+
+            for drv in self.session_drivers:
+                idx = drv["CarIdx"]
+                if idx is not None and not drv.get("IsSpectator"):
+                    is_player = drv.get("UserName") == self.player_name
+
+                    if is_player:
+                        active_cars[str(idx)] = {
+                            "Lap": get_val("Lap", 1),
+                            "LapDistPct": mock_player_pct,
+                            "TrackSurface": 3,
+                            "Position": idx,
+                            "LastLapTime": 0,
+                        }
+                    else:
+                        # Fake opponents moving slightly faster
+                        opp_pct = (0.05 + idx * 0.13 + self.current_idx * 0.0003) % 1.0
+                        active_cars[str(idx)] = {
+                            "Lap": 1,
+                            "LapDistPct": opp_pct,
+                            "TrackSurface": 3,
+                            "Position": idx,
+                            "LastLapTime": 90.0 + (idx * 0.5),
+                        }
+
+                        # Mock CarLeftRight behavior based on proximity for UI testing
+                        delta = opp_pct - mock_player_pct
+                        if delta > 0.5:
+                            delta -= 1.0
+                        if delta < -0.5:
+                            delta += 1.0
+
+                        # If this fake opponent is right next to the player (within 0.005)
+                        if abs(delta) < 0.005:
+                            # Make them randomly left or right based on their index
+                            data["car_left_right"] = 1 if idx % 2 == 0 else 2
+
+        data["grid"] = active_cars
 
         data = calculate_wheel_physics(data)
 

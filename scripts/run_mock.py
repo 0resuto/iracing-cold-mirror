@@ -15,6 +15,10 @@ class MockReader:
         return getattr(self.reader, "sectors", [])
 
     @property
+    def session_drivers(self):
+        return getattr(self.reader, "session_drivers", [])
+
+    @property
     def track_name(self):
         return getattr(self.reader, "track_name", "Unknown Track")
 

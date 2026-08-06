@@ -75,6 +75,8 @@ goto MENU
 
 :RUN_IBT
 cls
+echo Cleaning up orphaned IBT agents...
+powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.agent' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
 echo Starting IBT File Sync Agent...
 python -m scripts.agent
 pause
@@ -82,6 +84,8 @@ goto MENU
 
 :RUN_LIVE
 cls
+echo Cleaning up orphaned Live Telemetry agents...
+powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.run_live' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
 echo Starting Live Telemetry Streamer...
 python -m scripts.run_live
 pause
@@ -89,6 +93,9 @@ goto MENU
 
 :RUN_ALL
 cls
+echo Cleaning up any orphaned agent processes...
+powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.agent' -or $_.CommandLine -match 'scripts.run_live' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
+
 echo Starting both agents in separate console windows...
 start "IBT File Sync Agent" cmd /k "cd /d %~dp0 && call venv\Scripts\activate.bat && python -m scripts.agent"
 start "Live Telemetry Streamer" cmd /k "cd /d %~dp0 && call venv\Scripts\activate.bat && python -m scripts.run_live"

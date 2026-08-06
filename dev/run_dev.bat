@@ -66,6 +66,9 @@ echo Activating Python venv and running database migrations...
 call venv\Scripts\activate.bat
 alembic upgrade head
 
+echo Cleaning up any orphaned backend or agent processes...
+powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'uvicorn' -or $_.CommandLine -match 'scripts.agent' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
+
 echo Starting FastAPI Backend in separate window...
 start "FastAPI Backend (Dev)" cmd /k "cd /d %CD% && call venv\Scripts\activate.bat && uvicorn telemetry.api.app:app --reload --host 127.0.0.1 --port 8000"
 
@@ -135,6 +138,9 @@ if not exist "venv\Scripts\activate.bat" (
     pause
     goto MENU
 )
+echo Cleaning up any orphaned mock processes...
+powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.run_mock' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
+
 echo Running Telemetry Mock Generator...
 call venv\Scripts\activate.bat
 python -m scripts.run_mock

@@ -58,7 +58,38 @@ class IRacingLiveReader:
             self.sectors = split_info.get("Sectors", []) or []
 
             driver_car_idx = driver_info.get("DriverCarIdx")
+
+            self.session_drivers = []
             for driver in driver_info.get("Drivers", []) or []:
+                self.session_drivers.append(
+                    {
+                        "CarIdx": driver.get("CarIdx"),
+                        "UserName": driver.get("UserName"),
+                        "CarNumber": driver.get("CarNumber"),
+                        "CarClassID": driver.get("CarClassID"),
+                        "CarScreenName": driver.get("CarScreenName"),
+                        "CarScreenNameShort": driver.get("CarScreenNameShort"),
+                        "TeamName": driver.get("TeamName"),
+                        "IRating": driver.get("IRating"),
+                        "LicLevel": driver.get("LicLevel"),
+                        "LicSubLevel": driver.get("LicSubLevel"),
+                        "LicString": driver.get("LicString"),
+                        "LicColor": driver.get("LicColor"),
+                        "StartingPosition": driver.get("StartingPosition"),
+                        "IsSpectator": driver.get("IsSpectator"),
+                        "IsPaceCar": driver.get("CarIsPaceCar", driver.get("IsPaceCar")),
+                        "CarPath": driver.get("CarPath"),
+                        "CarID": driver.get("CarID"),
+                        "CarClassRelSpeed": driver.get("CarClassRelSpeed"),
+                        "CarClassEstLapTime": driver.get("CarClassEstLapTime"),
+                        "CarClassMaxFuelPct": driver.get("CarClassMaxFuelPct"),
+                        "CarClassWeightPenalty": driver.get("CarClassWeightPenalty"),
+                        "CarClassPowerAdjust": driver.get("CarClassPowerAdjust"),
+                        "CarClassDryTireSetLimit": driver.get("CarClassDryTireSetLimit"),
+                        "CarClassColor": driver.get("CarClassColor"),
+                    }
+                )
+
                 if driver.get("CarIdx") == driver_car_idx:
                     self.player_name = driver.get("UserName", "Unknown Player")
                     self.car_name = (
@@ -120,7 +151,50 @@ class IRacingLiveReader:
             math.degrees(math.atan2(velocity_y, velocity_x)) if speed_ms > 2.0 else 0.0
         )
 
+        data["car_left_right"] = self._get_val("CarLeftRight", 0)
+
         data = calculate_wheel_physics(data)
+
+        grid_vars = [
+            "CarIdxLap",
+            "CarIdxLapCompleted",
+            "CarIdxLapDistPct",
+            "CarIdxTrackSurface",
+            "CarIdxOnPitRoad",
+            "CarIdxPosition",
+            "CarIdxClassPosition",
+            "CarIdxGate",
+            "CarIdxSessionFlags",
+            "CarIdxF2Time",
+            "CarIdxEstTime",
+            "CarIdxLastLapTime",
+            "CarIdxBestLapTime",
+            "CarIdxSteer",
+            "CarIdxRPM",
+            "CarIdxGear",
+            "CarIdxTireCompound",
+            "CarIdxQualTireCompound",
+            "CarIdxPaceLine",
+            "CarIdxPaceRow",
+            "CarIdxPaceFlags",
+        ]
+
+        raw_arrays = {var: self._get_val(var, []) for var in grid_vars}
+        surface_arr = raw_arrays["CarIdxTrackSurface"]
+        active_cars = {}
+        if isinstance(surface_arr, (list, tuple)):
+            for i in range(len(surface_arr)):
+                if surface_arr[i] > -1:
+                    car_data = {}
+                    for var in grid_vars:
+                        key = var.replace("CarIdx", "")
+                        arr = raw_arrays[var]
+                        car_data[key] = (
+                            arr[i] if isinstance(arr, (list, tuple)) and len(arr) > i else None
+                        )
+
+                    active_cars[str(i)] = car_data
+        data["grid"] = active_cars
 
         return data
 

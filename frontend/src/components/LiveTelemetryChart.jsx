@@ -3,6 +3,10 @@ import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import { useLiveStore } from '../store/useLiveStore';
 import { useAppStore } from '../store/useAppStore';
+import { LiveRadar } from './LiveRadar';
+import { SpotterRadar } from './SpotterRadar';
+
+
 
 const THEME = {
   grid: 'rgba(255, 255, 255, 0.15)',
@@ -124,11 +128,11 @@ export const LiveTelemetryChart = React.memo(function LiveTelemetryChart() {
         if (!speedPlotRef.current || !inputsPlotRef.current) return;
 
         const len = liveLapData.length;
-        const time = new Array(len);
-        const speed = new Array(len);
-        const thr = new Array(len);
-        const brk = new Array(len);
-        const str = new Array(len);
+        const time = new Float64Array(len);
+        const speed = new Float32Array(len);
+        const thr = new Float32Array(len);
+        const brk = new Float32Array(len);
+        const str = new Float32Array(len);
 
         for (let i = 0; i < len; i++) {
           const d = liveLapData[i];
@@ -179,21 +183,30 @@ export const LiveTelemetryChart = React.memo(function LiveTelemetryChart() {
 
       <div className="w-full flex-1 flex flex-col gap-4 min-w-0 overflow-hidden">
         
+        {/* Radar Scale */}
+        <LiveRadar />
+
         {/* Speed Chart */}
         <div className="flex-1 min-h-[150px] flex flex-col relative group min-w-0">
           <div className="absolute left-10 top-0 text-[9px] text-[#a1a1aa] font-bold tracking-widest z-10 pointer-events-none">SPEED (km/h)</div>
           <div className="flex-1 mt-3" ref={speedContainerRef} />
         </div>
 
-        {/* Combined Inputs Chart */}
-        <div className="flex-[2] min-h-[220px] flex flex-col relative group min-w-0">
-          <div className="absolute left-10 top-0 text-[9px] text-[#a1a1aa] font-bold tracking-widest z-10 flex gap-4 pointer-events-none">
-            <span>INPUTS</span>
-            <span className="text-green-500">THR</span>
-            <span className="text-red-500">BRK</span>
-            <span className="text-brand-10">STR</span>
+        {/* Combined Inputs Chart & Spotter Radar */}
+        <div className="flex-[2] min-h-[220px] flex gap-4 min-w-0">
+          {/* Inputs Chart */}
+          <div className="flex-1 flex flex-col relative group min-w-0">
+            <div className="absolute left-10 top-0 text-[9px] text-[#a1a1aa] font-bold tracking-widest z-10 flex gap-4 pointer-events-none">
+              <span>INPUTS</span>
+              <span className="text-green-500">THR</span>
+              <span className="text-red-500">BRK</span>
+              <span className="text-brand-10">STR</span>
+            </div>
+            <div className="flex-1 mt-3" ref={inputsContainerRef} />
           </div>
-          <div className="flex-1 mt-3" ref={inputsContainerRef} />
+
+          {/* Vertical Spotter Radar */}
+          <SpotterRadar />
         </div>
 
       </div>

@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { useLiveStore } from '../../store/useLiveStore';
 import { useLapTelemetryQuery, useLapDeltaQuery, useHistoryQuery } from '../../api/queries';
 
 import { useLocation } from 'react-router-dom';
@@ -44,12 +43,10 @@ export function useTelemetryData() {
   const activeRefId = validReferenceLapId || bestLapId;
 
   const { data: staticLapData = [] } = useLapTelemetryQuery(selectedLap?.id, isLive);
-  const liveLapData = useLiveStore((state) => state.liveLapData);
-  
   const { data: rawReferenceData = [] } = useLapTelemetryQuery(isLive ? null : activeRefId, isLive);
   const { data: rawDeltaData = [] } = useLapDeltaQuery(isLive ? null : selectedLap?.id, activeRefId);
 
-  const lapData = isLive ? liveLapData : staticLapData;
+  const lapData = isLive ? [] : staticLapData;
   const referenceData = isLive ? [] : rawReferenceData;
   const deltaData = isLive ? [] : rawDeltaData;
 

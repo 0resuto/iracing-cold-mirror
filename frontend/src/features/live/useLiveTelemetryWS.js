@@ -85,14 +85,29 @@ export function useLiveTelemetryWS(isLiveActive) {
             return;
           }
 
+          if (newData.session_time !== undefined && lastSessionTimeRef.current !== null && newData.session_time < lastSessionTimeRef.current - 1) {
+            // Time jumped backwards (e.g. mock data looped). Reset the chart data to prevent zigzagging.
+            useLiveStore.setState({ liveLapData: [] });
+            bufferRef.current = [];
+          }
+
           lastSessionTimeRef.current = newData.session_time;
           lastUpdateTimestampRef.current = Date.now();
           
           if (!useLiveStore.getState().isStreaming) {
             toast.success('Connected to iRacing Live Telemetry', { id: 'connected' });
+            useLiveStore.setState({ 
+              isStreaming: true,
+              liveTrackName: newData.track_name,
+              livePlayerName: newData.player_name,
+              liveCarName: newData.car_name
+            });
           }
           
-          useLiveStore.setState({ isStreaming: true });
+          if (newData.session_drivers) {
+            useLiveStore.getState().setSessionDrivers(newData.session_drivers);
+          }
+          
           bufferRef.current.push(newData);
         } catch (err) {
           console.error('Live WS parse error:', err);

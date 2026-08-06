@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TelemetryChart } from './components/TelemetryChart';
 import { LiveTelemetryChart } from './components/LiveTelemetryChart';
+import { LiveStandings } from './components/LiveStandings';
 import { TrackMap } from './components/TrackMap';
 import { StatsWidget } from './components/StatsWidget';
 import { useAppStore } from './store/useAppStore';
@@ -10,6 +11,48 @@ import { Toaster } from 'react-hot-toast';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront } from 'lucide-react';
 import { useTelemetryData } from './features/telemetry/useTelemetryData';
+import { useLiveStore } from './store/useLiveStore';
+
+const HeaderLiveStats = ({ isStreaming }) => {
+  const [stats, setStats] = useState({ speed: 0, pct: 0 });
+
+  useEffect(() => {
+    if (!isStreaming) return;
+    
+    let lastUpdateTime = 0;
+    const unsubscribe = useLiveStore.subscribe((state) => {
+      const now = performance.now();
+      if (now - lastUpdateTime < 500) return; // Throttle to 2Hz
+      lastUpdateTime = now;
+
+      const data = state.liveLapData;
+      const latest = data[data.length - 1];
+      if (latest) {
+        setStats({
+          speed: latest.speed || 0,
+          pct: latest.lap_dist_pct || 0
+        });
+      }
+    });
+    return unsubscribe;
+  }, [isStreaming]);
+
+  if (!isStreaming) return null;
+
+  return (
+    <div className="flex items-center gap-4 text-xs bg-brand-60/20 px-4 py-1.5 rounded-lg border border-brand-60 shadow-sm ml-2">
+      <div className="flex items-center gap-1.5 text-brand-10/80">
+        <span className="text-brand-10/40">Speed</span>
+        <span className="font-mono text-red-400 font-bold w-12 text-right">{stats.speed.toFixed(0)}</span>
+      </div>
+      <div className="w-px h-3 bg-brand-60/80 mx-1"></div>
+      <div className="flex items-center gap-1.5 text-brand-10/80">
+        <span className="text-brand-10/40">Track</span>
+        <span className="font-mono text-brand-30/90 font-bold w-12 text-right">{(stats.pct * 100).toFixed(1)}%</span>
+      </div>
+    </div>
+  );
+};
 
 function AppContent() {
   const location = useLocation();
@@ -26,14 +69,18 @@ function AppContent() {
 
   const { lapData, players } = useTelemetryData();
 
-  const liveInfo = isLive && lapData?.length > 0 ? lapData[lapData.length - 1] : null;
-  const trackName = isLive ? liveInfo?.track_name : selectedLap?.track_name;
+  const liveTrackName = useLiveStore(state => state.liveTrackName);
+  const livePlayerName = useLiveStore(state => state.livePlayerName);
+  const liveCarName = useLiveStore(state => state.liveCarName);
+  const isStreaming = useLiveStore(state => state.isStreaming);
+
+  const trackName = isLive ? liveTrackName : selectedLap?.track_name;
   
-  let playerName = isLive ? liveInfo?.player_name : null;
+  let playerName = isLive ? livePlayerName : null;
   if (!isLive && selectedLap) {
     playerName = players?.find(p => p.id === selectedLap.player_id)?.name;
   }
-  const carName = isLive ? liveInfo?.car_name : selectedLap?.car_name;
+  const carName = isLive ? liveCarName : selectedLap?.car_name;
 
   // Mobile View Tab state
   const [mobileView, setMobileView] = useState('charts'); // 'charts' | 'map' | 'stats'
@@ -100,6 +147,8 @@ function AppContent() {
             {(!trackName && !playerName && !carName) && (
               <span className="text-brand-10/40 italic">Waiting for telemetry...</span>
             )}
+            
+            {isLive && <HeaderLiveStats isStreaming={isStreaming} />}
           </div>
 
           {/* View Switcher Buttons on Mobile (Charts, Map, Stats) - Takes flex-1 width */}
@@ -204,13 +253,22 @@ function AppContent() {
           </div>
         ) : (
           <div className="flex flex-1 gap-4 md:gap-6 min-h-0 w-full overflow-hidden flex-col md:flex-row">
-              {/* Telemetry Charts (Visible on desktop or when mobileView === 'charts') */}
-              <div className={`flex-[2] min-w-0 flex flex-col h-full ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
-                {isLive ? <LiveTelemetryChart /> : <TelemetryChart />}
+              {/* Telemetry Charts & Standings (Visible on desktop or when mobileView === 'charts') */}
+              <div className={`flex-[2] min-w-0 flex flex-col h-full overflow-y-scroll custom-scrollbar ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
+                {isLive ? (
+                  <>
+                    <LiveTelemetryChart />
+                    <div className="px-2 sm:px-4 pb-4">
+                      <LiveStandings />
+                    </div>
+                  </>
+                ) : (
+                  <TelemetryChart />
+                )}
               </div>
               
               {/* Track Map & Stats Column (Visible on desktop or when mobileView === 'map' / 'stats') */}
-              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-4 overflow-x-hidden overflow-y-auto h-full pr-1 custom-scrollbar ${
+              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-4 overflow-x-hidden overflow-y-scroll h-full pr-1 custom-scrollbar ${
                 mobileView !== 'charts' ? 'flex' : 'hidden md:flex'
               }`}>
                 {/* Track Map */}
