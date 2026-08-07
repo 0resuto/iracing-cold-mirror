@@ -42,7 +42,7 @@ def run(reader):
 
                     lap_current_lap_time = data.get("session_time", 0.0)
 
-                    if last_lap_dist_pct > 0.8 and data["lap_dist_pct"] < 0.2:
+                    if last_lap_dist_pct > 0.8 and data.get("lap_dist_pct", 0.0) < 0.2:
                         current_sector_id = 0
                         lap += 1
 
@@ -50,10 +50,10 @@ def run(reader):
 
                     if len(sectors) > 1 and next_sector_id < len(sectors):
                         next_sector_start_time = sectors[next_sector_id]["SectorStartPct"]
-                        if data["lap_dist_pct"] >= next_sector_start_time:
+                        if data.get("lap_dist_pct", 0.0) >= next_sector_start_time:
                             current_sector_id = next_sector_id
 
-                    last_lap_dist_pct = data["lap_dist_pct"]
+                    last_lap_dist_pct = data.get("lap_dist_pct", 0.0)
 
                     live_data = {
                         "track_id": getattr(reader, "track_id", None),
@@ -61,12 +61,12 @@ def run(reader):
                         "player_name": getattr(reader, "player_name", "Unknown Player"),
                         "car_name": getattr(reader, "car_name", "Unknown Car"),
                         "lap_number": lap,
-                        "speed": data["speed"],
-                        "rpm": data["rpm"],
-                        "gear": data["gear"],
-                        "throttle": data["throttle"],
-                        "brake": data["brake"],
-                        "wheel_angle": data["wheel_angle"],
+                        "speed": data.get("speed", 0.0),
+                        "rpm": data.get("rpm", 0.0),
+                        "gear": data.get("gear", 0),
+                        "throttle": data.get("throttle", 0.0),
+                        "brake": data.get("brake", 0.0),
+                        "wheel_angle": data.get("wheel_angle", 0.0),
                         "session_time": lap_current_lap_time,
                         "lap_dist_pct": data.get("lap_dist_pct"),
                         "lat": data.get("lat"),

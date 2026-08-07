@@ -55,7 +55,7 @@ def process_file_in_background(tmp_path: str, task_id: str):
 def get_lap_telemetry(lap_id: int, db: DBSession = Depends(get_db), max_points: int = 2000):
     total = db.query(func.count(Telemetry.id)).filter(Telemetry.lap_id == lap_id).scalar()
     if total == 0:
-        return []
+        raise HTTPException(status_code=404, detail="Lap not found")
     step = max(1, total // max_points)
     rows = (
         db.execute(
@@ -194,15 +194,20 @@ def upload_file(
 ):
     if not file.filename.endswith(".ibt"):
         raise HTTPException(status_code=400, detail="Only .ibt files are allowed")
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".ibt") as tmp:
+            shutil.copyfileobj(file.file, tmp)
+            tmp_path = tmp.name
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".ibt") as tmp:
-        shutil.copyfileobj(file.file, tmp)
-        tmp_path = tmp.name
-
-    task_id = str(uuid.uuid4())
-    import_statuses[task_id] = {"status": "processing"}
-    background_tasks.add_task(process_file_in_background, tmp_path, task_id)
-    return {"status": "accepted", "task_id": task_id}
+        task_id = str(uuid.uuid4())
+        import_statuses[task_id] = {"status": "processing"}
+        background_tasks.add_task(process_file_in_background, tmp_path, task_id)
+        return {"status": "accepted", "task_id": task_id}
+    except Exception:
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise HTTPException(status_code=500, detail="Upload failed mid-stream")
 
 
 @router.get(

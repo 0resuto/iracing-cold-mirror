@@ -33,8 +33,12 @@ async def websocket_telemetry(websocket: WebSocket):
         logger.error(f"Error in subscriber websocket: {e}")
     finally:
         if pubsub:
-            await pubsub.unsubscribe("telemetry:stream")
-            await pubsub.close()
+            try:
+                await pubsub.unsubscribe("telemetry:stream")
+            except Exception:
+                pass
+            finally:
+                await pubsub.close()
 
 
 @router.websocket("/ws/telemetry/publish")
@@ -57,3 +61,5 @@ async def websocket_publish_telemetry(websocket: WebSocket):
                 await asyncio.sleep(0.5)
     except WebSocketDisconnect:
         logger.info("Publisher disconnected")
+    except Exception as e:
+        logger.error(f"Publisher error: {e}")

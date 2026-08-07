@@ -50,15 +50,15 @@ def send_file_to_server(file_path: str):
                             if current_status == "done":
                                 sys.stdout.write("\r" + " " * 50 + "\r")
                                 print(f"  [OK] Successfully processed: {file_name}")
-                                break
+                                return True
                             elif current_status == "skipped":
                                 sys.stdout.write("\r" + " " * 50 + "\r")
                                 print(f"  [SKIP] File already imported: {file_name}")
-                                break
+                                return True
                             elif current_status == "error":
                                 sys.stdout.write("\r" + " " * 50 + "\r")
                                 print(f"  [ERROR] Processing failed: {status_data.get('message')}")
-                                break
+                                return False
                             elif current_status == "processing":
                                 # ДОСТАЕМ ПРОГРЕСС И ПЕЧАТАЕМ
                                 pct = status_data.get("progress", 0.0)
@@ -68,13 +68,17 @@ def send_file_to_server(file_path: str):
                         time.sleep(1.0)
                 else:
                     print(f"  [ERROR] Unknown response: {data}")
+                    return False
 
             elif response.status_code == 413:
                 print(f"  [ERROR] File too large (413). Size: {file_size_mb:.2f} MB")
+                return False
             else:
                 print(f"  [ERROR] Server error [{response.status_code}]: {response.text}")
+                return False
     except Exception as e:
         print(f"  [CRITICAL] Connection error while uploading {file_name}: {e}")
+        return False
 
 
 def scan_existing_files():
@@ -86,7 +90,13 @@ def scan_existing_files():
     print(f"Found {len(ibt_files)} existing .ibt files. Starting synchronization...")
     for index, file in enumerate(ibt_files, 1):
         print(f"[{index}/{len(ibt_files)}] Processing file...")
-        send_file_to_server(os.path.join(settings.iracing_telemetry_dir, file))
+        success = send_file_to_server(os.path.join(settings.iracing_telemetry_dir, file))
+        if success is False:
+            print(
+                f"\n[FATAL] Synchronization aborted due to server or processing error on '{file}'."
+            )
+            print("Please check the server logs or fix the issue before restarting.")
+            sys.exit(1)
 
     print("Initial scan complete. Watching for new files...")
 

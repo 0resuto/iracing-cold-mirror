@@ -2,6 +2,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
+import telemetry.db.models  # noqa
 from alembic import context
 from telemetry.config import settings
 from telemetry.db import Base

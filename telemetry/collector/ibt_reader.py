@@ -5,6 +5,15 @@ import irsdk
 from telemetry.physics import calculate_wheel_physics
 
 
+def safe_int(val, default=0):
+    try:
+        if math.isnan(val):
+            return default
+        return int(val)
+    except (ValueError, TypeError):
+        return default
+
+
 class IBTReader:
     def __init__(self, file_path="dev/telemetry.ibt"):
         self.ibt = irsdk.IBT()
@@ -139,13 +148,13 @@ class IBTReader:
         speed_ms = get_val("Speed")
         data["speed"] = speed_ms * 3.6  # m/s to km/h
         data["rpm"] = get_val("RPM")
-        data["gear"] = int(get_val("Gear", 0))
+        data["gear"] = safe_int(get_val("Gear", 0))
         data["throttle"] = get_val("Throttle")
         data["brake"] = get_val("Brake")
         data["wheel_angle"] = get_val("SteeringWheelAngle")
 
         data["session_time"] = get_val("SessionTime")
-        data["lap"] = int(get_val("Lap", 0))
+        data["lap"] = safe_int(get_val("Lap", 0))
         data["lap_dist_pct"] = get_val("LapDistPct")
         data["lat"] = get_val("Lat")
         data["lon"] = get_val("Lon")

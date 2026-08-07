@@ -9,6 +9,15 @@ from telemetry.physics import calculate_wheel_physics
 logger = logging.getLogger(__name__)
 
 
+def safe_int(val, default=0):
+    try:
+        if math.isnan(val):
+            return default
+        return int(val)
+    except (ValueError, TypeError):
+        return default
+
+
 class IRacingLiveReader:
     def __init__(self, reconnect_interval=2.0):
         self.reconnect_interval = reconnect_interval
@@ -122,13 +131,13 @@ class IRacingLiveReader:
         data = {
             "speed": speed_kmh,
             "rpm": self._get_val("RPM"),
-            "gear": int(self._get_val("Gear", 0)),
+            "gear": safe_int(self._get_val("Gear", 0)),
             "throttle": self._get_val("Throttle"),
             "brake": self._get_val("Brake"),
             "wheel_angle": self._get_val("SteeringWheelAngle"),
             "track_id": getattr(self, "track_id", None),
             "session_time": self._get_val("SessionTime"),
-            "lap": int(self._get_val("Lap", 0)),
+            "lap": safe_int(self._get_val("Lap", 0)),
             "lap_dist_pct": self._get_val("LapDistPct"),
             "lat": self._get_val("Lat", None),
             "lon": self._get_val("Lon", None),
