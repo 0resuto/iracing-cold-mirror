@@ -86,14 +86,18 @@ def _handle_lap_transition(
     current_lap,
     lap_last_lap_time,
     sector_start_time,
+    lap_start_time,
     current_sector_id,
     current_lap_num,
     current_session,
 ):
-    if lap_last_lap_time < 15.0 or lap_last_lap_time == 0.0:
+    actual_lap_time = lap_last_lap_time - lap_start_time
+
+    if actual_lap_time < 15.0 or actual_lap_time == 0.0:
         current_lap.lap_time = -1.0
     else:
-        current_lap.lap_time = lap_last_lap_time
+        current_lap.lap_time = actual_lap_time
+
     db.flush()
     current_sector_time = lap_last_lap_time - sector_start_time
     new_sector = Sector(
@@ -103,7 +107,6 @@ def _handle_lap_transition(
     )
     db.add(new_sector)
     db.flush()
-
     iracing_lap = data.get("lap")
     if iracing_lap is not None and iracing_lap > current_lap_num:
         new_lap_num = iracing_lap
@@ -111,12 +114,14 @@ def _handle_lap_transition(
         new_lap_num = current_lap_num + 1
     new_lap = RacingLap(session_id=current_session.id, lap_number=new_lap_num, lap_time=0.0)
     db.add(new_lap)
-    db.commit()
+    db.flush()
+
     return (
         new_lap,
         0,
-        0.0,
+        lap_last_lap_time,
         new_lap_num,
+        lap_last_lap_time,
     )
 
 
@@ -138,6 +143,7 @@ def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None)
         lap_current_lap_time = 0
         last_lap_dist_pct = 0.0
         lap_last_lap_time = 0.0
+        lap_start_time = 0.0
         sectors = getattr(reader, "sectors", [])
         current_sector_id = 0
         sector_start_time = 0.0
@@ -147,7 +153,7 @@ def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None)
 
         player = _get_or_create_player(db, player_name)
         current_session = _create_session(db, player.id, track_name, car_name, file_hash)
-        db.commit()
+        db.flush()
 
         # Read first frame to determine initial iRacing lap number (0 for Outlap, 1 for Lap 1)
         first_data = reader.read()
@@ -155,12 +161,15 @@ def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None)
             return False
 
         current_lap_num = first_data.get("lap", 0)
+
+        lap_start_time = first_data.get("session_time", 0.0)
+        sector_start_time = lap_start_time
+
         current_lap = RacingLap(
             session_id=current_session.id, lap_number=current_lap_num, lap_time=0.0
         )
         db.add(current_lap)
-        db.commit()
-
+        db.flush()
         # Process telemetry frames starting with first_data
         total_samples = getattr(reader, "num_samples", 0)
         pbar = tqdm(total=total_samples, desc="Importing IBT telemetry", unit="frames")
@@ -179,17 +188,22 @@ def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None)
             lap_dist_pct = data.get("lap_dist_pct", 0.0)
 
             if last_lap_dist_pct > 0.8 and lap_dist_pct < 0.2:
-                current_lap, current_sector_id, sector_start_time, current_lap_num = (
-                    _handle_lap_transition(
-                        db,
-                        data,
-                        current_lap,
-                        lap_last_lap_time,
-                        sector_start_time,
-                        current_sector_id,
-                        current_lap_num,
-                        current_session,
-                    )
+                (
+                    current_lap,
+                    current_sector_id,
+                    sector_start_time,
+                    current_lap_num,
+                    lap_start_time,
+                ) = _handle_lap_transition(
+                    db,
+                    data,
+                    current_lap,
+                    lap_last_lap_time,
+                    sector_start_time,
+                    lap_start_time,
+                    current_sector_id,
+                    current_lap_num,
+                    current_session,
                 )
 
             next_sector_id = current_sector_id + 1
@@ -224,7 +238,7 @@ def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None)
 
         if current_lap and current_lap.lap_time == 0.0:
             current_lap.lap_time = -1.0
-            db.commit()
+            db.flush()
 
         if len(batch) > 0:
             db.bulk_save_objects(batch)
