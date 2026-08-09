@@ -107,7 +107,7 @@ class IBTReader:
                         "CarNumber": f"9{i}",
                         "CarClassID": 1,
                         "CarClassShortName": "TEST",
-                        "CarScreenNameShort": f"Car {i+1}",
+                        "CarScreenNameShort": f"Car {i + 1}",
                         "TeamName": "Test Team",
                         "IRating": 1500 + (i * 500),
                         "LicLevel": lvl,
