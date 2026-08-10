@@ -68,6 +68,8 @@ export const LiveStandings = () => {
             pct: gridData.LapDistPct || 0,
             lap: gridData.Lap || 0,
             lastLapTime: gridData.LastLapTime || -1,
+            trackSurface: gridData.TrackSurface,
+            onPitRoad: gridData.OnPitRoad,
             isPlayer: driver.UserName === playerName
           });
         }
@@ -128,15 +130,12 @@ export const LiveStandings = () => {
                   key={driver.CarIdx} 
                   className={`border-b transition-colors ${
                     isPaceCar ? 'opacity-50 border-brand-60/20' : 
-                    isPlayer ? 'bg-brand-30/5 hover:bg-brand-30/10 border-brand-60/40 relative' : 
+                    isPlayer ? 'bg-brand-30/5 hover:bg-brand-30/10 border-brand-60/40' : 
                     'border-brand-60/20 hover:bg-brand-60/30'
                   }`}
                 >
-                  {/* Subtle left indicator for player */}
-                  {isPlayer && <td className="absolute left-0 top-0 bottom-0 w-0.5 bg-brand-30" />}
-                  
                   {columns.pos && (
-                    <td className={`py-2 px-4 text-center font-bold ${isPlayer ? 'text-brand-30' : 'text-brand-10/90'}`}>
+                    <td className={`py-2 px-4 text-center font-bold ${isPlayer ? 'text-brand-30 border-l-2 border-brand-30' : 'text-brand-10/90'}`}>
                       {driver.pos > 0 ? driver.pos : '-'}
                     </td>
                   )}
@@ -202,7 +201,13 @@ export const LiveStandings = () => {
                   )}
                   {columns.trackPct && (
                     <td className="py-2 px-4 text-right text-brand-10/70">
-                      {(driver.pct * 100).toFixed(1)}%
+                      {driver.trackSurface === -1 ? (
+                        <span className="text-brand-10/30 font-sans text-[10px]">OUT</span>
+                      ) : (driver.onPitRoad === 1 || driver.trackSurface === 1 || driver.trackSurface === 2) ? (
+                        <span className="text-amber-400/80 font-sans text-[10px]">PIT</span>
+                      ) : (
+                        <>{(driver.pct * 100).toFixed(1)}%</>
+                      )}
                     </td>
                   )}
                 </tr>

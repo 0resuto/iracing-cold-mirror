@@ -2,27 +2,29 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Flag, ChevronDown, ChevronRight } from 'lucide-react';
 import { SessionItem } from './SessionItem';
 
-export const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, selectedLapId, setSelectedLap, onSelectLap }) {
-  const hasSelected = useMemo(() => {
-    return sessions.some(s => s.laps?.some(l => l.id === selectedLapId));
-  }, [sessions, selectedLapId]);
-
-  const [isOpen, setIsOpen] = useState(hasSelected);
+export const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, isOpen, onToggle, selectedLapId, setSelectedLap, onSelectLap }) {
+  // Accordion state for sessions within this track
+  const [openSessionId, setOpenSessionId] = useState(null);
 
   useEffect(() => {
-    if (hasSelected) setIsOpen(true);
-  }, [hasSelected]);
+    if (selectedLapId && sessions) {
+      const sessionWithLap = sessions.find(s => s.laps?.some(l => l.id === selectedLapId));
+      if (sessionWithLap) {
+        setOpenSessionId(sessionWithLap.id);
+      }
+    }
+  }, [selectedLapId, sessions]);
 
   const totalLaps = useMemo(() => {
     return sessions.reduce((sum, s) => sum + (s.laps?.length || 0), 0);
   }, [sessions]);
 
   return (
-    <div className="flex flex-col my-1 min-w-0">
+    <div className="flex flex-col min-w-0">
       {/* Track Header */}
       <div
-        onClick={() => setIsOpen(!isOpen)}
-        className={`px-3 py-1.5 flex justify-between items-center cursor-pointer font-bold text-xs sm:text-sm transition-all min-w-0 rounded-xl border-l-4 border-brand-30 border-y border-r border-brand-30/30 active:scale-[0.99] min-h-[34px] relative z-10 ${
+        onClick={onToggle}
+        className={`px-3 py-1.5 flex justify-between items-center cursor-pointer font-bold text-xs sm:text-sm transition-all min-w-0 rounded-xl overflow-hidden border-l-4 border-brand-30 border-y border-r border-brand-30/30 active:scale-[0.99] min-h-[34px] relative z-10 ${
           isOpen 
             ? 'bg-brand-60 text-brand-10 border border-brand-30/40 shadow-sm' 
             : 'glass hover:bg-brand-60/70 text-brand-10/90'
@@ -48,13 +50,15 @@ export const TrackItem = React.memo(function TrackItem({ trackName, sessions, pl
             className="absolute top-[-10px] bottom-1 w-1 bg-brand-30/70 rounded-full pointer-events-none" 
             style={{ left: '-4px', zIndex: 0 }}
           />
-          <div className="flex flex-col gap-1.5 relative z-10 min-w-0 pl-1">
+          <div className="flex flex-col relative z-10 min-w-0 pl-1">
             {sessions.map(session => (
               <SessionItem 
                 key={session.id} 
                 session={session} 
                 player={player} 
                 trackName={trackName}
+                isOpen={openSessionId === session.id}
+                onToggle={() => setOpenSessionId(openSessionId === session.id ? null : session.id)}
                 selectedLapId={selectedLapId} 
                 setSelectedLap={setSelectedLap} 
                 onSelectLap={onSelectLap}

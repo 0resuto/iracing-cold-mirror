@@ -34,6 +34,18 @@ export const Sidebar = React.memo(function Sidebar() {
   const { data: rawPlayers = [], isLoading, isError } = useHistoryQuery();
   const { data: idealLap } = useIdealLapQuery(selectedLap?.player_id, selectedLap?.track_name);
 
+  // Accordion state for players
+  const [openPlayerId, setOpenPlayerId] = useState(null);
+
+  useEffect(() => {
+    if (selectedLapId && rawPlayers.length > 0) {
+      const playerWithLap = rawPlayers.find(p => p.sessions?.some(s => s.laps?.some(l => l.id === selectedLapId)));
+      if (playerWithLap) {
+        setOpenPlayerId(playerWithLap.id);
+      }
+    }
+  }, [selectedLapId, rawPlayers]);
+
   // Auto-close sidebar on mobile when selecting a lap
   const handleSelectLapMobile = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 768 && isOpen) {
@@ -95,7 +107,7 @@ export const Sidebar = React.memo(function Sidebar() {
       const getBestTime = (session) => {
         let best = Infinity;
         (session.laps || []).forEach(l => {
-          if (l.lap_time > 0 && l.lap_time < best) best = l.lap_time;
+          if (l.lap_number > 0 && l.lap_time > 0 && l.lap_time < best) best = l.lap_time;
         });
         return best;
       };
@@ -121,8 +133,8 @@ export const Sidebar = React.memo(function Sidebar() {
     // Sort players if sorting by fastest
     if (sortBy === 'fastest') {
       filtered.sort((a, b) => {
-        const bestA = Math.min(...a.sessions.map(s => Math.min(...(s.laps || []).map(l => l.lap_time > 0 ? l.lap_time : Infinity))));
-        const bestB = Math.min(...b.sessions.map(s => Math.min(...(s.laps || []).map(l => l.lap_time > 0 ? l.lap_time : Infinity))));
+        const bestA = Math.min(...a.sessions.map(s => Math.min(...(s.laps || []).map(l => (l.lap_number > 0 && l.lap_time > 0) ? l.lap_time : Infinity))));
+        const bestB = Math.min(...b.sessions.map(s => Math.min(...(s.laps || []).map(l => (l.lap_number > 0 && l.lap_time > 0) ? l.lap_time : Infinity))));
         return bestA - bestB;
       });
     }
@@ -277,6 +289,8 @@ export const Sidebar = React.memo(function Sidebar() {
                     <PlayerItem 
                       key={player.id} 
                       player={player} 
+                      isOpen={openPlayerId === player.id}
+                      onToggle={() => setOpenPlayerId(openPlayerId === player.id ? null : player.id)}
                       selectedLapId={selectedLapId} 
                       setSelectedLap={setSelectedLap} 
                       onSelectLap={handleSelectLapMobile}

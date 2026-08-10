@@ -2,16 +2,18 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { User, ChevronDown, ChevronRight } from 'lucide-react';
 import { TrackItem } from './TrackItem';
 
-export const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId, setSelectedLap, onSelectLap }) {
-  const hasSelected = useMemo(() => {
-    return player.sessions?.some(s => s.laps?.some(l => l.id === selectedLapId)) ?? false;
-  }, [player.sessions, selectedLapId]);
-
-  const [isOpen, setIsOpen] = useState(hasSelected);
+export const PlayerItem = React.memo(function PlayerItem({ player, isOpen, onToggle, selectedLapId, setSelectedLap, onSelectLap }) {
+  // Accordion state for tracks within this player
+  const [openTrackName, setOpenTrackName] = useState(null);
 
   useEffect(() => {
-    if (hasSelected) setIsOpen(true);
-  }, [hasSelected]);
+    if (selectedLapId && player.sessions) {
+      const trackWithLap = player.sessions.find(s => s.laps?.some(l => l.id === selectedLapId))?.track_name;
+      if (trackWithLap) {
+        setOpenTrackName(trackWithLap);
+      }
+    }
+  }, [selectedLapId, player.sessions]);
 
   // Group sessions by Track Name for this player
   const trackGroups = useMemo(() => {
@@ -31,7 +33,7 @@ export const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId
     <div className="flex flex-col bg-brand-bg border-l-4 border-brand-30 border-y border-brand-60/80 w-full min-w-0">
       {/* Player Header Card */}
       <div
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onToggle}
         className={`px-3.5 py-2 flex justify-between items-center cursor-pointer font-extrabold text-xs sm:text-sm transition-colors min-w-0 active:scale-[0.99] min-h-[38px] ${
           isOpen ? 'bg-brand-60/90 text-brand-10' : 'hover:bg-brand-60/60 text-brand-10'
         }`}
@@ -50,7 +52,7 @@ export const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId
       
       {/* Tracks List Level 2 */}
       {isOpen && (
-        <div className="flex flex-col bg-black/60 min-w-0 gap-2 p-2">
+        <div className="flex flex-col min-w-0">
           {sessionsCount === 0 ? (
             <div className="px-4 py-2 text-xs text-brand-10/40 italic">No sessions yet.</div>
           ) : (
@@ -60,6 +62,8 @@ export const PlayerItem = React.memo(function PlayerItem({ player, selectedLapId
                 trackName={trackName} 
                 sessions={sessions} 
                 player={player} 
+                isOpen={openTrackName === trackName}
+                onToggle={() => setOpenTrackName(openTrackName === trackName ? null : trackName)}
                 selectedLapId={selectedLapId} 
                 setSelectedLap={setSelectedLap} 
                 onSelectLap={onSelectLap}

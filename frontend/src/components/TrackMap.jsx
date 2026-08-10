@@ -465,7 +465,7 @@ export const TrackMap = React.memo(function TrackMap() {
       </div>
       
       <div className="flex-1 w-full relative overflow-hidden bg-brand-60/60 backdrop-blur-md rounded-xl border border-white/5 mt-2 shadow-lg">
-        {isLive && (!lapData || lapData.length === 0) ? (
+        {isLive && (!lapData || lapData.length === 0) && !fallbackPathD ? (
           <div className="w-full h-full flex flex-col items-center justify-center text-brand-10/40 gap-3">
             <span className="w-6 h-6 border-2 border-brand-60 border-t-zinc-400 rounded-full animate-spin"></span>
             <span>Waiting for live GPS data...</span>

@@ -49,9 +49,11 @@ export const SpotterRadar = () => {
       for (const driver of sessionDrivers) {
         const idx = driver.CarIdx?.toString();
         if (idx == playerIdx) continue; // Skip player
+        if (driver.IsPaceCar || driver.IsSpectator) continue; // Skip non-racing cars
 
         const gridData = grid[idx];
-        if (gridData && gridData.TrackSurface > -1) {
+        // Only show cars that are on track (3) or off track (0). Exclude pits (1, 2) and not in world (-1).
+        if (gridData && (gridData.TrackSurface === 3 || gridData.TrackSurface === 0)) {
           let oppPct = gridData.LapDistPct || 0;
           let delta = oppPct - playerPct;
           
@@ -81,15 +83,16 @@ export const SpotterRadar = () => {
       let leftAssigned = false;
       let rightAssigned = false;
 
-      if (spotterFlags === 1 || spotterFlags === 3) {
-        // Find closest car and put them left
+      // iRacing CarLeftRight: 0=Off, 1=Clear, 2=CarLeft, 3=CarRight, 4=Both, 5=2CarsLeft, 6=2CarsRight
+      if (spotterFlags === 2 || spotterFlags === 4 || spotterFlags === 5) {
+        // Car(s) on left
         if (rawOpponents.length > 0) {
           rawOpponents[0].lane = 'left';
           leftAssigned = true;
         }
       }
-      if (spotterFlags === 2 || spotterFlags === 3) {
-        // Find next closest car and put them right
+      if (spotterFlags === 3 || spotterFlags === 4 || spotterFlags === 6) {
+        // Car(s) on right
         const targetIdx = leftAssigned && rawOpponents.length > 1 ? 1 : 0;
         if (rawOpponents.length > targetIdx) {
           rawOpponents[targetIdx].lane = 'right';
@@ -109,7 +112,7 @@ export const SpotterRadar = () => {
 
   if (!radarState.hasLiveTelemetry) {
     return (
-      <div className="w-48 h-full bg-brand-60/10 border border-brand-60 rounded-xl flex items-center justify-center flex-col text-brand-10/40 p-4 text-center">
+      <div className="w-full md:w-48 min-h-[180px] md:h-full bg-brand-60/10 border border-brand-60 rounded-xl flex items-center justify-center flex-col text-brand-10/40 p-4 text-center">
         <ShieldAlert size={24} className="mb-2 opacity-50" />
         <span className="text-[10px] font-bold uppercase tracking-widest">Radar Offline</span>
       </div>
@@ -117,14 +120,14 @@ export const SpotterRadar = () => {
   }
 
   const { opponents, spotterFlags } = radarState;
-  const isLeftDanger = spotterFlags === 1 || spotterFlags === 3;
-  const isRightDanger = spotterFlags === 2 || spotterFlags === 3;
+  const isLeftDanger = spotterFlags === 2 || spotterFlags === 4 || spotterFlags === 5;
+  const isRightDanger = spotterFlags === 3 || spotterFlags === 4 || spotterFlags === 6;
 
   return (
-    <div className="w-48 h-full bg-brand-bg border border-brand-60 rounded-xl relative overflow-hidden flex flex-col shadow-2xl shrink-0">
+    <div className="w-full md:w-48 min-h-[180px] md:h-full bg-brand-bg border border-brand-60 rounded-xl relative overflow-hidden flex flex-col shadow-2xl shrink-0 z-0">
       <div className="flex-none p-2 border-b border-brand-60/50 bg-brand-60/20 text-center z-10 backdrop-blur-md">
         <h3 className="text-[10px] uppercase tracking-widest text-brand-10/80 font-bold m-0 flex items-center justify-center gap-1.5">
-          <ShieldAlert size={12} className={spotterFlags > 0 ? "text-red-500 animate-pulse" : "text-brand-30"} />
+          <ShieldAlert size={12} className={spotterFlags > 1 ? "text-red-500 animate-pulse" : "text-brand-30"} />
           Blind Spot
         </h3>
       </div>

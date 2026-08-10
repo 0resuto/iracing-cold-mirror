@@ -19,6 +19,7 @@ export function useTelemetryData() {
 
     let bestLap = null;
     let refValid = false;
+    let minTime = Infinity;
     const player = players.find(p => p.id === selectedLap.player_id);
 
     if (player) {
@@ -26,8 +27,11 @@ export function useTelemetryData() {
         if (s.track_name === selectedLap.track_name) {
           for (const l of (s.laps || [])) {
             if (l.id === referenceLapId) refValid = true;
-            if (l.lap_time > 0) {
-              if (!bestLap || l.lap_time < bestLap.lap_time) bestLap = l;
+            if (l.lap_number > 0 && l.lap_time > 0) {
+              if (l.lap_time < minTime) {
+                minTime = l.lap_time;
+                bestLap = l;
+              }
             }
           }
         }

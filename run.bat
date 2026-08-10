@@ -108,7 +108,7 @@ cls
 echo Creating silent startup script for IBT Sync Agent...
 (
     echo Set WinScriptHost = CreateObject("WScript.Shell"^)
-    echo WinScriptHost.Run "cmd /c cd /d ""%~dp0"" && call venv\Scripts\activate.bat && python -m scripts.agent", 0, False
+    echo WinScriptHost.Run "cmd /c cd /d ""%~dp0"" ^&^& call venv\Scripts\activate.bat ^&^& python -m scripts.agent", 0, False
 ) > "%VBS_IBT%" 2>nul
 if %errorlevel% neq 0 (
     echo [ERROR] Could not write to Startup folder! Try running as Administrator.
@@ -123,7 +123,7 @@ cls
 echo Creating silent startup script for Live Telemetry Streamer...
 (
     echo Set WinScriptHost = CreateObject("WScript.Shell"^)
-    echo WinScriptHost.Run "cmd /c cd /d ""%~dp0"" && call venv\Scripts\activate.bat && python -m scripts.run_live", 0, False
+    echo WinScriptHost.Run "cmd /c cd /d ""%~dp0"" ^&^& call venv\Scripts\activate.bat ^&^& python -m scripts.run_live", 0, False
 ) > "%VBS_LIVE%" 2>nul
 if %errorlevel% neq 0 (
     echo [ERROR] Could not write to Startup folder! Try running as Administrator.
@@ -142,8 +142,11 @@ goto MENU
 :DISABLE_ALL
 cls
 echo Removing autostart tasks...
+echo Stopping any running background agents...
+powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.agent' -or $_.CommandLine -match 'scripts.run_live' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
 if exist "%VBS_IBT%" del "%VBS_IBT%"
 if exist "%VBS_LIVE%" del "%VBS_LIVE%"
+if exist "%STARTUP_DIR%\iracing_*.vbs" del "%STARTUP_DIR%\iracing_*.vbs"
 echo Autostart disabled for all agents!
 timeout /t 2 >nul
 goto MENU

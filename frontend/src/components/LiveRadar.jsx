@@ -67,7 +67,7 @@ export const LiveRadar = () => {
   }, []);
 
   return (
-    <div className="w-full flex flex-col mb-4 bg-brand-60/20 border border-brand-60 rounded-xl p-3 shadow-inner relative overflow-hidden">
+    <div className="w-full flex flex-col mb-4 bg-brand-60/20 border border-brand-60 rounded-xl p-3 shadow-inner relative overflow-hidden z-0">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-[10px] uppercase tracking-widest text-brand-10/60 font-bold m-0 flex items-center gap-1.5">
           <Navigation2 size={12} className="text-brand-30" />

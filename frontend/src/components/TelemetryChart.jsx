@@ -191,7 +191,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       (player.sessions || []).forEach(s => {
           if (s.track_name === selectedLap.track_name) laps.push(...(s.laps || []));
       });
-      return laps.filter(l => l.lap_time > 0).sort((a,b) => a.lap_number - b.lap_number);
+      return laps.filter(l => l.lap_number > 0 && l.lap_time > 0).sort((a,b) => a.lap_time - b.lap_time);
   }, [selectedLap, players]);
 
   const processLap = (data) => {
@@ -377,7 +377,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 let bestLapId = null;
                 let bestTime = Infinity;
                 availableLaps.forEach(l => {
-                    if (l.lap_time > 0 && l.lap_time < bestTime) {
+                    if (l.lap_number > 0 && l.lap_time > 0 && l.lap_time < bestTime) {
                         bestTime = l.lap_time;
                         bestLapId = l.id;
                     }

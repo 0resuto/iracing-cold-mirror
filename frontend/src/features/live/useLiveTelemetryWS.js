@@ -14,6 +14,7 @@ export function useLiveTelemetryWS(isLiveActive) {
   const bufferRef = useRef([]);
   const lastSessionTimeRef = useRef(null);
   const lastUpdateTimestampRef = useRef(Date.now());
+  const staleTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (!isLiveActive) {
@@ -32,7 +33,23 @@ export function useLiveTelemetryWS(isLiveActive) {
     const statusCheckInterval = setInterval(() => {
       const timeSinceLastUpdate = Date.now() - lastUpdateTimestampRef.current;
       const isStreaming = timeSinceLastUpdate < 2500;
+      const wasStreaming = useLiveStore.getState().isStreaming;
       useLiveStore.setState({ isStreaming });
+
+      // Stream went offline — start 5s delayed cleanup of stale data
+      if (wasStreaming && !isStreaming) {
+        staleTimeoutRef.current = setTimeout(() => {
+          if (!useLiveStore.getState().isStreaming) {
+            useLiveStore.setState({ liveLapData: [] });
+            bufferRef.current = [];
+          }
+        }, 5000);
+      }
+      // Stream came back — cancel pending cleanup
+      if (!wasStreaming && isStreaming && staleTimeoutRef.current) {
+        clearTimeout(staleTimeoutRef.current);
+        staleTimeoutRef.current = null;
+      }
     }, 1000);
 
     // Batch flush interval (flushes buffer every 33ms -> 30Hz update rate for smooth rendering)
@@ -139,6 +156,7 @@ export function useLiveTelemetryWS(isLiveActive) {
     connectWS();
 
     return () => {
+      if (staleTimeoutRef.current) clearTimeout(staleTimeoutRef.current);
       clearInterval(flushInterval);
       clearInterval(statusCheckInterval);
       clearTimeout(reconnectTimeout);

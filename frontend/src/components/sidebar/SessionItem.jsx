@@ -3,23 +3,14 @@ import { Calendar, ChevronDown, ChevronRight, Car, Clock } from 'lucide-react';
 import { formatSessionTime } from './utils';
 import { LapItem } from './LapItem';
 
-export const SessionItem = React.memo(function SessionItem({ session, player, trackName, selectedLapId, setSelectedLap, onSelectLap }) {
-  const hasSelected = useMemo(() => {
-    return session.laps?.some(l => l.id === selectedLapId) ?? false;
-  }, [session.laps, selectedLapId]);
-
-  const [isOpen, setIsOpen] = useState(hasSelected);
+export const SessionItem = React.memo(function SessionItem({ session, player, trackName, isOpen, onToggle, selectedLapId, setSelectedLap, onSelectLap }) {
   const [showAllLaps, setShowAllLaps] = useState(false);
-
-  useEffect(() => {
-    if (hasSelected) setIsOpen(true);
-  }, [hasSelected]);
 
   const bestLapId = useMemo(() => {
     let best = null;
     let minTime = Infinity;
     (session.laps || []).forEach(l => {
-      if (l.lap_time > 0 && l.lap_time < minTime) {
+      if (l.lap_number > 0 && l.lap_time > 0 && l.lap_time < minTime) {
         minTime = l.lap_time;
         best = l.id;
       }
@@ -35,11 +26,11 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
   const carName = session.car_name || 'Unknown Car';
 
   return (
-    <div className="flex flex-col my-1.5 relative min-w-0">
+    <div className="flex flex-col relative min-w-0">
       {/* Session Header Card */}
       <div
-        onClick={() => setIsOpen(!isOpen)}
-        className={`px-2.5 py-2 flex flex-col gap-1 cursor-pointer rounded-xl border-l-4 border-emerald-500 border-y border-r border-emerald-500/30 transition-all active:scale-[0.99] min-h-[36px] relative z-10 ${
+        onClick={onToggle}
+        className={`px-2.5 py-2 flex flex-col gap-1 cursor-pointer rounded-xl overflow-hidden border-l-4 border-emerald-500 border-y border-r border-emerald-500/30 transition-all active:scale-[0.99] min-h-[36px] relative z-10 ${
           isOpen
             ? 'bg-brand-60 text-brand-10 shadow-md'
             : 'glass hover:glass text-brand-10/80'

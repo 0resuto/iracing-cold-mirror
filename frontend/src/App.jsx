@@ -254,7 +254,7 @@ function AppContent() {
         ) : (
           <div className="flex flex-1 gap-4 md:gap-6 min-h-0 w-full overflow-hidden flex-col md:flex-row">
               {/* Telemetry Charts & Standings (Visible on desktop or when mobileView === 'charts') */}
-              <div className={`flex-[2] min-w-0 flex flex-col h-full overflow-y-scroll custom-scrollbar ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
+              <div className={`flex-[2] min-w-0 flex flex-col h-full overflow-y-scroll custom-scrollbar pb-20 ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
                 {isLive ? (
                   <>
                     <LiveTelemetryChart />
@@ -268,7 +268,7 @@ function AppContent() {
               </div>
               
               {/* Track Map & Stats Column (Visible on desktop or when mobileView === 'map' / 'stats') */}
-              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-4 overflow-x-hidden overflow-y-scroll h-full pr-1 custom-scrollbar ${
+              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-4 overflow-x-hidden overflow-y-scroll h-full pr-1 custom-scrollbar pb-20 ${
                 mobileView !== 'charts' ? 'flex' : 'hidden md:flex'
               }`}>
                 {/* Track Map */}

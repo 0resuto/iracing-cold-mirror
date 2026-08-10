@@ -187,13 +187,13 @@ export const LiveTelemetryChart = React.memo(function LiveTelemetryChart() {
         <LiveRadar />
 
         {/* Speed Chart */}
-        <div className="flex-1 min-h-[150px] flex flex-col relative group min-w-0">
+        <div className="flex-1 min-h-[75px] flex flex-col relative group min-w-0">
           <div className="absolute left-10 top-0 text-[9px] text-[#a1a1aa] font-bold tracking-widest z-10 pointer-events-none">SPEED (km/h)</div>
           <div className="flex-1 mt-3" ref={speedContainerRef} />
         </div>
 
         {/* Combined Inputs Chart & Spotter Radar */}
-        <div className="flex-[2] min-h-[220px] flex gap-4 min-w-0">
+        <div className="flex-[2] min-h-[320px] md:min-h-[110px] flex flex-col md:flex-row gap-4 min-w-0">
           {/* Inputs Chart */}
           <div className="flex-1 flex flex-col relative group min-w-0">
             <div className="absolute left-10 top-0 text-[9px] text-[#a1a1aa] font-bold tracking-widest z-10 flex gap-4 pointer-events-none">
