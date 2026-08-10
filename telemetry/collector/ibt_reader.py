@@ -244,7 +244,7 @@ class IBTReader:
                         }
                     else:
                         # Fake opponents moving slightly faster
-                        opp_pct = (0.05 + idx * 0.13 + self.current_idx * 0.0003) % 1.0
+                        opp_pct = (0.05 + idx * 0.137 + self.current_idx * 0.0003) % 1.0
                         active_cars[str(idx)] = {
                             "Lap": 1,
                             "LapDistPct": opp_pct,
@@ -263,7 +263,7 @@ class IBTReader:
                         # If this fake opponent is right next to the player (within 0.005)
                         if abs(delta) < 0.005:
                             # Make them randomly left or right based on their index
-                            data["car_left_right"] = 1 if idx % 2 == 0 else 2
+                            data["car_left_right"] = 2 if idx % 2 == 0 else 3
 
         data["grid"] = active_cars
 

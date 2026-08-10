@@ -2,6 +2,7 @@ import asyncio
 import logging
 import secrets
 
+import anyio
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from telemetry.config import settings
@@ -14,31 +15,41 @@ router = APIRouter()
 @router.websocket("/ws/telemetry/live")
 async def websocket_telemetry(websocket: WebSocket):
     await websocket.accept()
-    pubsub = None
+
     try:
-        try:
-            snapshot = await redis_client.get("telemetry:latest")
-            if snapshot:
-                await websocket.send_text(snapshot)
-        except Exception as e:
-            logger.warning(f"Could not fetch initial snapshot: {e}")
-        pubsub = redis_client.pubsub()
-        await pubsub.subscribe("telemetry:stream")
+        snapshot = await redis_client.get("telemetry:latest")
+        if snapshot:
+            await websocket.send_text(snapshot)
+    except Exception as e:
+        logger.warning(f"Could not fetch initial snapshot: {e}")
+
+    pubsub = redis_client.pubsub()
+    await pubsub.subscribe("telemetry:stream")
+
+    async def writer():
         async for message in pubsub.listen():
             if message["type"] == "message":
                 await websocket.send_text(message["data"])
+
+    async def reader():
+        while True:
+            await websocket.receive()
+
+    try:
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(writer)
+            tg.start_soon(reader)
     except WebSocketDisconnect:
-        logger.info("Client disconnected")
+        logger.info("Client disconnected cleanly")
     except Exception as e:
-        logger.error(f"Error in subscriber websocket: {e}")
+        logger.debug(f"WebSocket closed with exception: {e}")
     finally:
-        if pubsub:
-            try:
-                await pubsub.unsubscribe("telemetry:stream")
-            except Exception:
-                pass
-            finally:
-                await pubsub.close()
+        try:
+            await pubsub.unsubscribe("telemetry:stream")
+        except Exception:
+            pass
+        finally:
+            await pubsub.close()
 
 
 @router.websocket("/ws/telemetry/publish")
