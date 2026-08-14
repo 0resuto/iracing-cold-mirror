@@ -212,6 +212,70 @@ export const TrackMap = React.memo(function TrackMap() {
     };
   }, [svgData, hoveredData, lapData]);
 
+  const refCarState = useMemo(() => {
+    if (!svgData || !referenceData || referenceData.length === 0) return { x: 0, y: 0, travelAngle: 0, headingAngle: 0, isValid: false };
+    
+    let currentData = null;
+    let prevData = null;
+
+    if (hoveredData && hoveredData.lap_dist_pct != null) {
+      const targetPct = hoveredData.lap_dist_pct;
+      let minDiff = Infinity;
+      for (let i = 0; i < referenceData.length; i++) {
+        if (referenceData[i].lat == null || referenceData[i].lon == null) continue;
+        const diff = Math.abs((referenceData[i].lap_dist_pct || 0) - targetPct);
+        if (diff < minDiff) {
+          minDiff = diff;
+          currentData = referenceData[i];
+          if (i > 0) prevData = referenceData[i - 1];
+        }
+      }
+    } else {
+      currentData = referenceData[0];
+    }
+
+    if (!currentData || (currentData.lat == null && currentData.lap_dist_pct == null)) {
+      return { x: 0, y: 0, travelAngle: 0, headingAngle: 0, isValid: false };
+    }
+
+    let px, py;
+    if (currentData.lat != null && currentData.lon != null) {
+      px = currentData.lon * svgData.lonScale;
+      py = currentData.lat;
+    } else {
+      return { x: 0, y: 0, travelAngle: 0, headingAngle: 0, isValid: false };
+    }
+
+    const x = (px - svgData.minX) * svgData.scale + svgData.xOffset;
+    const y = svgData.vbHeight - ((py - svgData.minY) * svgData.scale + svgData.yOffset);
+
+    let travelAngle = 0;
+    if (prevData && prevData.lat !== null && prevData.lon !== null) {
+      const pxPrev = prevData.lon * svgData.lonScale;
+      const pyPrev = prevData.lat;
+      const xPrev = (pxPrev - svgData.minX) * svgData.scale + svgData.xOffset;
+      const yPrev = svgData.vbHeight - ((pyPrev - svgData.minY) * svgData.scale + svgData.yOffset);
+      
+      const dx = x - xPrev;
+      const dy = y - yPrev;
+      
+      if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
+        travelAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+      }
+    }
+
+    const slipAngleDeg = currentData.slip_angle || 0;
+    const headingAngle = travelAngle + slipAngleDeg;
+
+    return { 
+      x, 
+      y, 
+      travelAngle, 
+      headingAngle,
+      isValid: true 
+    };
+  }, [svgData, hoveredData, referenceData]);
+
   const sectorBoundaries = useMemo(() => {
     if (!selectedLap || !selectedLap.sectors || selectedLap.sectors.length === 0 || !lapData || lapData.length === 0 || !svgData) return [];
     
@@ -503,7 +567,7 @@ export const TrackMap = React.memo(function TrackMap() {
                   className="adaptive-path"
                   d={svgData.basePath} 
                   fill="none" 
-                  stroke="var(--color-text-muted)" 
+                  stroke="rgba(59, 130, 246, 0.5)" 
                   style={{ strokeWidth: 'var(--path-stroke, 4px)' }}
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -572,6 +636,23 @@ export const TrackMap = React.memo(function TrackMap() {
                           strokeWidth="2" 
                         />
                         {/* Windshield to indicate front clearly */}
+                        <path d="M 0 -5 L 4 -4 L 4 4 L 0 5 Z" fill="rgba(255,255,255,0.5)" />
+                      </g>
+                    </g>
+                  </g>
+                )}
+
+                {/* Ghost Reference Car */}
+                {refCarState.isValid && (
+                  <g transform={`translate(${refCarState.x}, ${refCarState.y})`}>
+                    <g className="car-scale" style={{ transform: 'scale(var(--car-scale, 1))', opacity: 0.5 }}>
+                      <g transform={`rotate(${refCarState.headingAngle})`}>
+                        <path 
+                          d="M -12 -7 L 6 -7 L 12 -2 L 12 2 L 6 7 L -12 7 Z" 
+                          fill="var(--color-text-muted)" 
+                          stroke="white" 
+                          strokeWidth="2" 
+                        />
                         <path d="M 0 -5 L 4 -4 L 4 4 L 0 5 Z" fill="rgba(255,255,255,0.5)" />
                       </g>
                     </g>
