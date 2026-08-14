@@ -189,7 +189,13 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       if (!player) return [];
       const laps = [];
       (player.sessions || []).forEach(s => {
-          if (s.track_name === selectedLap.track_name) laps.push(...(s.laps || []));
+          if (s.track_name === selectedLap.track_name) {
+              const sessionDate = s.start_time ? new Date(s.start_time).toLocaleString(undefined, {
+                  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+              }) : `Session ${s.id}`;
+              const sessionLaps = (s.laps || []).map(l => ({ ...l, sessionName: sessionDate }));
+              laps.push(...sessionLaps);
+          }
       });
       return laps.filter(l => l.lap_number > 0 && l.lap_time > 0).sort((a,b) => a.lap_time - b.lap_time);
   }, [selectedLap, players]);
@@ -382,6 +388,14 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                         bestLapId = l.id;
                     }
                 });
+                
+                const groupedLaps = availableLaps.reduce((acc, lap) => {
+                    const group = lap.sessionName || 'Unknown Session';
+                    if (!acc[group]) acc[group] = [];
+                    acc[group].push(lap);
+                    return acc;
+                }, {});
+
                 return (
                     <div className="flex items-center gap-1.5 flex-none">
                         <span className="text-xs text-brand-10/60 font-bold">Ref:</span>
@@ -390,14 +404,18 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                             onChange={e => setReferenceLapId(parseInt(e.target.value))}
                             className="bg-brand-60 text-brand-10 border border-brand-60 px-2 py-1 rounded-lg text-xs cursor-pointer outline-none focus:border-brand-30 font-mono truncate max-w-[170px] min-h-[28px] font-semibold"
                         >
-                            {availableLaps.map(l => (
-                                <option 
-                                    key={l.id} 
-                                    value={l.id}
-                                    className={l.id === bestLapId ? 'text-brand-30/80 font-bold' : 'text-inherit'}
-                                >
-                                    Lap {l.lap_number} ({l.lap_time.toFixed(2)}s)
-                                </option>
+                            {Object.entries(groupedLaps).map(([group, laps]) => (
+                                <optgroup key={group} label={group}>
+                                    {laps.map(l => (
+                                        <option 
+                                            key={l.id} 
+                                            value={l.id}
+                                            className={l.id === bestLapId ? 'text-brand-30/80 font-bold' : 'text-inherit'}
+                                        >
+                                            Lap {l.lap_number} ({l.lap_time.toFixed(2)}s)
+                                        </option>
+                                    ))}
+                                </optgroup>
                             ))}
                         </select>
                     </div>
@@ -455,15 +473,15 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         {visibleCharts.delta && deltaData?.length > 0 && (
           <div className="flex-none h-28 flex flex-col relative group min-w-0">
             <div className="absolute left-10 top-0 text-[9px] text-brand-10/40 font-bold tracking-widest z-10 group-hover:text-brand-10/80 transition-colors">DELTA (s)</div>
-            <div className="flex-1 mt-3 relative">
-              <div className="absolute inset-0">
+            <div className="flex-1 mt-3 flex flex-col relative">
+              <div className="flex-1 min-h-0">
                 <DeltaMinimapChart 
                   mergedData={mergedData} 
                   sectorBoundaries={sectorBoundaries} 
                   activeChartRef={activeChartRef} 
                 />
               </div>
-              <div className="absolute inset-0 pointer-events-none [&_.recharts-brush]:pointer-events-auto">
+              <div className="h-[20px] shrink-0 mt-1 pointer-events-none [&_.recharts-brush]:pointer-events-auto">
                 <DeltaBrushOverlay 
                   mergedData={mergedData} 
                   setBrushRange={setBrushRange} 
