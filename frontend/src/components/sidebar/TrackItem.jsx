@@ -30,14 +30,16 @@ export const TrackItem = React.memo(function TrackItem({ trackName, sessions, pl
             : 'glass hover:bg-brand-60/70 text-brand-10/90'
         }`}
       >
-        <span className="flex items-center gap-2.5 min-w-0 truncate pr-2">
-          <Flag size={16} className="text-brand-30/80 flex-none" />
-          <span className="truncate text-xs sm:text-sm font-extrabold">{trackName}</span>
+        <span className="flex items-start gap-2.5 min-w-0 pr-2">
+          <Flag size={16} className="text-brand-30/80 flex-none mt-0.5" />
+          <div className="flex flex-col min-w-0">
+            <span className="truncate text-xs sm:text-sm font-extrabold">{trackName}</span>
+            <span className="text-[10px] text-brand-10/40 font-mono truncate mt-0.5">
+              {sessions.length} sess · {totalLaps} laps
+            </span>
+          </div>
         </span>
         <div className="flex items-center gap-2 flex-none ml-1">
-          <span className="text-[11px] font-mono text-brand-10 bg-brand-30 px-2.5 py-0.5 rounded-full border border-brand-30/30 font-bold truncate max-w-[150px]">
-            {sessions.length} sess · {totalLaps} laps
-          </span>
           {isOpen ? <ChevronDown size={18} className="text-brand-30/80" /> : <ChevronRight size={18} className="text-brand-10/60" />}
         </div>
       </div>
