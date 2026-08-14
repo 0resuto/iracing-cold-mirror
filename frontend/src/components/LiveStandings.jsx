@@ -97,7 +97,7 @@ export const LiveStandings = () => {
   }
 
   return (
-    <div className="flex flex-col mt-4 border border-brand-60/60 rounded-xl bg-brand-bg shadow-xl overflow-hidden min-h-[200px] max-h-[350px]">
+    <div className="flex flex-col mt-4 border border-brand-60/60 rounded-xl bg-brand-bg shadow-xl overflow-hidden min-h-[200px] h-full flex-1">
       <div className="flex items-center gap-2 bg-brand-60/40 border-b border-brand-60 p-3 flex-none">
         <Trophy size={16} className="text-yellow-500" />
         <h3 className="text-xs font-extrabold uppercase tracking-widest text-brand-10/90 m-0">Live Standings</h3>
