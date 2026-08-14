@@ -9,6 +9,13 @@ from watchdog.observers import Observer
 from telemetry.config import settings
 
 
+class Colors:
+    OK = "\033[92m"
+    WARNING = "\033[93m"
+    ERROR = "\033[91m"
+    RESET = "\033[0m"
+
+
 def send_file_to_server(file_path: str):
     upload_url = f"{settings.server_url}/api/sessions/upload"
     file_name = os.path.basename(file_path)
@@ -21,13 +28,13 @@ def send_file_to_server(file_path: str):
     print(f"  -> Uploading '{file_name}' ({file_size_mb:.2f} MB)...")
     try:
         file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
-        print("  -> Uploading to server (fast)...")
+        print("  -> Uploading to server...")
 
         with open(file_path, "rb") as f:
             files = {"file": (file_name, f, "application/octet-stream")}
 
             print(
-                "  -> Server is processing the file (Parsing IBT & saving to DB). This may take several minutes, please wait..."
+                "  -> Server is processing the file. This may take several minutes, please wait..."
             )
 
             response = httpx.post(upload_url, files=files, headers=headers, timeout=120.0)
@@ -49,35 +56,46 @@ def send_file_to_server(file_path: str):
 
                             if current_status == "done":
                                 sys.stdout.write("\r" + " " * 50 + "\r")
-                                print(f"  [OK] Successfully processed: {file_name}")
+                                print(
+                                    f"  {Colors.OK}[OK] Successfully processed: {file_name}{Colors.RESET}"
+                                )
                                 return True
                             elif current_status == "skipped":
                                 sys.stdout.write("\r" + " " * 50 + "\r")
-                                print(f"  [SKIP] File already imported: {file_name}")
+                                print(
+                                    f"  {Colors.WARNING}[SKIP] File already imported: {file_name}{Colors.RESET}"
+                                )
                                 return True
                             elif current_status == "error":
                                 sys.stdout.write("\r" + " " * 50 + "\r")
-                                print(f"  [ERROR] Processing failed: {status_data.get('message')}")
+                                print(
+                                    f"  {Colors.ERROR}[ERROR] Processing failed: {status_data.get('message')}{Colors.RESET}"
+                                )
                                 return False
                             elif current_status == "processing":
-                                # ДОСТАЕМ ПРОГРЕСС И ПЕЧАТАЕМ
                                 pct = status_data.get("progress", 0.0)
                                 sys.stdout.write(f"\r  -> Server processing: {pct:.1f}% ")
                                 sys.stdout.flush()
 
                         time.sleep(1.0)
                 else:
-                    print(f"  [ERROR] Unknown response: {data}")
+                    print(f"  {Colors.ERROR}[ERROR] Unknown response: {data}{Colors.RESET}")
                     return False
 
             elif response.status_code == 413:
-                print(f"  [ERROR] File too large (413). Size: {file_size_mb:.2f} MB")
+                print(
+                    f"  {Colors.ERROR}[ERROR] File too large (413). Size: {file_size_mb:.2f} MB{Colors.RESET}"
+                )
                 return False
             else:
-                print(f"  [ERROR] Server error [{response.status_code}]: {response.text}")
+                print(
+                    f"  {Colors.ERROR}[ERROR] Server error [{response.status_code}]: {response.text}{Colors.RESET}"
+                )
                 return False
     except Exception as e:
-        print(f"  [CRITICAL] Connection error while uploading {file_name}: {e}")
+        print(
+            f"  {Colors.ERROR}[CRITICAL] Connection error while uploading {file_name}: {e}{Colors.RESET}"
+        )
         return False
 
 
@@ -93,7 +111,7 @@ def scan_existing_files():
         success = send_file_to_server(os.path.join(settings.iracing_telemetry_dir, file))
         if success is False:
             print(
-                f"\n[FATAL] Synchronization aborted due to server or processing error on '{file}'."
+                f"\n{Colors.ERROR}[FATAL] Synchronization aborted due to server or processing error on '{file}'.{Colors.RESET}"
             )
             print("Please check the server logs or fix the issue before restarting.")
             sys.exit(1)
@@ -105,7 +123,7 @@ class TelemetryFileHandler(FileSystemEventHandler):
     def on_created(self, event):
         if event.src_path.endswith(".ibt"):
             file_name = os.path.basename(event.src_path)
-            print(f"\n[WATCHDOG] New file detected: {file_name}")
+            print(f"\n{Colors.WARNING}[WATCHDOG] New file detected: {file_name}{Colors.RESET}")
             print("Waiting for file to be completely written to disk...")
             time.sleep(4)
             try:

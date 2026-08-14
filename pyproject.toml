@@ -16,7 +16,8 @@ dependencies = [
     "python-multipart",
     "pyirsdk",
     "websockets",
-    "tqdm"
+    "tqdm",
+    "colorlog"
 ]
 
 [project.optional-dependencies]

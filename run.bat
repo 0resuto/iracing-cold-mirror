@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+for /F %%a in ('echo prompt $E ^| cmd') do set "ESC=%%a"
 title iRacing Telemetry Client Control Panel
 cd /d "%~dp0"
 
@@ -27,16 +28,16 @@ echo.
 echo   Process Status (Memory):
 powershell -noprofile -command "if (Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.agent' }) { exit 0 } else { exit 1 }" >nul 2>&1
 if %errorlevel% equ 0 (
-    echo     - IBT Sync Agent:   [ RUNNING ]
+    echo     - IBT Sync Agent:   %ESC%[32m[ RUNNING ]%ESC%[0m
 ) else (
-    echo     - IBT Sync Agent:   [ STOPPED ]
+    echo     - IBT Sync Agent:   %ESC%[31m[ STOPPED ]%ESC%[0m
 )
 
 powershell -noprofile -command "if (Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.run_live' }) { exit 0 } else { exit 1 }" >nul 2>&1
 if %errorlevel% equ 0 (
-    echo     - Live Telemetry:   [ RUNNING ]
+    echo     - Live Telemetry:   %ESC%[32m[ RUNNING ]%ESC%[0m
 ) else (
-    echo     - Live Telemetry:   [ STOPPED ]
+    echo     - Live Telemetry:   %ESC%[31m[ STOPPED ]%ESC%[0m
 )
 echo ======================================================================
 echo.
@@ -67,7 +68,7 @@ if "%CHOICE%"=="6" goto ENABLE_ALL
 if "%CHOICE%"=="7" goto DISABLE_ALL
 if "%CHOICE%"=="8" goto TEST_PING
 if "%CHOICE%"=="9" goto EDIT_ENV
-if "%CHOICE%"=="0" exit /b 0
+if "%CHOICE%"=="0" exit
 
 echo Invalid choice. Please try again.
 timeout /t 2 >nul
@@ -114,6 +115,8 @@ if %errorlevel% neq 0 (
     echo [ERROR] Could not write to Startup folder! Try running as Administrator.
 ) else (
     echo Autostart enabled for IBT Sync Agent!
+    echo Starting it now in the background...
+    wscript "%VBS_IBT%"
 )
 timeout /t 2 >nul
 goto MENU
@@ -129,6 +132,8 @@ if %errorlevel% neq 0 (
     echo [ERROR] Could not write to Startup folder! Try running as Administrator.
 ) else (
     echo Autostart enabled for Live Telemetry Streamer!
+    echo Starting it now in the background...
+    wscript "%VBS_LIVE%"
 )
 timeout /t 2 >nul
 goto MENU
