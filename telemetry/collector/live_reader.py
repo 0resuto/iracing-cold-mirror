@@ -100,6 +100,7 @@ class IRacingLiveReader:
                 )
 
                 if driver.get("CarIdx") == driver_car_idx:
+                    self._driver_car_idx = driver_car_idx
                     self.player_name = driver.get("UserName", "Unknown Player")
                     self.car_name = (
                         driver.get("CarScreenName")
@@ -134,11 +135,28 @@ class IRacingLiveReader:
             "gear": safe_int(self._get_val("Gear", 0)),
             "throttle": self._get_val("Throttle"),
             "brake": self._get_val("Brake"),
+            "clutch": self._get_val("Clutch"),
             "wheel_angle": self._get_val("SteeringWheelAngle"),
+            "shift_indicator_pct": self._get_val("ShiftIndicatorPct"),
             "track_id": getattr(self, "track_id", None),
             "session_time": self._get_val("SessionTime"),
             "lap": safe_int(self._get_val("Lap", 0)),
             "lap_dist_pct": self._get_val("LapDistPct"),
+            "fuel_level": self._get_val("FuelLevel"),
+            "fuel_use_per_hour": self._get_val("FuelUsePerHour"),
+            "fuel_level_pct": self._get_val("FuelLevelPct"),
+            "air_temp": self._get_val("AirTemp"),
+            "track_temp": self._get_val("TrackTemp"),
+            "wind_vel": self._get_val("WindVel"),
+            "wind_dir": self._get_val("WindDir"),
+            "skies": safe_int(self._get_val("Skies", 0)),
+            "on_pit_road": self._get_val("OnPitRoad", False),
+            "pit_sv_flags": safe_int(self._get_val("PitSvFlags", 0)),
+            "pit_sv_fuel": self._get_val("PitSvFuel"),
+            "session_flags": safe_int(self._get_val("SessionFlags", 0)),
+            "session_time_remain": self._get_val("SessionTimeRemain"),
+            "session_laps_remain": safe_int(self._get_val("SessionLapsRemainEx", 0)),
+            "player_car_idx": getattr(self, "_driver_car_idx", None),
             "lat": self._get_val("Lat", None),
             "lon": self._get_val("Lon", None),
             "yaw": self._get_val("Yaw"),

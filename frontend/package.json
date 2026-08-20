@@ -13,15 +13,16 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
+    "cold-mirror-widgets": "file:../../cm-widgets",
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
+    "framer-motion": "^13.1.0",
     "lucide-react": "^1.27.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.18.2",
     "recharts": "^3.9.2",
-    "uplot": "^1.6.32",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

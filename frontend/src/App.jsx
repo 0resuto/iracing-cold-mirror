@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TelemetryChart } from './components/TelemetryChart';
-import { LiveTelemetryChart } from './components/LiveTelemetryChart';
-import { LiveStandings } from './components/LiveStandings';
+import { LiveDashboard } from './features/live/LiveDashboard';
 import { TrackMap } from './components/TrackMap';
 import { StatsWidget } from './components/StatsWidget';
 import { useAppStore } from './store/useAppStore';
@@ -25,12 +24,11 @@ const HeaderLiveStats = ({ isStreaming }) => {
       if (now - lastUpdateTime < 500) return; // Throttle to 2Hz
       lastUpdateTime = now;
 
-      const data = state.liveLapData;
-      const latest = data[data.length - 1];
+      const latest = state.latestTelemetry;
       if (latest) {
         setStats({
-          speed: latest.speed || 0,
-          pct: latest.lap_dist_pct || 0
+          speed: latest.speed || (Number(latest.Speed || 0) * 3.6) || 0,
+          pct: latest.lap_dist_pct ?? latest.LapDistPct ?? 0
         });
       }
     });
@@ -152,7 +150,7 @@ function AppContent() {
           </div>
 
           {/* View Switcher Buttons on Mobile (Charts, Map, Stats) - Takes flex-1 width */}
-          {(isHistory || isLive) && (
+          {isHistory && (
             <div className="grid grid-cols-3 gap-1 glass p-1 rounded-xl border border-brand-60/90 md:hidden flex-1 shadow-inner min-w-0">
               <button
                 onClick={() => setMobileView('charts')}
@@ -231,7 +229,9 @@ function AppContent() {
               </div>
             </div>
           </div>
-        ) : (!selectedLap && !isLive) ? (
+        ) : isLive ? (
+          <LiveDashboard />
+        ) : !selectedLap ? (
           <div className="flex-1 flex flex-col items-center justify-center text-brand-10/40 gap-4 glass rounded-xl border border-brand-60/60 p-6">
             <div className="w-14 h-14 rounded-full bg-brand-60 border border-brand-60 flex items-center justify-center">
               <svg className="w-7 h-7 text-brand-30/80/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -253,18 +253,9 @@ function AppContent() {
           </div>
         ) : (
           <div className="flex flex-1 gap-4 md:gap-6 min-h-0 w-full overflow-hidden flex-col md:flex-row">
-              {/* Telemetry Charts & Standings (Visible on desktop or when mobileView === 'charts') */}
+              {/* Telemetry Charts (Visible on desktop or when mobileView === 'charts') */}
               <div className={`flex-[2] min-w-0 flex flex-col h-full overflow-y-scroll custom-scrollbar pb-20 ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
-                {isLive ? (
-                  <>
-                    <LiveTelemetryChart />
-                    <div className="px-2 sm:px-4 pb-4">
-                      <LiveStandings />
-                    </div>
-                  </>
-                ) : (
-                  <TelemetryChart />
-                )}
+                <TelemetryChart />
               </div>
               
               {/* Track Map & Stats Column (Visible on desktop or when mobileView === 'map' / 'stats') */}

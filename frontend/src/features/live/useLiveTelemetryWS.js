@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLiveStore } from '../../store/useLiveStore';
 import { useAppStore } from '../../store/useAppStore';
+import { mapLiveTelemetry } from './telemetryMapper';
 import toast from 'react-hot-toast';
 
 const WS_URL = import.meta.env.VITE_WS_URL || (() => {
@@ -9,9 +10,7 @@ const WS_URL = import.meta.env.VITE_WS_URL || (() => {
 })();
 
 export function useLiveTelemetryWS(isLiveActive) {
-  const setLiveLapData = useLiveStore((state) => state.setLiveLapData);
   const clearLiveData = useLiveStore((state) => state.clearLiveData);
-  const bufferRef = useRef([]);
   const lastSessionTimeRef = useRef(null);
   const lastUpdateTimestampRef = useRef(Date.now());
   const staleTimeoutRef = useRef(null);
@@ -19,7 +18,7 @@ export function useLiveTelemetryWS(isLiveActive) {
   useEffect(() => {
     if (!isLiveActive) {
       clearLiveData();
-      useLiveStore.setState({ isStreaming: false });
+      useLiveStore.setState({ isStreaming: false, latestTelemetry: null });
       useAppStore.getState().setHoveredData(null);
       return;
     }
@@ -36,12 +35,11 @@ export function useLiveTelemetryWS(isLiveActive) {
       const wasStreaming = useLiveStore.getState().isStreaming;
       useLiveStore.setState({ isStreaming });
 
-      // Stream went offline — start 5s delayed cleanup of stale data
+      // Stream went offline — start 5s delayed cleanup of stale telemetry
       if (wasStreaming && !isStreaming) {
         staleTimeoutRef.current = setTimeout(() => {
           if (!useLiveStore.getState().isStreaming) {
-            useLiveStore.setState({ liveLapData: [] });
-            bufferRef.current = [];
+            useLiveStore.setState({ latestTelemetry: null });
           }
         }, 5000);
       }
@@ -52,29 +50,6 @@ export function useLiveTelemetryWS(isLiveActive) {
       }
     }, 1000);
 
-    // Batch flush interval (flushes buffer every 33ms -> 30Hz update rate for smooth rendering)
-    const MAX_LIVE_DISPLAY_POINTS = 300; // ~10 seconds of rolling window at 30Hz
-    const flushInterval = setInterval(() => {
-      if (bufferRef.current.length > 0) {
-        const batch = bufferRef.current;
-        bufferRef.current = [];
-
-        useLiveStore.setState((state) => {
-          const updated = [...state.liveLapData, ...batch];
-          return {
-            liveLapData: updated.length > MAX_LIVE_DISPLAY_POINTS 
-              ? updated.slice(-MAX_LIVE_DISPLAY_POINTS) 
-              : updated
-          };
-        });
-
-        const { isUserHovering, setHoveredData } = useAppStore.getState();
-        if (!isUserHovering) {
-          setHoveredData(batch[batch.length - 1]);
-        }
-      }
-    }, 33);
-
     const connectWS = () => {
       if (ws) {
         ws.onclose = null;
@@ -84,48 +59,49 @@ export function useLiveTelemetryWS(isLiveActive) {
 
       ws.onmessage = (event) => {
         try {
-          const newData = JSON.parse(event.data);
-          
-          if (newData.wheel_angle !== undefined && newData.wheel_angle !== null) {
-            newData.wheel_angle_deg = newData.wheel_angle * (180 / Math.PI);
-          }
+          const rawData = JSON.parse(event.data);
 
-          if (newData.status === 'waiting for data') {
+          if (rawData.status === 'waiting for data') {
             if (useLiveStore.getState().isStreaming) {
               toast('iRacing is waiting for data...', { icon: '🟡', id: 'waiting-data' });
             }
-            useLiveStore.setState({ isStreaming: false });
+            useLiveStore.setState({ isStreaming: false, latestTelemetry: null });
             return;
           }
 
-          if (newData.session_time !== undefined && newData.session_time === lastSessionTimeRef.current) {
+          if (rawData.session_time !== undefined && rawData.session_time === lastSessionTimeRef.current) {
             return;
           }
 
-          if (newData.session_time !== undefined && lastSessionTimeRef.current !== null && newData.session_time < lastSessionTimeRef.current - 1) {
-            // Time jumped backwards (e.g. mock data looped). Reset the chart data to prevent zigzagging.
-            useLiveStore.setState({ liveLapData: [] });
-            bufferRef.current = [];
-          }
-
-          lastSessionTimeRef.current = newData.session_time;
+          lastSessionTimeRef.current = rawData.session_time;
           lastUpdateTimestampRef.current = Date.now();
-          
+
+          const mappedData = mapLiveTelemetry(rawData);
+          if (mappedData.wheel_angle !== undefined && mappedData.wheel_angle !== null) {
+            mappedData.wheel_angle_deg = mappedData.wheel_angle * (180 / Math.PI);
+          }
+
+          const storeUpdates = {
+            latestTelemetry: mappedData,
+          };
+
+          if (mappedData.playerCarIdx !== undefined && mappedData.playerCarIdx !== null) {
+            storeUpdates.driverCarIdx = mappedData.playerCarIdx;
+          }
+
           if (!useLiveStore.getState().isStreaming) {
             toast.success('Connected to iRacing Live Telemetry', { id: 'connected' });
-            useLiveStore.setState({ 
-              isStreaming: true,
-              liveTrackName: newData.track_name,
-              livePlayerName: newData.player_name,
-              liveCarName: newData.car_name
-            });
+            storeUpdates.isStreaming = true;
+            storeUpdates.liveTrackName = rawData.track_name;
+            storeUpdates.livePlayerName = rawData.player_name;
+            storeUpdates.liveCarName = rawData.car_name;
           }
-          
-          if (newData.session_drivers) {
-            useLiveStore.getState().setSessionDrivers(newData.session_drivers);
+
+          if (rawData.session_drivers) {
+            useLiveStore.getState().setSessionDrivers(rawData.session_drivers);
           }
-          
-          bufferRef.current.push(newData);
+
+          useLiveStore.setState(storeUpdates);
         } catch (err) {
           console.error('Live WS parse error:', err);
         }
@@ -157,17 +133,14 @@ export function useLiveTelemetryWS(isLiveActive) {
 
     return () => {
       if (staleTimeoutRef.current) clearTimeout(staleTimeoutRef.current);
-      clearInterval(flushInterval);
       clearInterval(statusCheckInterval);
       clearTimeout(reconnectTimeout);
-      bufferRef.current = [];
       if (ws) {
-        // Remove onclose to prevent auto-reconnect when intentionally unmounting
         ws.onclose = null; 
         ws.close();
       }
       clearLiveData();
-      useLiveStore.setState({ isStreaming: false });
+      useLiveStore.setState({ isStreaming: false, latestTelemetry: null });
     };
-  }, [isLiveActive, setLiveLapData, clearLiveData]);
+  }, [isLiveActive, clearLiveData]);
 }

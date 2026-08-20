@@ -1,19 +1,18 @@
 import { create } from 'zustand';
 
-const MAX_LIVE_POINTS = 18000; // ~5 minutes at 60Hz
-
 export const useLiveStore = create((set) => ({
-  liveLapData: [],
+  latestTelemetry: null,
   sessionDrivers: [],
+  sessionData: null,
+  trackLength: 4000,
+  driverCarIdx: null,
   isStreaming: false,
   liveTrackName: null,
   livePlayerName: null,
   liveCarName: null,
-  setLiveLapData: (data) => set({ liveLapData: data }),
+  setLatestTelemetry: (telemetry) => set({ latestTelemetry: telemetry }),
   setSessionDrivers: (drivers) => set({ sessionDrivers: drivers }),
-  appendLiveData: (newData) => set((state) => {
-    const updated = [...state.liveLapData, newData];
-    return { liveLapData: updated.length > MAX_LIVE_POINTS ? updated.slice(-MAX_LIVE_POINTS) : updated };
-  }),
-  clearLiveData: () => set({ liveLapData: [], isStreaming: false }),
+  setSessionData: (sessionData) => set({ sessionData }),
+  setTrackLength: (trackLength) => set({ trackLength }),
+  clearLiveData: () => set({ latestTelemetry: null, isStreaming: false }),
 }));

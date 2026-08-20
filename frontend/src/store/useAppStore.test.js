@@ -9,17 +9,19 @@ describe('useAppStore', () => {
 
   it('should have initial state', () => {
     const state = useAppStore.getState();
-    expect(state.activeTab).toBe('history');
     expect(state.selectedLap).toBeNull();
+    expect(state.referenceLapId).toBeNull();
     expect(state.isSidebarOpen).toBe(true);
+    expect(state.hoveredData).toBeNull();
+    expect(state.steeringMax).toBe(450);
   });
 
-  it('should update active tab and clear hovered data', () => {
+  it('should update selected lap and clear hovered data', () => {
     useAppStore.getState().setHoveredData({ speed: 100 });
-    useAppStore.getState().setActiveTab('live');
+    useAppStore.getState().setSelectedLap({ id: 1, lap_time: 90.5 });
     
     const state = useAppStore.getState();
-    expect(state.activeTab).toBe('live');
+    expect(state.selectedLap).toEqual({ id: 1, lap_time: 90.5 });
     expect(state.hoveredData).toBeNull();
   });
 
@@ -29,5 +31,11 @@ describe('useAppStore', () => {
     
     useAppStore.getState().toggleSidebar();
     expect(useAppStore.getState().isSidebarOpen).toBe(true);
+  });
+
+  it('should toggle standings columns', () => {
+    const initialPos = useAppStore.getState().standingsColumns.pos;
+    useAppStore.getState().toggleStandingsColumn('pos');
+    expect(useAppStore.getState().standingsColumns.pos).toBe(!initialPos);
   });
 });
