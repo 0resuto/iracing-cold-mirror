@@ -14,7 +14,7 @@ This project collects live telemetry data from iRacing, stores historic sessions
 ## Features
 - **Asynchronous Telemetry Import**: The server processes large `.ibt` binary files using FastAPI BackgroundTasks to prevent HTTP proxy timeouts. The client agent polls a dedicated status endpoint to retrieve real-time parsing progress.
 - **Data Pipeline**: The parser extracts binary telemetry, calculates wheel physics (slip angles, acceleration vectors), and bulk-inserts data into PostgreSQL using SQLAlchemy to ensure high throughput.
-- **Live Telemetry Streaming**: Real-time car telemetry streaming directly from the iRacing simulator via WebSocket.
+- **Live Telemetry Streaming**: Real-time car telemetry streaming directly from the iRacing simulator via WebSocket, visualized using the [cold-mirror-widgets](https://github.com/0resuto/cold-mirror-widgets) component library.
 - **Session Auto-Sync**: Background Python agent that uses `watchdog` to monitor directory changes and automatically upload new `.ibt` telemetry files upon session completion.
 - **Delta Analysis**: Server-side time delta calculations between current lap and reference lap telemetry points by mapping distance percentages.
 - **API Security**: Token-based authorization for session upload endpoints and WebSocket connections.
@@ -94,7 +94,7 @@ iracing-telemetry/
 ## Tech Stack
 - **Backend**: Python 3.11, FastAPI, SQLAlchemy 2.0, Alembic, Pydantic
 - **Database / Cache**: PostgreSQL 16, Redis Alpine
-- **Frontend**: React 19, Vite, Zustand, Recharts, Tailwind CSS
+- **Frontend**: React 19, Vite, Zustand, [cold-mirror-widgets](https://github.com/0resuto/cold-mirror-widgets), Recharts, Tailwind CSS
 - **Proxy / Web Server**: Nginx
 - **Telemetry Parsing**: pyirsdk, PyYAML
 - **Testing**: Pytest, Vitest, React Testing Library, unittest.mock
