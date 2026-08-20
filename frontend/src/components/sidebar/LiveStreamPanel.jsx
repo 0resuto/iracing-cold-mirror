@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLiveStore } from '../../store/useLiveStore';
 import { useAppStore } from '../../store/useAppStore';
+import { Checkbox } from '../Checkbox';
 
 export const LiveStreamPanel = () => {
   const isStreaming = useLiveStore(state => state.isStreaming);
@@ -34,7 +35,7 @@ export const LiveStreamPanel = () => {
 
       <div className="bg-brand-bg border border-brand-60 rounded-xl flex flex-col p-4">
         <h3 className="text-[10px] uppercase tracking-widest text-brand-10/60 font-bold mb-3">Standings Columns</h3>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           {Object.entries({
             pos: 'Position',
             driver: 'Driver Name & License',
@@ -45,24 +46,12 @@ export const LiveStreamPanel = () => {
             lastLap: 'Last Lap Time',
             trackPct: 'Track Progress %',
           }).map(([key, label]) => (
-            <label key={key} className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
-                <input 
-                  type="checkbox" 
-                  className="sr-only"
-                  checked={columns[key]}
-                  onChange={() => toggleColumn(key)}
-                />
-                <div className={`w-4 h-4 rounded ${columns[key] ? 'bg-accent-red border-accent-red' : 'bg-brand-60 border-brand-60/80'} border flex items-center justify-center transition-colors group-hover:border-brand-30`}>
-                  {columns[key] && (
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-              </div>
-              <span className="text-xs text-brand-10/80 group-hover:text-brand-10 transition-colors">{label}</span>
-            </label>
+            <Checkbox
+              key={key}
+              label={label}
+              checked={columns[key]}
+              onChange={() => toggleColumn(key)}
+            />
           ))}
         </div>
       </div>

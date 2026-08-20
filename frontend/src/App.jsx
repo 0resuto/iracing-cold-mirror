@@ -12,46 +12,6 @@ import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront
 import { useTelemetryData } from './features/telemetry/useTelemetryData';
 import { useLiveStore } from './store/useLiveStore';
 
-const HeaderLiveStats = ({ isStreaming }) => {
-  const [stats, setStats] = useState({ speed: 0, pct: 0 });
-
-  useEffect(() => {
-    if (!isStreaming) return;
-    
-    let lastUpdateTime = 0;
-    const unsubscribe = useLiveStore.subscribe((state) => {
-      const now = performance.now();
-      if (now - lastUpdateTime < 500) return; // Throttle to 2Hz
-      lastUpdateTime = now;
-
-      const latest = state.latestTelemetry;
-      if (latest) {
-        setStats({
-          speed: latest.speed || (Number(latest.Speed || 0) * 3.6) || 0,
-          pct: latest.lap_dist_pct ?? latest.LapDistPct ?? 0
-        });
-      }
-    });
-    return unsubscribe;
-  }, [isStreaming]);
-
-  if (!isStreaming) return null;
-
-  return (
-    <div className="flex items-center gap-4 text-xs bg-brand-60/20 px-4 py-1.5 rounded-lg border border-brand-60 shadow-sm ml-2">
-      <div className="flex items-center gap-1.5 text-brand-10/80">
-        <span className="text-brand-10/40">Speed</span>
-        <span className="font-mono text-red-400 font-bold w-12 text-right">{stats.speed.toFixed(0)}</span>
-      </div>
-      <div className="w-px h-3 bg-brand-60/80 mx-1"></div>
-      <div className="flex items-center gap-1.5 text-brand-10/80">
-        <span className="text-brand-10/40">Track</span>
-        <span className="font-mono text-brand-30/90 font-bold w-12 text-right">{(stats.pct * 100).toFixed(1)}%</span>
-      </div>
-    </div>
-  );
-};
-
 function AppContent() {
   const location = useLocation();
   const pathname = location.pathname;
@@ -117,36 +77,34 @@ function AppContent() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden gap-3 sm:gap-4 md:gap-6 bg-brand-bg min-w-0 px-4 py-3">
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-brand-bg min-w-0">
         
         {/* Header Bar */}
-        <div className="flex items-center justify-between flex-none pb-2.5 border-b border-brand-60/80 gap-2.5 w-full min-w-0 h-[52px]">
+        <div className="flex items-center justify-between flex-none px-4 pt-1.5 pb-1 border-b border-brand-60/30 gap-3 w-full min-w-0">
           
           {/* Session Info (Desktop) */}
-          <div className="hidden md:flex items-center gap-4 text-xs font-semibold text-brand-10/80 flex-1 truncate">
+          <div className="hidden md:flex items-center gap-4 text-[11px] text-brand-10/70 flex-1 truncate">
             {trackName && (
-              <div className="flex items-center gap-1.5 bg-brand-60/40 px-3 py-1.5 rounded-lg border border-brand-60 shadow-sm truncate">
-                <MapPin size={14} className="text-brand-30/80 flex-none" />
-                <span className="truncate">{trackName}</span>
+              <div className="flex items-center gap-1.5 text-brand-10/90 truncate">
+                <MapPin size={12} className="text-brand-30 flex-none" />
+                <span className="font-semibold truncate">{trackName}</span>
               </div>
             )}
             {playerName && (
-              <div className="flex items-center gap-1.5 bg-brand-60/40 px-3 py-1.5 rounded-lg border border-brand-60 shadow-sm truncate">
-                <User size={14} className="text-brand-30/80 flex-none" />
+              <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
+                <User size={12} className="text-brand-30/70 flex-none" />
                 <span className="truncate">{playerName}</span>
               </div>
             )}
             {carName && (
-              <div className="flex items-center gap-1.5 bg-brand-60/40 px-3 py-1.5 rounded-lg border border-brand-60 shadow-sm truncate">
-                <CarFront size={14} className="text-brand-30/80 flex-none" />
+              <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
+                <CarFront size={12} className="text-brand-30/70 flex-none" />
                 <span className="truncate">{carName}</span>
               </div>
             )}
             {(!trackName && !playerName && !carName) && (
-              <span className="text-brand-10/40 italic">Waiting for telemetry...</span>
+              <span className="text-brand-10/40 text-[11px] italic">Waiting for telemetry...</span>
             )}
-            
-            {isLive && <HeaderLiveStats isStreaming={isStreaming} />}
           </div>
 
           {/* View Switcher Buttons on Mobile (Charts, Map, Stats) - Takes flex-1 width */}
@@ -154,38 +112,38 @@ function AppContent() {
             <div className="grid grid-cols-3 gap-1 glass p-1 rounded-xl border border-brand-60/90 md:hidden flex-1 shadow-inner min-w-0">
               <button
                 onClick={() => setMobileView('charts')}
-                className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 min-w-0 ${
+                className={`py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[36px] active:scale-95 min-w-0 ${
                   mobileView === 'charts' 
                     ? 'bg-brand-30/20 text-brand-30/90 border border-brand-30/40 shadow-sm font-extrabold' 
                     : 'text-brand-10/60 hover:text-brand-10/90'
                 }`}
                 title="Charts View"
               >
-                <Activity size={15} className="flex-none" />
+                <Activity size={14} className="flex-none" />
                 <span className="truncate">Charts</span>
               </button>
               <button
                 onClick={() => setMobileView('map')}
-                className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 min-w-0 ${
+                className={`py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[36px] active:scale-95 min-w-0 ${
                   mobileView === 'map' 
                     ? 'bg-brand-30/20 text-brand-10 border border-brand-30/40 shadow-sm font-extrabold' 
                     : 'text-brand-10/60 hover:text-brand-10/90'
                 }`}
                 title="Track Map View"
               >
-                <Map size={15} className="flex-none" />
+                <Map size={14} className="flex-none" />
                 <span className="truncate">Map</span>
               </button>
               <button
                 onClick={() => setMobileView('stats')}
-                className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[40px] active:scale-95 min-w-0 ${
+                className={`py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[36px] active:scale-95 min-w-0 ${
                   mobileView === 'stats' 
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm font-extrabold' 
                     : 'text-brand-10/60 hover:text-brand-10/90'
                 }`}
                 title="Sectors & Stats View"
               >
-                <BarChart2 size={15} className="flex-none" />
+                <BarChart2 size={14} className="flex-none" />
                 <span className="truncate">Stats</span>
               </button>
             </div>
@@ -194,16 +152,16 @@ function AppContent() {
           {/* Gray Icon-Only Menu Toggle Button (Mobile Only) */}
           <button 
             onClick={toggleSidebar}
-            className="md:hidden p-2.5 rounded-xl bg-brand-60 border border-brand-60 hover:border-brand-60 active:bg-brand-60 text-brand-10/80 hover:text-brand-10 transition-all flex items-center justify-center cursor-pointer flex-none min-w-[42px] min-h-[42px] shadow-sm active:scale-95"
+            className="md:hidden p-2 rounded-xl bg-brand-60 border border-brand-60 hover:border-brand-60 active:bg-brand-60 text-brand-10/80 hover:text-brand-10 transition-all flex items-center justify-center cursor-pointer flex-none min-w-[38px] min-h-[38px] shadow-sm active:scale-95"
             title="Toggle Menu"
           >
-            <Menu size={20} />
+            <Menu size={18} />
           </button>
         </div>
 
         {/* Main Content Body */}
         {isSystem ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-brand-10/60 gap-4 glass rounded-xl border border-brand-60/60 p-6">
+          <div className="flex-1 flex flex-col items-center justify-center text-brand-10/60 gap-4 glass rounded-xl border border-brand-60/60 p-6 m-4">
             <div className="w-14 h-14 rounded-full bg-brand-60 border border-brand-60 flex items-center justify-center text-2xl">
               <Settings size={28} className="text-brand-10/40" />
             </div>
@@ -232,9 +190,9 @@ function AppContent() {
         ) : isLive ? (
           <LiveDashboard />
         ) : !selectedLap ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-brand-10/40 gap-4 glass rounded-xl border border-brand-60/60 p-6">
+          <div className="flex-1 flex flex-col items-center justify-center text-brand-10/40 gap-4 glass rounded-xl border border-brand-60/60 p-6 m-4">
             <div className="w-14 h-14 rounded-full bg-brand-60 border border-brand-60 flex items-center justify-center">
-              <svg className="w-7 h-7 text-brand-30/80/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-7 h-7 text-brand-30/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
             </div>
@@ -252,7 +210,7 @@ function AppContent() {
             </button>
           </div>
         ) : (
-          <div className="flex flex-1 gap-4 md:gap-6 min-h-0 w-full overflow-hidden flex-col md:flex-row">
+          <div className="flex flex-1 gap-4 md:gap-6 min-h-0 w-full overflow-hidden flex-col md:flex-row p-4">
               {/* Telemetry Charts (Visible on desktop or when mobileView === 'charts') */}
               <div className={`flex-[2] min-w-0 flex flex-col h-full overflow-y-scroll custom-scrollbar pb-20 ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
                 <TelemetryChart />
