@@ -25,14 +25,26 @@ This project collects live telemetry data from iRacing, stores historic sessions
 The project uses a decoupled Client-Server architecture:
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '14px' }}}%%
+%%{init: {
+  'theme': 'base',
+  'flowchart': { 'curve': 'basis', 'nodeSpacing': 45, 'rankSpacing': 65, 'wrap': true },
+  'themeVariables': {
+    'fontSize': '14px',
+    'primaryColor': '#37474F',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#78909C',
+    'lineColor': '#90A4AE',
+    'secondaryColor': '#37474F',
+    'tertiaryColor': '#37474F'
+  }
+}}%%
 flowchart LR
     subgraph Client["iRacing Client Machine"]
         direction TB
         Sim(["iRacing Simulator"])
         IBT[/".ibt Telemetry Files"/]
-        Agent["Sync Agent"]
-        Live["Live Reader"]
+        Agent["Sync Agent<br/>agent.py"]
+        Live["Live Reader<br/>service.py"]
 
         Sim -->|Generates| IBT
         Sim -->|Shared Memory| Live
@@ -41,11 +53,11 @@ flowchart LR
 
     subgraph Server["Server Infrastructure"]
         direction TB
-        Proxy["Nginx Proxy"]
-        API["FastAPI Backend"]
-        UI["React Dashboard"]
-        DB[("PostgreSQL")]
-        Redis[("Redis Cache")]
+        Proxy["Nginx Proxy<br/>Port 8080"]
+        API["FastAPI Backend<br/>REST & WebSockets"]
+        UI["React Dashboard<br/>Live Widgets & History"]
+        DB[("PostgreSQL<br/>Relational DB")]
+        Redis[("Redis Cache<br/>Pub/Sub")]
 
         Proxy <-->|"/api & /ws"| API
         Proxy -->|Serves App| UI
@@ -56,18 +68,20 @@ flowchart LR
     Agent -->|HTTP POST batch| Proxy
     Live <-->|WebSocket stream| Proxy
 
-    classDef client fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1
-    classDef edge fill:#FFF3E0,stroke:#E65100,stroke-width:1.5px,color:#E65100
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20
-    classDef data fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1.5px,color:#4A148C
+    classDef core fill:#1565C0,stroke:#90CAF9,stroke-width:1.5px,color:#ffffff
+    classDef bridge fill:#E65100,stroke:#FFCC80,stroke-width:1.5px,color:#ffffff
+    classDef app fill:#2E7D32,stroke:#A5D6A7,stroke-width:1.5px,color:#ffffff
+    classDef diskstore fill:#AD1457,stroke:#F48FB1,stroke-width:1.5px,color:#ffffff
+    classDef memstore fill:#F57F17,stroke:#FFE082,stroke-width:1.5px,color:#ffffff
 
-    class Sim,IBT,Agent,Live client
-    class Proxy edge
+    class Sim,Live core
+    class Proxy,Agent,IBT bridge
     class UI,API app
-    class DB,Redis data
+    class DB diskstore
+    class Redis memstore
 
-    style Client fill:#FAFAFA,stroke:#90A4AE,stroke-width:1px
-    style Server fill:#FAFAFA,stroke:#90A4AE,stroke-width:1px
+    style Client fill:none,stroke:#78909C,stroke-width:1px,color:#90A4AE
+    style Server fill:none,stroke:#78909C,stroke-width:1px,color:#90A4AE
 ```
 
 ## Project Structure
