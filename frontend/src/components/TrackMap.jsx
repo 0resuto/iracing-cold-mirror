@@ -496,13 +496,6 @@ export const TrackMap = React.memo(function TrackMap() {
     }
   }, [carState.x, carState.y, isLive, svgData]);
 
-  const getStrokeWidth = () => {
-    const BASE_THICKNESS = 4;
-    const k = zoomKRef.current;
-    const visualThickness = BASE_THICKNESS / Math.sqrt(k);
-    return visualThickness / k;
-  };
-
   return (
     <div className="flex flex-col items-center h-full">
       <div className="w-full flex justify-between items-center px-4 pt-3 pb-1">

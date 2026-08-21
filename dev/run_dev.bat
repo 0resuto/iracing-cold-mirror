@@ -16,27 +16,31 @@ echo  [1]  Start Full Stack Dev Mode (Postgres + Redis + API + Frontend)
 echo  [2]  Start Vite Dev Frontend Only (HMR / Hot Reload: http://localhost:5173)
 echo  [3]  Start Docker Infrastructure Only (Postgres + Redis + pgAdmin)
 echo.
-echo  ----------------------- TESTING AND MOCKING ------------------------
-echo  [4]  Run Test Suite (pytest)
-echo  [5]  Run Telemetry Mock Generator (scripts.run_mock)
-echo  [6]  Run Database Migrations (alembic upgrade head)
+echo  ------------------- SIMULATION AND MOCKING ---------------------
+echo  [4]  Launch Simulator Studio GUI (Embedded Engine + 60 FPS Streamer)
+echo  [5]  Run Telemetry IBT Mock Generator (scripts.run_mock)
+echo.
+echo  ---------------------- TESTING AND DATABASE ---------------------
+echo  [6]  Run Test Suite (pytest)
+echo  [7]  Run Database Migrations (alembic upgrade head)
 echo.
 echo  ------------------------- UTILITIES -----------------------------
-echo  [7]  Stop Docker Containers
-echo  [8]  Edit Configuration (.env)
+echo  [8]  Stop Docker Containers
+echo  [9]  Edit Configuration (.env)
 echo.
 echo  [0]  Exit
 echo ======================================================================
-set /p CHOICE="Select an option [0-8]: "
+set /p CHOICE="Select an option [0-9]: "
 
 if "%CHOICE%"=="1" goto DEV_FULLSTACK
 if "%CHOICE%"=="2" goto DEV_FRONTEND
 if "%CHOICE%"=="3" goto INFRA_ONLY
-if "%CHOICE%"=="4" goto RUN_TESTS
+if "%CHOICE%"=="4" goto RUN_SIM_GUI
 if "%CHOICE%"=="5" goto RUN_MOCK
-if "%CHOICE%"=="6" goto RUN_MIGRATIONS
-if "%CHOICE%"=="7" goto STOP_DOCKER
-if "%CHOICE%"=="8" goto EDIT_ENV
+if "%CHOICE%"=="6" goto RUN_TESTS
+if "%CHOICE%"=="7" goto RUN_MIGRATIONS
+if "%CHOICE%"=="8" goto STOP_DOCKER
+if "%CHOICE%"=="9" goto EDIT_ENV
 if "%CHOICE%"=="0" exit /b 0
 
 echo Invalid choice. Please try again.
@@ -67,16 +71,16 @@ call venv\Scripts\activate.bat
 alembic upgrade head
 
 echo Cleaning up any orphaned backend or agent processes...
-powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'uvicorn' -or $_.CommandLine -match 'scripts.agent' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
+powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'uvicorn' -or $_.CommandLine -match 'scripts.agent' -or $_.CommandLine -match 'scripts.simulator_gui' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
 
-echo Starting FastAPI Backend in separate window...
-start "FastAPI Backend (Dev)" cmd /k "cd /d %CD% && call venv\Scripts\activate.bat && uvicorn telemetry.api.app:app --reload --host 127.0.0.1 --port 8000"
+echo Starting FastAPI Backend in separate minimized window...
+start /min "FastAPI Backend (Dev)" cmd /k "cd /d %CD% && call venv\Scripts\activate.bat && uvicorn telemetry.api.app:app --reload --host 127.0.0.1 --port 8000"
 
-echo Starting React Frontend (Vite) in separate window...
-start "React Frontend (Vite)" cmd /k "cd /d %CD%\frontend && npm run dev"
+echo Starting React Frontend (Vite) in separate minimized window...
+start /min "React Frontend (Vite)" cmd /k "cd /d %CD%\frontend && npm run dev"
 
-echo Starting Telemetry Sync Agent in separate window...
-start "IBT Sync Agent" cmd /k "cd /d %CD% && call venv\Scripts\activate.bat && python -m scripts.agent"
+echo Starting Telemetry Sync Agent in separate minimized window...
+start /min "IBT Sync Agent" cmd /k "cd /d %CD% && call venv\Scripts\activate.bat && python -m scripts.agent"
 
 echo.
 echo ======================================================================
@@ -90,7 +94,7 @@ goto MENU
 :DEV_FRONTEND
 cls
 echo Starting React Frontend Vite Dev Server (Hot Reload HMR)...
-start "React Frontend (Vite Dev)" cmd /k "cd /d %CD%\frontend && npm run dev"
+start /min "React Frontend (Vite Dev)" cmd /k "cd /d %CD%\frontend && npm run dev"
 echo.
 echo ======================================================================
 echo Vite Dev Server started!
@@ -118,17 +122,15 @@ echo  - Redis:    localhost:6379
 pause
 goto MENU
 
-:RUN_TESTS
+:RUN_SIM_GUI
 cls
 if not exist "venv\Scripts\activate.bat" (
     echo [ERROR] Python virtual environment not found. Please run setup.bat first.
     pause
     goto MENU
 )
-echo Running pytest test suite...
-call venv\Scripts\activate.bat
-pytest -v
-pause
+echo Launching Cold Mirror Telemetry Simulator Studio GUI...
+start "" "%CD%\venv\Scripts\pythonw.exe" "%CD%\scripts\simulator_gui.py"
 goto MENU
 
 :RUN_MOCK
@@ -141,9 +143,22 @@ if not exist "venv\Scripts\activate.bat" (
 echo Cleaning up any orphaned mock processes...
 powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.run_mock' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
 
-echo Running Telemetry Mock Generator...
+echo Running Telemetry IBT Mock Generator...
 call venv\Scripts\activate.bat
 python -m scripts.run_mock
+pause
+goto MENU
+
+:RUN_TESTS
+cls
+if not exist "venv\Scripts\activate.bat" (
+    echo [ERROR] Python virtual environment not found. Please run setup.bat first.
+    pause
+    goto MENU
+)
+echo Running pytest test suite...
+call venv\Scripts\activate.bat
+pytest -v
 pause
 goto MENU
 
