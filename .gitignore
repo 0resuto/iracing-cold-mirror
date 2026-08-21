@@ -6,10 +6,11 @@ __pycache__/
 .vscode/
 .agents/
 
-# Python packaging
+# Python packaging & cache
 *.egg-info/
 build/
 dist/
+.ruff_cache/
 
 # Testing
 .pytest_cache/

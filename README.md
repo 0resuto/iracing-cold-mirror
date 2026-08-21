@@ -15,6 +15,7 @@ This project collects live telemetry data from iRacing, stores historic sessions
 - **Asynchronous Telemetry Import**: The server processes large `.ibt` binary files using FastAPI BackgroundTasks to prevent HTTP proxy timeouts. The client agent polls a dedicated status endpoint to retrieve real-time parsing progress.
 - **Data Pipeline**: The parser extracts binary telemetry, calculates wheel physics (slip angles, acceleration vectors), and bulk-inserts data into PostgreSQL using SQLAlchemy to ensure high throughput.
 - **Live Telemetry Streaming**: Real-time car telemetry streaming directly from the iRacing simulator via WebSocket, visualized using the [cold-mirror-widgets](https://github.com/0resuto/cold-mirror-widgets) component library.
+- **Autonomous Telemetry Simulator Studio**: Embedded multi-class racing simulation engine (GTP, LMP2, GT3, GT4) and Tkinter desktop studio with dynamic weather, pit stop routines, analog pedal inputs, safety car and hazard controls for offline development and testing without iRacing.
 - **Session Auto-Sync**: Background Python agent that uses `watchdog` to monitor directory changes and automatically upload new `.ibt` telemetry files upon session completion.
 - **Delta Analysis**: Server-side time delta calculations between current lap and reference lap telemetry points by mapping distance percentages.
 - **API Security**: Token-based authorization for session upload endpoints and WebSocket connections.
@@ -92,13 +93,14 @@ iracing-telemetry/
 ├── deploy/                  # Production Docker deployment files & entrypoint
 ├── dev/                     # Developer tools & dev control panel (dev/run_dev.bat)
 ├── frontend/                # React 19 web application (Vite + Nginx)
-├── scripts/                 # Client agent scripts (IBT file watcher, live streamer)
+├── scripts/                 # Client agents, simulator studio & CLI runner
 ├── telemetry/               # Main FastAPI backend package
 │   ├── api/                 # REST API routes and schemas
-│   ├── collector/           # Live memory reader and Redis streamer
+│   ├── collector/           # Live memory reader, sim adapter & Redis streamer
 │   ├── db/                  # SQLAlchemy models and database setup
-│   └── services/            # Core business logic (delta math, ibt import)
-├── tests/                   # Pytest suite (Backend APIs & Mock data importers)
+│   ├── services/            # Core business logic (delta math, ibt import)
+│   └── simulator/           # Multi-class physics simulation & domain models
+├── tests/                   # Pytest suite (Backend APIs, Simulators & Importers)
 ├── docker-compose.yml       # Production infrastructure orchestrator
 ├── README.md
 ├── run.bat                  # Client Control Panel (Gaming PC)
@@ -131,8 +133,13 @@ This automatically configures Python `venv`, installs backend/frontend dependenc
 - **For Gaming PC (Client Agents)**:
   Double-click **`run.bat`** to launch the Client Control Panel. You can run file sync, live streaming, check server connectivity, or enable silent Windows autostart.
 
-- **For Local Full-Stack Development**:
-  Double-click **`dev/run_dev.bat`** to launch the Developer Panel (runs Docker Postgres/Redis, FastAPI with auto-reload, Vite dev server, pytest, and mock generators).
+- **For Local Full-Stack Development & Simulation**:
+  Double-click **`dev/run_dev.bat`** to launch the Developer Panel (runs Docker Postgres/Redis, FastAPI with auto-reload, Vite dev server, pytest, and the all-in-one telemetry simulator studio).
+
+  Alternatively, launch the Simulator Studio GUI directly:
+  ```bash
+  python scripts/simulator_gui.py
+  ```
 
 ---
 
