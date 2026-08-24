@@ -230,7 +230,7 @@ def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None)
             batch.append(_build_telemetry(current_lap.id, lap_current_lap_time, data))
 
             if len(batch) >= 10000:
-                db.bulk_save_objects(batch)
+                db.add_all(batch)
                 db.flush()
                 batch.clear()
 
@@ -241,7 +241,7 @@ def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None)
             db.flush()
 
         if len(batch) > 0:
-            db.bulk_save_objects(batch)
+            db.add_all(batch)
 
         if current_session:
             current_session.duration_seconds = lap_last_lap_time
