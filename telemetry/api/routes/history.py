@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import tempfile
@@ -20,27 +21,36 @@ from telemetry.api.schemas import (
 from telemetry.config import settings
 from telemetry.db import SessionLocal
 from telemetry.db.models import Lap, Player, Sector, Session, Telemetry
+from telemetry.redis import redis_sync
 from telemetry.services.delta import calculate_delta
 from telemetry.services.importer import import_ibt_to_db
 
 router = APIRouter()
 
-import_statuses = {}
-
 
 def process_file_in_background(tmp_path: str, task_id: str):
+    redis_key = f"import:{task_id}"
+
     def update_progress(current, total):
         if total > 0:
-            import_statuses[task_id] = {"status": "processing", "progress": (current / total) * 100}
+            redis_sync.setex(
+                redis_key,
+                600,
+                json.dumps({"status": "processing", "progress": (current / total) * 100}),
+            )
 
     try:
         success = import_ibt_to_db(tmp_path, SessionLocal, progress_callback=update_progress)
         if success:
-            import_statuses[task_id] = {"status": "done"}
+            redis_sync.setex(redis_key, 600, json.dumps({"status": "done"}))
         else:
-            import_statuses[task_id] = {"status": "skipped", "message": "File already imported"}
+            redis_sync.setex(
+                redis_key,
+                600,
+                json.dumps({"status": "skipped", "message": "File already imported"}),
+            )
     except Exception as e:
-        import_statuses[task_id] = {"status": "error", "message": str(e)}
+        redis_sync.setex(redis_key, 600, json.dumps({"status": "error", "message": str(e)}))
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
@@ -201,7 +211,7 @@ def upload_file(
             tmp_path = tmp.name
 
         task_id = str(uuid.uuid4())
-        import_statuses[task_id] = {"status": "processing"}
+        redis_sync.setex(f"import:{task_id}", 600, json.dumps({"status": "processing"}))
         background_tasks.add_task(process_file_in_background, tmp_path, task_id)
         return {"status": "accepted", "task_id": task_id}
     except Exception:
@@ -216,12 +226,15 @@ def upload_file(
     summary="Check upload status",
 )
 def get_upload_status(task_id: str):
-    status_info = import_statuses.get(task_id)
-    if not status_info:
+    redis_key = f"import:{task_id}"
+    raw = redis_sync.get(redis_key)
+    if not raw:
         raise HTTPException(status_code=404, detail="Task not found")
 
+    status_info = json.loads(raw)
+
     if status_info["status"] in ["done", "error", "skipped"]:
-        import_statuses.pop(task_id, None)
+        redis_sync.delete(redis_key)
 
     return status_info
 
