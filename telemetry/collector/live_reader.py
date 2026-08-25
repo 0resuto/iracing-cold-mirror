@@ -156,6 +156,8 @@ class IRacingLiveReader:
             "session_flags": safe_int(self._get_val("SessionFlags", 0)),
             "session_time_remain": self._get_val("SessionTimeRemain"),
             "session_laps_remain": safe_int(self._get_val("SessionLapsRemainEx", 0)),
+            "session_best_lap_time": self._get_val("SessionFastestTime", -1),
+            "lap_number": safe_int(self._get_val("Lap", 0)),
             "player_car_idx": getattr(self, "_driver_car_idx", None),
             "lat": self._get_val("Lat", None),
             "lon": self._get_val("Lon", None),
@@ -179,6 +181,11 @@ class IRacingLiveReader:
         )
 
         data["car_left_right"] = self._get_val("CarLeftRight", 0)
+
+        data["lap_delta_to_best_lap"] = self._get_val("LapDeltaToBestLap", 0)
+        data["lap_delta_to_session_best_lap"] = self._get_val("LapDeltaToSessionBestLap", 0)
+        data["lap_current_lap_time"] = self._get_val("LapCurrentLapTime", 0)
+        data["lap_best_lap_time"] = self._get_val("LapBestLapTime", 0)
 
         data = calculate_wheel_physics(data)
 

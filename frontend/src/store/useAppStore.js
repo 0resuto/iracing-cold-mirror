@@ -17,12 +17,12 @@ export const useAppStore = create((set) => ({
   standingsColumns: {
     pos: true,
     driver: true,
-    carName: false,
+    carName: true,
     carClass: true,
     srating: true,
     irating: true,
-    lastLap: false,
-    trackPct: true,
+    lastLap: true,
+    trackPct: false,
   },
   toggleStandingsColumn: (col) => set((state) => ({
     standingsColumns: {
@@ -30,4 +30,6 @@ export const useAppStore = create((set) => ({
       [col]: !state.standingsColumns[col]
     }
   })),
+  showClassName: false,
+  toggleShowClassName: () => set((state) => ({ showClassName: !state.showClassName })),
 }));

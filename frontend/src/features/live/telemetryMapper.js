@@ -61,5 +61,13 @@ export function mapLiveTelemetry(raw) {
     playerCarIdx: raw.player_car_idx ?? null,
     player_name: raw.player_name || '',
     grid: grid,
+
+    // Lap Delta
+    LapDeltaToBestLap: Number(raw.lap_delta_to_best_lap) || 0,
+    LapDeltaToSessionBestLap: Number(raw.lap_delta_to_session_best_lap) || 0,
+    LapCurrentLapTime: Number(raw.lap_current_lap_time) || 0,
+    LapBestLapTime: Number(raw.lap_best_lap_time) || 0,
+    Lap: Number(raw.lap_number) || 0,
+    LapDistPct: Number(raw.lap_dist_pct) || 0,
   };
 }

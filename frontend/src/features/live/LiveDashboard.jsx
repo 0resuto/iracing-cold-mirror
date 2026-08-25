@@ -12,7 +12,9 @@ import {
   LinearTrackMap,
   LiveRadar,
   LiveRelative,
-  LiveStandings
+  LiveStandings,
+  LiveDelta,
+  LiveFlags
 } from 'cold-mirror-widgets';
 import { Activity } from 'lucide-react';
 
@@ -23,6 +25,7 @@ export function LiveDashboard() {
   const trackLength = useLiveStore((state) => state.trackLength);
   const isStreaming = useLiveStore((state) => state.isStreaming);
   const columns = useAppStore((state) => state.standingsColumns);
+  const showClassName = useAppStore((state) => state.showClassName);
 
   const [activeTab, setActiveTab] = useState('standings'); // 'standings' | 'relative'
   const [groupByClass, setGroupByClass] = useState(true);
@@ -66,32 +69,50 @@ export function LiveDashboard() {
             <LinearTrackMap throttleMs={33} />
           </div>
 
-          {/* 2. Cockpit Widgets Row (Fuel & Weather status) */}
+          {/* 2. Weather + Flags Row */}
           <div className="flex flex-wrap items-center gap-3 flex-none">
-            {/* Fuel Status (3x narrower, original 140px height: ~240px wide, 140px high) */}
-            <div className="w-full sm:w-[240px] h-[140px] min-h-[140px] flex flex-col flex-none">
-              <LiveFuel maxFuel={120} lowFuelThreshold={15} criticalFuelThreshold={5} throttleMs={200} />
-            </div>
-
-            {/* Weather / Track Conditions (~30% narrower, ~2.5x shorter: ~380px wide, 56px high) */}
-            <div className="w-full sm:w-[380px] h-[56px] min-h-[56px] flex flex-col flex-none">
+            <div className="w-full sm:w-[418px] h-[56px] min-h-[56px] flex flex-col flex-none">
               <LiveWeather tempUnit="C" speedUnit="kmh" throttleMs={500} />
+            </div>
+            <div className="w-full sm:w-[320px] h-[56px] min-h-[56px] flex-none border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl">
+              <div style={{ '--widget-bg-color': 'transparent' }} className="h-full overflow-hidden">
+                <LiveFlags
+                  variant="banner"
+                  autoHideClean={false}
+                  showSector={true}
+                  throttleMs={50}
+                  isLocked={true}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Hidden Widgets (Radar, PitHelper, DigitalDash) - Ready for customization menu */}
-          {false && (
-            <div className="hidden">
-              <LiveRadar rangeMeters={30} throttleMs={33} />
-              <PitHelper units="kph" throttleMs={33} />
-              <DigitalDash units="kph" shiftPctThreshold={0.95} throttleMs={16} />
-            </div>
-          )}
+          {/* 3. Delta + Fuel (left) alongside Standings Table (right) */}
+          <div className="flex-1 flex gap-3 min-h-0 min-w-0">
 
-          {/* 3. Timing & Classification Section with Standings / Relative Tabs */}
-          <div className="flex-1 flex flex-col border border-brand-60/60 rounded-xl bg-brand-bg shadow-xl overflow-hidden min-h-[320px]">
+            {/* Left Column: Delta + Fuel stacked */}
+            <div className="flex-none w-[240px] flex flex-col gap-3">
+              <div className="h-[280px] min-h-[280px] flex-none border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl">
+                <div style={{ '--widget-bg-color': 'transparent' }} className="h-full overflow-hidden">
+                  <LiveDelta
+                    variant="split"
+                    referenceMode="sessionBest"
+                    range={2}
+                    showLapTime={true}
+                    throttleMs={16}
+                    isLocked={true}
+                  />
+                </div>
+              </div>
+              <div className="h-[140px] min-h-[140px] flex-none">
+                <LiveFuel maxFuel={120} lowFuelThreshold={15} criticalFuelThreshold={5} throttleMs={200} />
+              </div>
+            </div>
+
+            {/* Right Column: Standings / Relative Table */}
+            <div className="flex-1 flex flex-col border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl overflow-hidden min-h-[320px] min-w-0">
             {/* Section Header & Tabs */}
-            <div className="flex items-center justify-between bg-brand-60/40 border-b border-brand-60 px-3.5 py-2 flex-none flex-wrap gap-2">
+            <div className="flex items-center justify-between border-b border-brand-60/60 px-3.5 py-2 flex-none flex-wrap gap-2">
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setActiveTab('standings')}
@@ -130,18 +151,20 @@ export function LiveDashboard() {
                 <LiveStandings 
                   columns={{ num: true, classPos: true, gap: true, ...columns }} 
                   groupByClass={groupByClass} 
-                  showClassName={true} 
+                  showClassName={showClassName}
                   throttleMs={200} 
                 />
               )}
               {activeTab === 'relative' && (
                 <LiveRelative 
                   columns={{ num: true, gap: true, ...columns }} 
-                  showClassName={true} 
+                  showClassName={showClassName}
                   throttleMs={100} 
                 />
               )}
             </div>
+          </div>
+
           </div>
 
         </div>

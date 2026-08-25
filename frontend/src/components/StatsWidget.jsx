@@ -107,19 +107,21 @@ export const StatsWidget = React.memo(function StatsWidget() {
       <div className="flex flex-wrap w-full gap-x-3 gap-y-6 p-4 justify-center items-center" style={{ '--widget-bg-color': 'rgba(30, 30, 36, 0.5)' }}>
 
         {/* Delta */}
-        <div className="flex-none w-[192px] h-[160px]">
-          <LiveDelta
-            variant="standard"
-            referenceMode="personalBest"
-            range={2}
-            showLapTime={true}
-            throttleMs={1}
-            isLocked={true}
-          />
+        <div className="flex-none w-[192px] h-[160px] border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl">
+          <div style={{ '--widget-bg-color': 'transparent' }} className="h-full overflow-hidden">
+            <LiveDelta
+              variant="standard"
+              referenceMode="personalBest"
+              range={2}
+              showLapTime={true}
+              throttleMs={1}
+              isLocked={true}
+            />
+          </div>
         </div>
 
         {/* Inputs + RPM combined block */}
-        <div className="flex flex-col bg-[var(--widget-bg-color)] rounded-xl overflow-hidden h-[160px]">
+        <div className="flex flex-col border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl overflow-hidden h-[160px]">
           <div className="w-[160px] h-[120px] hide-inputs-graph" style={{ '--widget-bg-color': 'transparent' }}>
             <LiveInputs throttleMs={1} timeRange={3} isLocked={true} />
           </div>
@@ -129,7 +131,7 @@ export const StatsWidget = React.memo(function StatsWidget() {
         </div>
 
         {/* G-Force Friction Circle */}
-        <div className="flex items-center justify-center bg-[var(--widget-bg-color)] rounded-xl p-3 h-[160px]">
+        <div className="flex items-center justify-center border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl p-3 h-[160px]">
           <FrictionCircle latAccel={data.lat_accel ?? data.g_lat ?? 0} longAccel={data.long_accel ?? data.g_lon ?? 0} maxG={2.5} />
         </div>
       </div>

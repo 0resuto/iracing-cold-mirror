@@ -7,6 +7,8 @@ export const LiveStreamPanel = () => {
   const isStreaming = useLiveStore(state => state.isStreaming);
   const columns = useAppStore(state => state.standingsColumns);
   const toggleColumn = useAppStore(state => state.toggleStandingsColumn);
+  const showClassName = useAppStore(state => state.showClassName);
+  const toggleShowClassName = useAppStore(state => state.toggleShowClassName);
 
   return (
     <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar min-w-0 p-5">
@@ -53,6 +55,13 @@ export const LiveStreamPanel = () => {
               onChange={() => toggleColumn(key)}
             />
           ))}
+          <div className="border-t border-brand-60 pt-2.5 mt-1">
+            <Checkbox
+              label="Show Class Name in Standings"
+              checked={showClassName}
+              onChange={toggleShowClassName}
+            />
+          </div>
         </div>
       </div>
 

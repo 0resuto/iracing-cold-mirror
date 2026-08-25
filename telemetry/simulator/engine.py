@@ -166,6 +166,12 @@ class SimulatorEngine:
         fuel_data = player.get_fuel_telemetry()
         weather_data = self.weather.get_telemetry_frame()
 
+        # 5.5 Calculate lap delta (current elapsed vs best lap projected at position)
+        current_elapsed = self.session_time - player.lap_start_time
+        best_at_position = player.best_lap_time * player.lap_dist_pct if player.best_lap_time and player.lap_dist_pct > 0 else 0
+        lap_delta = round(current_elapsed - best_at_position, 4) if best_at_position > 0 else 0
+        lap_delta_to_session = round(current_elapsed - best_at_position, 4) if best_at_position > 0 else 0
+
         # Determine effective spotter value (override vs auto)
         effective_car_left_right = grid_data["car_left_right"]
         if self.spotter_override == 1:
@@ -195,6 +201,10 @@ class SimulatorEngine:
             "session_laps_remain": laps_remain,
             "session_flags": global_flags["session_flags"],
             "session_best_lap_time": grid_data["session_best_lap_time"],
+            "lap_delta_to_best_lap": lap_delta,
+            "lap_delta_to_session_best_lap": lap_delta_to_session,
+            "lap_current_lap_time": round(current_elapsed, 3),
+            "lap_best_lap_time": player.best_lap_time,
             # Vehicle Dynamics & Controls
             **input_frame,
             # Fuel
