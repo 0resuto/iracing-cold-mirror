@@ -250,6 +250,3 @@ class IRacingLiveReader:
                     pass
                 self.ir.shutdown()
                 time.sleep(self.reconnect_interval)
-
-    def set_lap_dist_pct(self, pct):
-        pass
