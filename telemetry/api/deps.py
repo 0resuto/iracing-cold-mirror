@@ -10,14 +10,10 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 def verify_api_key(header_key: str | None = Security(api_key_header)) -> None:
+    # In dev mode (API_KEY not set), skip authentication for convenience.
+    # Set API_KEY in .env to enable protection.
     if not settings.api_key or not settings.api_key.strip():
-        import logging
-
-        logging.getLogger(__name__).warning(
-            "API_KEY is not set! API is unprotected. Set API_KEY in .env for production."
-        )
         return
-        # raise HTTPException(status_code=500, detail="Server misconfigured: API_KEY not set")
 
     if not header_key or not secrets.compare_digest(header_key, settings.api_key):
         raise HTTPException(

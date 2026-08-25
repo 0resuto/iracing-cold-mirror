@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,12 +40,20 @@ tags_metadata = [
 ]
 
 
+@asynccontextmanager
+async def lifespan(app):
+    if not settings.api_key or not settings.api_key.strip():
+        logger.warning("API_KEY is not set! Upload endpoint is unprotected.")
+    yield
+
+
 app = FastAPI(
     title="iRacing Telemetry API",
     description=description,
     version="0.2.0",
     openapi_tags=tags_metadata,
     swagger_ui_parameters={"syntaxHighlight.theme": "obsidian", "defaultModelsExpandDepth": -1},
+    lifespan=lifespan,
 )
 
 
