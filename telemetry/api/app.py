@@ -45,6 +45,11 @@ async def lifespan(app):
     if not settings.api_key or not settings.api_key.strip():
         logger.warning("API_KEY is not set! Upload endpoint is unprotected.")
     yield
+    # Graceful shutdown: close Redis connection pools
+    from telemetry.redis import redis_client, redis_sync
+
+    await redis_client.aclose()
+    redis_sync.close()
 
 
 app = FastAPI(
