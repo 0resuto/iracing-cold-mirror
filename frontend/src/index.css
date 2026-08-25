@@ -93,3 +93,7 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--color-brand-30);
 }
+
+.hide-inputs-graph .bg-black\/40 {
+  display: none !important;
+}

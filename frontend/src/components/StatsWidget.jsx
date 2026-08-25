@@ -1,7 +1,33 @@
 import React, { useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
+import { TelemetryProvider, LiveInputs, LiveDelta } from 'cold-mirror-widgets';
+import { RpmBar } from './RpmBar';
 import { FrictionCircle } from './FrictionCircle';
+
+function mapToWidgetFormat(data, delta, bestLapTime, sessionBestLap) {
+  if (!data) return null;
+  return {
+    Speed: (Number(data.speed) || 0) / 3.6,
+    RPM: Number(data.rpm) || 0,
+    Gear: Number(data.gear) || 0,
+    Throttle: Number(data.throttle) || 0,
+    Brake: Number(data.brake) || 0,
+    Clutch: Number(data.clutch) || 0,
+    SteeringWheelAngle: Number(data.wheel_angle) || 0,
+    ShiftIndicatorPct: Number(data.shift_indicator_pct) || 0,
+    LapDeltaToBestLap: delta != null ? delta : 0,
+    LapDeltaToSessionBestLap: sessionBestLap != null ? sessionBestLap : 0,
+    LapDeltaToOptimalLap: delta != null ? delta : 0,
+    LapCurrentLapTime: Number(data.lap_time) || 0,
+    LapBestLapTime: bestLapTime || 0,
+    SessionBestLapTime: sessionBestLap != null ? sessionBestLap : -1,
+    Lap: Number(data.lap_number) || 0,
+    OnPitRoad: false,
+    SessionFlags: 0,
+    LapDistPct: Number(data.lap_dist_pct) || 0,
+  };
+}
 
 export const StatsWidget = React.memo(function StatsWidget() {
   const hoveredData = useAppStore((state) => state.hoveredData);
@@ -45,6 +71,27 @@ export const StatsWidget = React.memo(function StatsWidget() {
     return null;
   }, [data, deltaData]);
 
+  const bestLapTime = useMemo(() => {
+    if (!selectedLap || !players?.length) return null;
+    const player = players.find(p => p.id === selectedLap.player_id);
+    if (!player) return null;
+    const session = player.sessions?.find(s => s.track_name === selectedLap.track_name);
+    return session?.best_lap_time || null;
+  }, [selectedLap, players]);
+
+  const sessionBestLap = useMemo(() => {
+    if (!players?.length) return null;
+    let best = null;
+    for (const p of players) {
+      for (const s of (p.sessions || [])) {
+        if (s.best_lap_time && s.best_lap_time > 0 && (best === null || s.best_lap_time < best)) {
+          best = s.best_lap_time;
+        }
+      }
+    }
+    return best;
+  }, [players]);
+
   if (!data) {
     return (
       <div className="flex h-full items-center justify-center text-brand-10/40">
@@ -53,143 +100,39 @@ export const StatsWidget = React.memo(function StatsWidget() {
     );
   }
 
-  // Handle data ranges (assuming throttle/brake are 0-1 or 0-100, let's assume 0-1 for now, adjust if needed)
-  const throttlePct = data.throttle <= 1 ? data.throttle * 100 : data.throttle;
-  const brakePct = data.brake <= 1 ? data.brake * 100 : data.brake;
-  
-  // RPM bar
-  const rpmPct = Math.min((data.rpm / maxRpm) * 100, 100);
-
-  // Steering angle (iRacing gives wheel_angle in radians. Positive = Left, Negative = Right)
-  // We negate it so Positive = Right (clockwise), Negative = Left, which matches CSS rotate and standard expectations.
-  const steeringRotation = -(data.wheel_angle || 0) * (180 / Math.PI);
-
-  const formatGear = (g) => {
-    if (g === 0) return 'N';
-    if (g < 0) return 'R';
-    return g;
-  };
+  const widgetTelemetry = mapToWidgetFormat(data, currentDelta, bestLapTime, sessionBestLap);
 
   return (
-    <div className="flex flex-wrap w-full gap-6 p-4 justify-center items-center">
-      
-      {/* Gear & Speed Block */}
-      <div className="flex-1 flex flex-col justify-between min-w-[120px] bg-brand-60/60 backdrop-blur-md border border-white/5 rounded-xl p-3 shadow-lg">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="text-brand-10/60 text-xs uppercase tracking-widest font-semibold">Gear</div>
-            <div className="font-mono text-[48px] leading-none text-accent-blue min-w-[40px] font-bold">
-              {formatGear(data.gear)}
-            </div>
+    <TelemetryProvider telemetry={widgetTelemetry} sessionDrivers={[]} sessionData={null} trackLength={0}>
+      <div className="flex flex-wrap w-full gap-x-3 gap-y-6 p-4 justify-center items-center" style={{ '--widget-bg-color': 'rgba(30, 30, 36, 0.5)' }}>
+
+        {/* Delta */}
+        <div className="flex-none w-[192px] h-[160px]">
+          <LiveDelta
+            variant="standard"
+            referenceMode="personalBest"
+            range={2}
+            showLapTime={true}
+            throttleMs={1}
+            isLocked={true}
+          />
+        </div>
+
+        {/* Inputs + RPM combined block */}
+        <div className="flex flex-col bg-[var(--widget-bg-color)] rounded-xl overflow-hidden h-[160px]">
+          <div className="w-[160px] h-[120px] hide-inputs-graph" style={{ '--widget-bg-color': 'transparent' }}>
+            <LiveInputs throttleMs={1} timeRange={3} isLocked={true} />
           </div>
-          <div className="text-right">
-            <div className="text-brand-10/60 text-xs uppercase tracking-widest font-semibold">Speed</div>
-            <div className="font-mono text-[32px] leading-none flex items-baseline justify-end font-bold">
-              <span className="w-[3ch] text-right inline-block text-brand-10">{Math.round(data.speed)}</span>
-              <span className="text-sm text-brand-10/60 ml-1.5 font-sans font-normal">km/h</span>
-            </div>
+          <div className="px-3 pb-3">
+            <RpmBar rpm={data.rpm} maxRpm={maxRpm} />
           </div>
         </div>
 
-        {/* RPM Bar */}
-        <div className="mt-4">
-          <div className="flex justify-between mb-1.5">
-            <span className="text-brand-10/60 text-[10px] uppercase font-bold tracking-widest">RPM</span>
-            <span className="font-mono text-sm font-bold text-brand-10">{Math.round(data.rpm)}</span>
-          </div>
-          <div className="h-2 bg-brand-60/80 rounded-full overflow-hidden border border-white/5">
-            <div 
-              className="h-full transition-all duration-100 ease-linear rounded-full"
-              style={{ 
-                width: `${rpmPct}%`, 
-                backgroundColor: rpmPct > 90 ? 'var(--color-accent-red)' : 'var(--color-text-main)'
-              }}
-            ></div>
-          </div>
+        {/* G-Force Friction Circle */}
+        <div className="flex items-center justify-center bg-[var(--widget-bg-color)] rounded-xl p-3 h-[160px]">
+          <FrictionCircle latAccel={data.lat_accel ?? data.g_lat ?? 0} longAccel={data.long_accel ?? data.g_lon ?? 0} maxG={2.5} />
         </div>
       </div>
-
-      {/* Delta Block */}
-      <div className="flex flex-col justify-center min-w-[130px] bg-brand-60/60 backdrop-blur-md border border-white/5 rounded-xl p-3 shadow-lg">
-        <div className="text-brand-10/60 text-[10px] uppercase font-bold tracking-widest mb-1 text-center">Delta</div>
-        <div className={`font-mono text-[32px] font-bold text-center ${
-          currentDelta === null ? 'text-brand-10/60' : (currentDelta <= 0 ? 'text-accent-green' : 'text-accent-red')
-        }`}>
-          {currentDelta !== null ? `${currentDelta > 0 ? '+' : ''}${currentDelta.toFixed(2)}s` : '---'}
-        </div>
-        
-        {/* Simple Delta Bar */}
-        <div className="h-2 w-full bg-brand-60/80 border border-white/5 rounded-full mt-3 relative overflow-hidden">
-            <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-text-muted z-10"></div>
-            {currentDelta !== null && (
-                <div 
-                    className="absolute top-0 bottom-0 transition-all duration-100 ease-linear"
-                    style={{
-                        left: currentDelta <= 0 ? `${Math.max(0, 50 - (Math.abs(currentDelta) / 2) * 50)}%` : '50%',
-                        right: currentDelta > 0 ? `${Math.max(0, 50 - (currentDelta / 2) * 50)}%` : '50%',
-                        backgroundColor: currentDelta <= 0 ? 'var(--color-accent-green)' : 'var(--color-accent-red)',
-                    }}
-                ></div>
-            )}
-        </div>
-        <div className="flex justify-between text-[10px] text-brand-10/60 mt-1.5 font-mono">
-          <span>-2s</span>
-          <span>+2s</span>
-        </div>
-      </div>
-
-      {/* Inputs (Pedals) Block */}
-      <div className="flex gap-4 bg-brand-60/60 backdrop-blur-md border border-white/5 rounded-xl p-3 shadow-lg">
-        
-        {/* Throttle */}
-        <div className="flex flex-col items-center">
-          <div className="h-[100px] w-6 bg-brand-60/80 border border-white/5 rounded-md overflow-hidden relative flex flex-col-reverse shadow-inner">
-            <div 
-              className="w-full bg-accent-green transition-all duration-100 ease-linear"
-              style={{ height: `${throttlePct}%` }}
-            ></div>
-          </div>
-          <div className="text-brand-10/60 text-[10px] mt-2 uppercase font-bold tracking-widest">THR</div>
-        </div>
-
-        {/* Brake */}
-        <div className="flex flex-col items-center">
-          <div className="h-[100px] w-6 bg-brand-60/80 border border-white/5 rounded-md overflow-hidden relative flex flex-col-reverse shadow-inner">
-            <div 
-              className="w-full bg-accent-red transition-all duration-100 ease-linear"
-              style={{ height: `${brakePct}%` }}
-            ></div>
-          </div>
-          <div className="text-brand-10/60 text-[10px] mt-2 uppercase font-bold tracking-widest">BRK</div>
-        </div>
-      </div>
-
-      {/* Steering Block */}
-      <div className="flex flex-col items-center justify-center min-w-[90px] bg-brand-60/60 backdrop-blur-md border border-white/5 rounded-xl p-3 shadow-lg">
-        <div className="text-brand-10/60 text-[10px] uppercase font-bold tracking-widest mb-3">Steering</div>
-        
-        {/* Simple steering wheel visualizer */}
-        <div className="w-[50px] h-[50px] border-2 border-text-muted/30 rounded-full relative bg-brand-60/80/50 shadow-inner">
-          {/* Steering marker */}
-          <div 
-            className="absolute top-[2px] w-1 h-2.5 bg-accent-blue rounded-full transition-transform duration-100 ease-linear"
-            style={{
-              left: 'calc(50% - 2px)',
-              transformOrigin: '2px 21px',
-              transform: `rotate(${steeringRotation}deg)`
-            }}
-          ></div>
-        </div>
-        <div className="font-mono text-xs mt-3 text-brand-10 font-bold">
-          {Math.round(steeringRotation)}°
-        </div>
-      </div>
-
-      {/* G-Force Friction Circle */}
-      <div className="flex items-center justify-center">
-        <FrictionCircle latAccel={data.lat_accel ?? data.g_lat ?? 0} longAccel={data.long_accel ?? data.g_lon ?? 0} maxG={2.5} />
-      </div>
-
-    </div>
+    </TelemetryProvider>
   );
 });

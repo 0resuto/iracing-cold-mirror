@@ -82,7 +82,7 @@ function AppContent() {
         className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-brand-60 ${
           isSidebarOpen 
             ? 'fixed md:relative inset-y-0 left-0 right-0 w-full md:w-[380px] z-50 md:z-auto shadow-2xl md:shadow-none bg-brand-60' 
-            : 'w-0 md:w-[64px] border-none md:border-r border-brand-60'
+            : 'w-0 md:w-11 border-none md:border-r border-brand-60'
         }`}
       >
         <Sidebar />
@@ -235,7 +235,7 @@ function AppContent() {
               </div>
               
               {/* Track Map & Stats Column (Visible on desktop or when mobileView === 'map' / 'stats') */}
-              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-2 overflow-x-hidden overflow-y-scroll h-full pr-1 custom-scrollbar pb-20 ${
+              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-2 overflow-x-hidden overflow-y-scroll h-full pl-1 custom-scrollbar pb-20 ${
                 mobileView !== 'charts' ? 'flex' : 'hidden md:flex'
               }`}>
                 {/* Track Map */}
