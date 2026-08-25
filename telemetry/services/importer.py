@@ -1,5 +1,6 @@
 import hashlib
 import logging
+from typing import NamedTuple
 
 from tqdm import tqdm
 
@@ -77,6 +78,14 @@ def _build_telemetry(lap_id: int, session_time: float, data: dict) -> Telemetry:
     )
 
 
+class LapTransitionResult(NamedTuple):
+    lap: RacingLap
+    sector_id: int
+    sector_start_time: float
+    lap_number: int
+    lap_start_time: float
+
+
 def _handle_lap_transition(
     db,
     data,
@@ -113,12 +122,12 @@ def _handle_lap_transition(
     db.add(new_lap)
     db.flush()
 
-    return (
-        new_lap,
-        0,
-        lap_last_lap_time,
-        new_lap_num,
-        lap_last_lap_time,
+    return LapTransitionResult(
+        lap=new_lap,
+        sector_id=0,
+        sector_start_time=lap_last_lap_time,
+        lap_number=new_lap_num,
+        lap_start_time=lap_last_lap_time,
     )
 
 
@@ -185,23 +194,22 @@ def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None)
             lap_dist_pct = data.get("lap_dist_pct", 0.0)
 
             if last_lap_dist_pct > 0.8 and lap_dist_pct < 0.2:
-                (
-                    current_lap,
-                    current_sector_id,
-                    sector_start_time,
-                    current_lap_num,
-                    lap_start_time,
-                ) = _handle_lap_transition(
-                    db,
-                    data,
-                    current_lap,
-                    lap_last_lap_time,
-                    sector_start_time,
-                    lap_start_time,
-                    current_sector_id,
-                    current_lap_num,
-                    current_session,
+                transition = _handle_lap_transition(
+                    db=db,
+                    data=data,
+                    current_lap=current_lap,
+                    lap_last_lap_time=lap_last_lap_time,
+                    sector_start_time=sector_start_time,
+                    lap_start_time=lap_start_time,
+                    current_sector_id=current_sector_id,
+                    current_lap_num=current_lap_num,
+                    current_session=current_session,
                 )
+                current_lap = transition.lap
+                current_sector_id = transition.sector_id
+                sector_start_time = transition.sector_start_time
+                current_lap_num = transition.lap_number
+                lap_start_time = transition.lap_start_time
 
             next_sector_id = current_sector_id + 1
 
