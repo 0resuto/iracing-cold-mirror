@@ -17,7 +17,7 @@ class Colors:
 
 
 def send_file_to_server(file_path: str):
-    upload_url = f"{settings.server_url}/api/sessions/upload"
+    upload_url = f"{settings.server_url}/api/v1/sessions/upload"
     file_name = os.path.basename(file_path)
     file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
 
@@ -47,7 +47,7 @@ def send_file_to_server(file_path: str):
                     print(f"  -> File sent. Server processing started (Task ID: {task_id}).")
 
                     while True:
-                        status_url = f"{settings.server_url}/api/sessions/upload/{task_id}"
+                        status_url = f"{settings.server_url}/api/v1/sessions/upload/{task_id}"
                         status_response = httpx.get(status_url, headers=headers)
 
                         if status_response.status_code == 200:

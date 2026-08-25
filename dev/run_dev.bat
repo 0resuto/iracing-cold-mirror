@@ -53,6 +53,15 @@ if errorlevel 1 (
     goto MENU
 )
 
+echo Running database migrations...
+call venv\Scripts\activate.bat
+alembic upgrade head
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Database migrations failed. Check PostgreSQL connection.
+    pause
+    goto MENU)
+
 echo Cleaning up orphaned processes...
 powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'uvicorn' -or $_.CommandLine -match 'scripts.simulator_gui' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
 

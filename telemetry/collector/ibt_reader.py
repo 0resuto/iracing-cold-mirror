@@ -20,7 +20,8 @@ def safe_int(val, default=0):
 class IBTReader:
     def __init__(self, file_path: str):
         self.ibt = irsdk.IBT()
-        if not self.ibt.open(file_path) or not getattr(self.ibt, "_header", None):
+        self.ibt.open(file_path)
+        if not getattr(self.ibt, "_header", None):
             raise ValueError(
                 f"Failed to parse '{file_path}': not a valid iRacing IBT telemetry file"
             )
