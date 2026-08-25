@@ -168,9 +168,15 @@ class SimulatorEngine:
 
         # 5.5 Calculate lap delta (current elapsed vs best lap projected at position)
         current_elapsed = self.session_time - player.lap_start_time
-        best_at_position = player.best_lap_time * player.lap_dist_pct if player.best_lap_time and player.lap_dist_pct > 0 else 0
+        best_at_position = (
+            player.best_lap_time * player.lap_dist_pct
+            if player.best_lap_time and player.lap_dist_pct > 0
+            else 0
+        )
         lap_delta = round(current_elapsed - best_at_position, 4) if best_at_position > 0 else 0
-        lap_delta_to_session = round(current_elapsed - best_at_position, 4) if best_at_position > 0 else 0
+        lap_delta_to_session = (
+            round(current_elapsed - best_at_position, 4) if best_at_position > 0 else 0
+        )
 
         # Determine effective spotter value (override vs auto)
         effective_car_left_right = grid_data["car_left_right"]

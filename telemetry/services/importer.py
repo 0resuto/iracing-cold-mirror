@@ -42,7 +42,11 @@ def _create_session(
     db, player_id: int, track_name: str, car_name: str, file_hash: str, redline_rpm: int = 8500
 ) -> RacingSession:
     session = RacingSession(
-        track_name=track_name, player_id=player_id, car_name=car_name, file_hash=file_hash, redline_rpm=redline_rpm
+        track_name=track_name,
+        player_id=player_id,
+        car_name=car_name,
+        file_hash=file_hash,
+        redline_rpm=redline_rpm,
     )
     db.add(session)
     db.flush()
@@ -159,7 +163,9 @@ def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None)
         redline_rpm = getattr(reader, "redline_rpm", 8500)
 
         player = _get_or_create_player(db, player_name)
-        current_session = _create_session(db, player.id, track_name, car_name, file_hash, redline_rpm)
+        current_session = _create_session(
+            db, player.id, track_name, car_name, file_hash, redline_rpm
+        )
         db.flush()
 
         # Read first frame to determine initial iRacing lap number (0 for Outlap, 1 for Lap 1)

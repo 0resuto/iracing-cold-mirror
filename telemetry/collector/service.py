@@ -102,7 +102,9 @@ def run(reader):
                         "player_car_idx": data.get("player_car_idx"),
                         "session_best_lap_time": data.get("session_best_lap_time", -1),
                         "lap_delta_to_best_lap": data.get("lap_delta_to_best_lap", 0),
-                        "lap_delta_to_session_best_lap": data.get("lap_delta_to_session_best_lap", 0),
+                        "lap_delta_to_session_best_lap": data.get(
+                            "lap_delta_to_session_best_lap", 0
+                        ),
                         "lap_current_lap_time": data.get("lap_current_lap_time", 0),
                         "lap_best_lap_time": data.get("lap_best_lap_time", 0),
                         "grid": data.get("grid", {}),

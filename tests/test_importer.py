@@ -50,6 +50,7 @@ def test_import_ibt_to_db_happy_path(mock_reader_class, mock_get_file_hash, db_s
     mock_instance.car_name = "Test Car"
     mock_instance.sectors = [{"SectorStartPct": 0.0}, {"SectorStartPct": 0.5}]
     mock_instance.num_samples = len(FAKE_TELEMETRY)
+    mock_instance.redline_rpm = 8500
 
     mock_instance.read.side_effect = FAKE_TELEMETRY + [None]
 
