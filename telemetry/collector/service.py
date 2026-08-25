@@ -8,9 +8,6 @@ from websockets.sync.client import connect
 
 from telemetry.config import settings
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 

@@ -25,9 +25,6 @@ def get_file_hash(file_path: str) -> str:
     return sha256.hexdigest()
 
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 
