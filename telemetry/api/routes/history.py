@@ -74,28 +74,19 @@ def get_lap_telemetry(lap_id: int, db: DBSession = Depends(get_db), max_points: 
     total = db.query(func.count(Telemetry.id)).filter(Telemetry.lap_id == lap_id).scalar()
     if total == 0:
         raise HTTPException(status_code=404, detail="Lap not found")
-    step = max(1, total // max_points)
-    rows = (
-        db.execute(
-            text("""
-            SELECT id FROM (
-                SELECT id, ROW_NUMBER() OVER (ORDER BY session_time ASC) as rn
-                FROM telemetry WHERE lap_id = :lap_id
-            ) sub
-            WHERE (rn - 1) % :step = 0
-        """),
-            {"lap_id": lap_id, "step": step},
-        )
-        .scalars()
-        .all()
-    )
 
-    return (
-        db.query(Telemetry)
-        .filter(Telemetry.id.in_(rows))
-        .order_by(Telemetry.session_time.asc())
-        .all()
-    )
+    step = max(1, total // max_points)
+    stmt = text("""
+        SELECT * FROM (
+            SELECT *, ROW_NUMBER() OVER (ORDER BY session_time ASC) as rn
+            FROM telemetry
+            WHERE lap_id = :lap_id
+        ) sub
+        WHERE (rn - 1) % :step = 0
+        ORDER BY session_time ASC
+    """)
+
+    return db.query(Telemetry).from_statement(stmt).params(lap_id=lap_id, step=step).all()
 
 
 @router.get(
