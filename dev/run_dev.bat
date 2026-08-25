@@ -16,9 +16,8 @@ echo  [1]  Start Full Stack Dev Mode (Postgres + Redis + API + Frontend)
 echo  [2]  Start Vite Dev Frontend Only (HMR / Hot Reload: http://localhost:5173)
 echo  [3]  Start Docker Infrastructure Only (Postgres + Redis + pgAdmin)
 echo.
-echo  ------------------- SIMULATION AND MOCKING ---------------------
+echo  ------------------- SIMULATION STUDIO -------------------------
 echo  [4]  Launch Simulator Studio GUI (Embedded Engine + 60 FPS Streamer)
-echo  [5]  Run Telemetry IBT Mock Generator (scripts.run_mock)
 echo.
 echo  ---------------------- TESTING AND DATABASE ---------------------
 echo  [6]  Run Test Suite (pytest)
@@ -36,7 +35,6 @@ if "%CHOICE%"=="1" goto DEV_FULLSTACK
 if "%CHOICE%"=="2" goto DEV_FRONTEND
 if "%CHOICE%"=="3" goto INFRA_ONLY
 if "%CHOICE%"=="4" goto RUN_SIM_GUI
-if "%CHOICE%"=="5" goto RUN_MOCK
 if "%CHOICE%"=="6" goto RUN_TESTS
 if "%CHOICE%"=="7" goto RUN_MIGRATIONS
 if "%CHOICE%"=="8" goto STOP_DOCKER
@@ -133,21 +131,6 @@ echo Launching Cold Mirror Telemetry Simulator Studio GUI...
 start "" "%CD%\venv\Scripts\pythonw.exe" "%CD%\scripts\simulator_gui.py"
 goto MENU
 
-:RUN_MOCK
-cls
-if not exist "venv\Scripts\activate.bat" (
-    echo [ERROR] Python virtual environment not found. Please run setup.bat first.
-    pause
-    goto MENU
-)
-echo Cleaning up any orphaned mock processes...
-powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.run_mock' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
-
-echo Running Telemetry IBT Mock Generator...
-call venv\Scripts\activate.bat
-python -m scripts.run_mock
-pause
-goto MENU
 
 :RUN_TESTS
 cls

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from telemetry.db import Base, engine
+from telemetry.db import Base
 
 
 class Player(Base):
@@ -89,8 +89,3 @@ class Telemetry(Base):
     wheel_lock = Column(Boolean, default=False, nullable=True)  # Any wheel locked flag
 
     lap = relationship("Lap", back_populates="telemetry_data")
-
-
-if __name__ == "__main__":
-    Base.metadata.create_all(engine)
-    print("Tables successfully created!")
