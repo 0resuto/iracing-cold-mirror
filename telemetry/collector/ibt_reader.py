@@ -39,6 +39,7 @@ class IBTReader:
         self.player_name = "Unknown Player"
         self.car_name = "Unknown Car"
         self.track_id = 165
+        self.redline_rpm = 8500
         self.session_drivers = []
         self.sectors = []
 
@@ -59,6 +60,7 @@ class IBTReader:
             self.track_id = weekend_info.get("TrackID", 165)
 
             driver_info = session_info.get("DriverInfo", {})
+            self.redline_rpm = int(driver_info.get("DriverCarRedLine", 8500))
             drivers = driver_info.get("Drivers", [])
             for d in drivers:
                 self.session_drivers.append(

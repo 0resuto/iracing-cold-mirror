@@ -5,9 +5,17 @@ import { FrictionCircle } from './FrictionCircle';
 
 export const StatsWidget = React.memo(function StatsWidget() {
   const hoveredData = useAppStore((state) => state.hoveredData);
-  const { lapData, deltaData } = useTelemetryData();
+  const { lapData, deltaData, players, selectedLap } = useTelemetryData();
 
   const data = hoveredData || (lapData.length > 0 ? lapData[lapData.length - 1] : null);
+
+  const maxRpm = useMemo(() => {
+    if (!selectedLap || !players?.length) return 8500;
+    const player = players.find(p => p.id === selectedLap.player_id);
+    if (!player) return 8500;
+    const session = player.sessions?.find(s => s.track_name === selectedLap.track_name);
+    return session?.redline_rpm || 8500;
+  }, [selectedLap, players]);
 
   const currentDelta = useMemo(() => {
     if (!data) return null;
@@ -49,8 +57,7 @@ export const StatsWidget = React.memo(function StatsWidget() {
   const throttlePct = data.throttle <= 1 ? data.throttle * 100 : data.throttle;
   const brakePct = data.brake <= 1 ? data.brake * 100 : data.brake;
   
-  // RPM bar (let's assume max RPM is around 8000 for a generic car)
-  const maxRpm = 8500;
+  // RPM bar
   const rpmPct = Math.min((data.rpm / maxRpm) * 100, 100);
 
   // Steering angle (iRacing gives wheel_angle in radians. Positive = Left, Negative = Right)

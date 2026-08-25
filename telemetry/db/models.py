@@ -27,6 +27,7 @@ class Session(Base):
     car_name = Column(String, nullable=True)
     start_time = Column(DateTime, nullable=True, default=lambda: datetime.now(timezone.utc))
     duration_seconds = Column(Float, nullable=True, default=0.0)
+    redline_rpm = Column(Integer, nullable=True, default=8500)
     laps = relationship("Lap", back_populates="session", cascade="all, delete-orphan")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 

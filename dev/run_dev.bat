@@ -53,12 +53,28 @@ if errorlevel 1 (
     goto MENU
 )
 
+echo Waiting for PostgreSQL to be ready...
+set /a RETRIES=0
+:WAIT_PG
+powershell -noprofile -command "$c = New-Object System.Net.Sockets.TcpClient; try { $c.Connect('127.0.0.1', 5432); $c.Close(); exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 goto PG_READY
+set /a RETRIES+=1
+if %RETRIES% geq 30 (
+    echo [ERROR] PostgreSQL did not become ready in time.
+    pause
+    goto MENU
+)
+timeout /t 1 >nul
+goto WAIT_PG
+:PG_READY
+echo PostgreSQL is ready.
+
 echo Running database migrations...
 call venv\Scripts\activate.bat
 alembic upgrade head
 if errorlevel 1 (
     echo.
-    echo [ERROR] Database migrations failed. Check PostgreSQL connection.
+    echo [ERROR] Database migrations failed.
     pause
     goto MENU)
 

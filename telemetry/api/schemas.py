@@ -79,6 +79,7 @@ class SessionResponse(BaseModel):
     car_name: str | None = Field(None, description="Name of the car used")
     start_time: datetime | None = Field(None, description="Session start time")
     duration_seconds: float | None = Field(0.0, description="Session duration in seconds")
+    redline_rpm: int | None = Field(8500, description="Engine redline RPM for the car")
     created_at: datetime | None = Field(None, description="Upload timestamp")
     laps: list[LapResponse] = Field([], description="List of laps in the session")
 
