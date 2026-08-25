@@ -99,6 +99,7 @@ def get_lap_telemetry(lap_id: int, db: DBSession = Depends(get_db), max_points: 
 def get_best_lap(player_id: int, track_name: str, db: DBSession = Depends(get_db)):
     best_lap = (
         db.query(Lap)
+        .options(selectinload(Lap.sectors))
         .join(Session)
         .filter(Session.player_id == player_id, Session.track_name == track_name, Lap.lap_time > 0)
         .order_by(Lap.lap_time.asc())
@@ -188,7 +189,11 @@ def get_lap_delta(lap_id: int, reference_lap_id: int, db: DBSession = Depends(ge
 )
 def get_history(skip: int = 0, limit: int = Query(10, le=100), db: DBSession = Depends(get_db)):
     players = (
-        db.query(Player).options(selectinload(Player.sessions)).offset(skip).limit(limit).all()
+        db.query(Player)
+        .options(selectinload(Player.sessions).selectinload(Session.laps).selectinload(Lap.sectors))
+        .offset(skip)
+        .limit(limit)
+        .all()
     )
     return players
 
