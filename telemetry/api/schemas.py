@@ -103,7 +103,6 @@ class LastUploadInfo(BaseModel):
 
 class SystemInfoResponse(BaseModel):
     status: str
-    database: str
     auth_enabled: bool
     total_players: int
     total_sessions: int

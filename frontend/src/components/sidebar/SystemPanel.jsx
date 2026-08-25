@@ -29,10 +29,8 @@ export const SystemPanel = () => {
                 Online
               </span>
             </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-brand-10/60">Database</span>
-              <span className="font-mono text-brand-10/80 font-bold">{systemInfo.database}</span>
-            </div>
+
+
             <div className="flex items-center justify-between text-xs">
               <span className="text-brand-10/60">API Key Security</span>
               <span className={`font-bold ${systemInfo.auth_enabled ? 'text-emerald-400' : 'text-amber-400'}`}>

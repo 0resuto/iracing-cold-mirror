@@ -265,7 +265,6 @@ def get_system_info(db: DBSession = Depends(get_db)):
         }
     return SystemInfoResponse(
         status="ok",
-        database="PostgreSQL 16",
         auth_enabled=bool(settings.api_key and settings.api_key.strip()),
         total_players=total_players,
         total_sessions=total_sessions,
