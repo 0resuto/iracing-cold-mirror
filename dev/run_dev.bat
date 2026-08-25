@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-title iRacing Telemetry Platform Developer Control Panel
+title iRacing Telemetry Developer Control Panel
 cd /d "%~dp0\.."
 
 :MENU
@@ -8,37 +8,28 @@ cls
 echo ======================================================================
 echo             iRacing Telemetry Platform Developer Panel
 echo ======================================================================
-echo  Root Directory: %CD%
+echo  Root: %CD%
 echo ======================================================================
 echo.
-echo  ---------------------- LOCAL DEVELOPMENT -----------------------
-echo  [1]  Start Full Stack Dev Mode (Postgres + Redis + API + Frontend)
-echo  [2]  Start Vite Dev Frontend Only (HMR / Hot Reload: http://localhost:5173)
-echo  [3]  Start Docker Infrastructure Only (Postgres + Redis + pgAdmin)
-echo.
-echo  ------------------- SIMULATION STUDIO -------------------------
-echo  [4]  Launch Simulator Studio GUI (Embedded Engine + 60 FPS Streamer)
-echo.
-echo  ---------------------- TESTING AND DATABASE ---------------------
-echo  [6]  Run Test Suite (pytest)
-echo  [7]  Run Database Migrations (alembic upgrade head)
-echo.
-echo  ------------------------- UTILITIES -----------------------------
-echo  [8]  Stop Docker Containers
-echo  [9]  Edit Configuration (.env)
+echo  [1]  Start Full Stack (API + Items [2] and [3])
+echo  [2]  Start Frontend Only (Vite Dev Server)
+echo  [3]  Start Infrastructure (Postgres + Redis)
+echo  [4]  Start IBT Sync Agent (Background Uploader)
+echo  [5]  Start Simulator Studio GUI (Engine + Streamer)
+echo  [6]  Run Tests (pytest)
+echo  [7]  Stop Infrastructure (Docker Down)
 echo.
 echo  [0]  Exit
 echo ======================================================================
-set /p CHOICE="Select an option [0-9]: "
+set /p CHOICE="Select an option [0-7]: "
 
 if "%CHOICE%"=="1" goto DEV_FULLSTACK
 if "%CHOICE%"=="2" goto DEV_FRONTEND
 if "%CHOICE%"=="3" goto INFRA_ONLY
-if "%CHOICE%"=="4" goto RUN_SIM_GUI
+if "%CHOICE%"=="4" goto RUN_AGENT
+if "%CHOICE%"=="5" goto RUN_SIM_GUI
 if "%CHOICE%"=="6" goto RUN_TESTS
-if "%CHOICE%"=="7" goto RUN_MIGRATIONS
-if "%CHOICE%"=="8" goto STOP_DOCKER
-if "%CHOICE%"=="9" goto EDIT_ENV
+if "%CHOICE%"=="7" goto STOP_DOCKER
 if "%CHOICE%"=="0" exit /b 0
 
 echo Invalid choice. Please try again.
@@ -48,8 +39,7 @@ goto MENU
 :DEV_FULLSTACK
 cls
 if not exist "venv\Scripts\activate.bat" (
-    echo [ERROR] Python virtual environment not found. Please run setup.bat first.
-    echo.
+    echo [ERROR] Python virtual environment not found. Run setup.bat first.
     pause
     goto MENU
 )
@@ -58,103 +48,92 @@ echo Starting Docker infrastructure (Postgres, Redis)...
 docker compose up -d postgres redis
 if errorlevel 1 (
     echo.
-    echo [ERROR] Failed to start Docker services. Make sure Docker Desktop is running.
-    echo.
+    echo [ERROR] Failed to start Docker services. Ensure Docker Desktop is running.
     pause
     goto MENU
 )
 
-echo Activating Python venv and running database migrations...
-call venv\Scripts\activate.bat
-alembic upgrade head
+echo Cleaning up orphaned processes...
+powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'uvicorn' -or $_.CommandLine -match 'scripts.simulator_gui' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
 
-echo Cleaning up any orphaned backend or agent processes...
-powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'uvicorn' -or $_.CommandLine -match 'scripts.agent' -or $_.CommandLine -match 'scripts.simulator_gui' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
-
-echo Starting FastAPI Backend in separate minimized window...
+echo Starting FastAPI Backend...
 start /min "FastAPI Backend (Dev)" cmd /k "cd /d %CD% && call venv\Scripts\activate.bat && uvicorn telemetry.api.app:app --reload --host 127.0.0.1 --port 8000"
 
-echo Starting React Frontend (Vite) in separate minimized window...
+echo Starting React Frontend (Vite)...
 start /min "React Frontend (Vite)" cmd /k "cd /d %CD%\frontend && npm run dev"
-
-echo Starting Telemetry Sync Agent in separate minimized window...
-start /min "IBT Sync Agent" cmd /k "cd /d %CD% && call venv\Scripts\activate.bat && python -m scripts.agent"
 
 echo.
 echo ======================================================================
-echo Full stack development environment launched!
-echo  - API Docs:   http://127.0.0.1:8000/docs
-echo  - Frontend:   http://127.0.0.1:5173
+echo Full stack development environment started!
+echo  - API Docs:  http://127.0.0.1:8000/docs
+echo  - Frontend:  http://127.0.0.1:5173
 echo ======================================================================
 pause
 goto MENU
 
 :DEV_FRONTEND
 cls
-echo Starting React Frontend Vite Dev Server (Hot Reload HMR)...
+echo Starting React Frontend Vite Dev Server...
 start /min "React Frontend (Vite Dev)" cmd /k "cd /d %CD%\frontend && npm run dev"
 echo.
 echo ======================================================================
-echo Vite Dev Server started!
-echo  - Local URL:  http://localhost:5173
-echo  (Edits in React/CSS files will instantly update in the browser!)
+echo Vite Dev Server started: http://localhost:5173
 echo ======================================================================
 pause
 goto MENU
 
 :INFRA_ONLY
 cls
-echo Starting Docker infrastructure (Postgres, Redis, pgAdmin)...
-docker compose up -d postgres redis pgadmin
+echo Starting Docker infrastructure (Postgres, Redis)...
+docker compose up -d postgres redis
 if errorlevel 1 (
     echo.
-    echo [ERROR] Failed to start Docker services. Make sure Docker Desktop is running.
-    echo.
+    echo [ERROR] Failed to start Docker services.
     pause
     goto MENU
 )
 echo.
-echo Infrastructure started!
-echo  - Postgres: localhost:5432
-echo  - Redis:    localhost:6379
+echo Infrastructure started (Postgres: 5432, Redis: 6379)
+pause
+goto MENU
+
+:RUN_AGENT
+cls
+if not exist "venv\Scripts\activate.bat" (
+    echo [ERROR] Python virtual environment not found. Run setup.bat first.
+    pause
+    goto MENU
+)
+echo Cleaning up orphaned IBT agents...
+powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.agent' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
+
+echo Starting IBT Sync Agent...
+call venv\Scripts\activate.bat
+python -m scripts.agent
 pause
 goto MENU
 
 :RUN_SIM_GUI
 cls
 if not exist "venv\Scripts\activate.bat" (
-    echo [ERROR] Python virtual environment not found. Please run setup.bat first.
+    echo [ERROR] Python virtual environment not found. Run setup.bat first.
     pause
     goto MENU
 )
-echo Launching Cold Mirror Telemetry Simulator Studio GUI...
+echo Launching Simulator Studio GUI...
 start "" "%CD%\venv\Scripts\pythonw.exe" "%CD%\scripts\simulator_gui.py"
 goto MENU
-
 
 :RUN_TESTS
 cls
 if not exist "venv\Scripts\activate.bat" (
-    echo [ERROR] Python virtual environment not found. Please run setup.bat first.
+    echo [ERROR] Python virtual environment not found. Run setup.bat first.
     pause
     goto MENU
 )
-echo Running pytest test suite...
+echo Running pytest...
 call venv\Scripts\activate.bat
 pytest -v
-pause
-goto MENU
-
-:RUN_MIGRATIONS
-cls
-if not exist "venv\Scripts\activate.bat" (
-    echo [ERROR] Python virtual environment not found. Please run setup.bat first.
-    pause
-    goto MENU
-)
-echo Running Alembic database migrations...
-call venv\Scripts\activate.bat
-alembic upgrade head
 pause
 goto MENU
 
@@ -163,13 +142,4 @@ cls
 echo Stopping Docker containers...
 docker compose down
 pause
-goto MENU
-
-:EDIT_ENV
-cls
-if exist ".env" (
-    notepad .env
-) else (
-    echo .env file not found. Run setup.bat first.
-)
 goto MENU
