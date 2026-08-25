@@ -157,14 +157,14 @@ export const Sidebar = React.memo(function Sidebar() {
     <div className="flex h-full w-full bg-brand-60 min-w-0">
       
       {/* Left Icon Navigation Bar (DESKTOP ONLY) */}
-      <div className="hidden md:flex w-16 min-w-[64px] border-r border-brand-60 flex-col items-center py-4 bg-brand-bg flex-none z-10">
+      <div className="hidden md:flex w-11 min-w-[44px] border-r border-brand-60 flex-col items-center py-4 bg-brand-bg flex-none z-10">
         {/* Toggle Sidebar Arrow Button */}
         <button 
           onClick={toggleSidebar} 
           title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-          className="p-3 rounded-xl hover:bg-brand-60 text-brand-10/60 hover:text-brand-10 transition-all flex items-center justify-center cursor-pointer mt-1 mb-10 w-12 h-12 border border-transparent hover:border-brand-60 active:scale-95"
+          className="p-2 rounded-xl hover:bg-brand-60 text-brand-10/60 hover:text-brand-10 transition-all flex items-center justify-center cursor-pointer mt-1 mb-10 w-9 h-9 border border-transparent hover:border-brand-60 active:scale-95"
         >
-          {isOpen ? <ChevronLeft size={26} strokeWidth={2.5} /> : <ChevronRight size={26} strokeWidth={2.5} />}
+          {isOpen ? <ChevronLeft size={20} strokeWidth={2.5} /> : <ChevronRight size={20} strokeWidth={2.5} />}
         </button>
 
         <div className="flex flex-col gap-4 w-full">
@@ -179,7 +179,7 @@ export const Sidebar = React.memo(function Sidebar() {
               isHistory ? 'border-accent-blue text-accent-blue font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
             }`}
           >
-            <Timer size={24} />
+            <Timer size={20} />
           </div>
 
           {/* Live Telemetry Tab */}
@@ -193,7 +193,7 @@ export const Sidebar = React.memo(function Sidebar() {
               isLive ? 'border-accent-red text-accent-red font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
             }`}
           >
-            <Radio size={24} />
+            <Radio size={20} />
           </div>
 
           {/* System & Parameters Tab */}
@@ -207,7 +207,7 @@ export const Sidebar = React.memo(function Sidebar() {
               isSystem ? 'border-accent-green text-accent-green font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
             }`}
           >
-            <Settings size={24} />
+            <Settings size={20} />
           </div>
         </div>
       </div>
@@ -305,7 +305,7 @@ export const Sidebar = React.memo(function Sidebar() {
               <div className="border-t border-brand-60 bg-black/10 flex-none min-w-0 px-5 py-1.5">
                  <div className="flex justify-between items-center min-w-0">
                     <h3 className="text-xs uppercase tracking-wider text-brand-10/60 font-semibold m-0 truncate">Theoretical Best</h3>
-                    <span className="font-mono font-bold text-brand-30/80 text-xs flex-none">
+                    <span className="font-mono font-bold text-purple-400 text-xs flex-none">
                       {idealLap.ideal_lap_time.toFixed(2)}s
                     </span>
                  </div>

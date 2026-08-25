@@ -8,7 +8,7 @@ import { useAppStore } from './store/useAppStore';
 import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
 import { Toaster } from 'react-hot-toast';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront } from 'lucide-react';
+import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront, Calendar } from 'lucide-react';
 import { useTelemetryData } from './features/telemetry/useTelemetryData';
 import { useLiveStore } from './store/useLiveStore';
 
@@ -39,6 +39,18 @@ function AppContent() {
     playerName = players?.find(p => p.id === selectedLap.player_id)?.name;
   }
   const carName = isLive ? liveCarName : selectedLap?.car_name;
+
+  let sessionDateTime = null;
+  if (!isLive && selectedLap && players) {
+    const player = players.find(p => p.id === selectedLap.player_id);
+    if (player) {
+      const session = player.sessions?.find(s => s.laps?.some(l => l.id === selectedLap.id));
+      if (session?.start_time) {
+        const d = new Date(session.start_time);
+        sessionDateTime = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+  }
 
   // Mobile View Tab state
   const [mobileView, setMobileView] = useState('charts'); // 'charts' | 'map' | 'stats'
@@ -100,6 +112,12 @@ function AppContent() {
               <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
                 <CarFront size={12} className="text-brand-30/70 flex-none" />
                 <span className="truncate">{carName}</span>
+              </div>
+            )}
+            {sessionDateTime && (
+              <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
+                <Calendar size={12} className="text-brand-30/70 flex-none" />
+                <span className="truncate">{sessionDateTime}</span>
               </div>
             )}
             {(!trackName && !playerName && !carName) && (
@@ -210,18 +228,18 @@ function AppContent() {
             </button>
           </div>
         ) : (
-          <div className="flex flex-1 gap-4 md:gap-6 min-h-0 w-full overflow-hidden flex-col md:flex-row p-4">
+          <div className="flex flex-1 gap-2 md:gap-3 min-h-0 w-full overflow-hidden flex-col md:flex-row p-2 md:p-3">
               {/* Telemetry Charts (Visible on desktop or when mobileView === 'charts') */}
               <div className={`flex-[2] min-w-0 flex flex-col h-full overflow-y-scroll custom-scrollbar pb-20 ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
                 <TelemetryChart />
               </div>
               
               {/* Track Map & Stats Column (Visible on desktop or when mobileView === 'map' / 'stats') */}
-              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-4 overflow-x-hidden overflow-y-scroll h-full pr-1 custom-scrollbar pb-20 ${
+              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-2 overflow-x-hidden overflow-y-scroll h-full pr-1 custom-scrollbar pb-20 ${
                 mobileView !== 'charts' ? 'flex' : 'hidden md:flex'
               }`}>
                 {/* Track Map */}
-                <div className={`flex-1 flex-col min-h-[260px] bg-brand-60 rounded-lg border border-brand-60 shadow-xl overflow-hidden relative ${
+                <div className={`flex-1 flex-col min-h-[260px] overflow-hidden relative ${
                   mobileView === 'map' ? 'flex' : 'hidden'
                 } md:flex`}>
                   <TrackMap />

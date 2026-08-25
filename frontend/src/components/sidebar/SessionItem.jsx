@@ -39,8 +39,10 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
         <div className="flex items-center justify-between text-xs sm:text-sm font-bold min-w-0">
           <div className="flex items-center gap-2 min-w-0 truncate pr-2">
             <Calendar size={15} className="text-emerald-400 flex-none" />
-            <span className="truncate text-brand-10 font-bold">{date}</span>
-            {timeRange && <span className="text-xs font-mono text-brand-10/60 font-normal truncate">({timeRange})</span>}
+            <div className="flex flex-col min-w-0">
+              <span className="truncate text-brand-10 font-bold text-[11px] leading-tight">{date}</span>
+              {timeRange && <span className="text-[10px] font-mono text-brand-10/60 font-normal truncate leading-tight">{timeRange}</span>}
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-none ml-1">
             <span className="text-[11px] font-mono font-bold text-brand-10/60">

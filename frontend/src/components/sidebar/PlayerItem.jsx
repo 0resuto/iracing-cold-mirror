@@ -38,14 +38,16 @@ export const PlayerItem = React.memo(function PlayerItem({ player, isOpen, onTog
           isOpen ? 'bg-brand-60/90 text-brand-10' : 'hover:bg-brand-60/60 text-brand-10'
         }`}
       >
-        <span className="flex items-center gap-3 min-w-0 truncate pr-2">
+        <div className="flex items-center gap-3 min-w-0 truncate pr-2">
           <User size={18} className="text-brand-30/80 flex-none" />
-          <span className="text-sky-100 font-extrabold text-xs sm:text-sm truncate">{player.name}</span>
-        </span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sky-100 font-extrabold text-xs sm:text-sm truncate">{player.name}</span>
+            <span className="text-[10px] font-mono text-brand-10/50 font-normal truncate leading-tight">
+              {tracksCount} tracks · {sessionsCount} sess
+            </span>
+          </div>
+        </div>
         <div className="flex items-center gap-2 flex-none ml-1">
-          <span className="text-[11px] font-mono text-brand-10/60 font-bold truncate max-w-[150px]">
-            {tracksCount} tracks · {sessionsCount} sess
-          </span>
           {isOpen ? <ChevronDown size={18} className="text-brand-30/80" /> : <ChevronRight size={18} className="text-brand-10/60" />}
         </div>
       </div>

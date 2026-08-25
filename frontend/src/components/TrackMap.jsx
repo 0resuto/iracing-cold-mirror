@@ -498,8 +498,7 @@ export const TrackMap = React.memo(function TrackMap() {
 
   return (
     <div className="flex flex-col items-center h-full">
-      <div className="w-full flex justify-between items-center px-4 pt-3 pb-1">
-        <h2 className="text-xs uppercase tracking-wider text-brand-10/60 font-extrabold m-0">Track Position (Scroll to Zoom)</h2>
+      <div className="w-full flex justify-between items-center px-2 pt-1 pb-0.5">
         <div className="flex items-center gap-2">
           <select 
             value={mapMode}
@@ -519,9 +518,26 @@ export const TrackMap = React.memo(function TrackMap() {
             <option value="delta">Delta</option>
           </select>
         </div>
+        {colorMode !== 'default' && (
+          <div className="flex items-center gap-2 text-[10px] text-brand-10/80 font-mono">
+            {colorMode === 'speed' ? (
+              <>
+                <span className="text-red-400 font-bold">Slow</span>
+                <div className="w-16 h-2 rounded bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
+                <span className="text-green-400 font-bold">Fast</span>
+              </>
+            ) : (
+              <>
+                <span className="text-red-400 font-bold">+ Δ</span>
+                <div className="w-16 h-2 rounded bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
+                <span className="text-green-400 font-bold">- Δ</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
       
-      <div className="flex-1 w-full relative overflow-hidden bg-brand-60/60 backdrop-blur-md rounded-xl border border-white/5 mt-2 shadow-lg">
+      <div className="flex-1 w-full relative overflow-hidden mt-1">
         {isLive && (!lapData || lapData.length === 0) && !fallbackPathD ? (
           <div className="w-full h-full flex flex-col items-center justify-center text-brand-10/40 gap-3">
             <span className="w-6 h-6 border-2 border-brand-60 border-t-zinc-400 rounded-full animate-spin"></span>
@@ -533,23 +549,6 @@ export const TrackMap = React.memo(function TrackMap() {
           </div>
         ) : svgData && mapMode === 'gps' ? (
           <div className="w-full h-full cursor-grab active:cursor-grabbing absolute top-0 left-0">
-            {colorMode !== 'default' && (
-              <div className="absolute bottom-3 left-3 bg-brand-bg/90 backdrop-blur-md border border-brand-60 px-3 py-1.5 rounded-md text-[10px] text-brand-10/80 flex items-center gap-2 font-mono shadow-md z-10 pointer-events-none">
-                {colorMode === 'speed' ? (
-                  <>
-                    <span className="text-red-400 font-bold">Slow</span>
-                    <div className="w-16 h-2 rounded bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
-                    <span className="text-green-400 font-bold">Fast</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-red-400 font-bold">+ Δ (Loss)</span>
-                    <div className="w-16 h-2 rounded bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
-                    <span className="text-green-400 font-bold">- Δ (Gain)</span>
-                  </>
-                )}
-              </div>
-            )}
             <svg ref={svgRef} width="100%" height="100%" style={{ minHeight: '300px', cursor: 'grab' }} viewBox={`0 0 ${svgData.vbWidth} ${svgData.vbHeight}`} preserveAspectRatio="xMidYMid meet">
               <g ref={gRef}>
                 {/* Background rect to catch pointer events for panning everywhere */}
@@ -693,7 +692,7 @@ export const TrackMap = React.memo(function TrackMap() {
         )}
       </div>
       
-      <div className="mt-4 text-sm text-brand-10/60 text-center font-mono font-bold bg-brand-60/50 border border-white/5 px-4 py-1.5 rounded-full shadow-sm">
+      <div className="mt-2 text-xs text-brand-10/60 text-center font-mono font-bold px-3 py-1 rounded-full">
         Progress: {(progress * 100).toFixed(1)}% <span className="mx-2 text-border-strong">|</span> <span className="text-xs">Time: {displayTime.toFixed(1)}s / {lapTime ? lapTime.toFixed(1) : '0.0'}s</span>
       </div>
     </div>

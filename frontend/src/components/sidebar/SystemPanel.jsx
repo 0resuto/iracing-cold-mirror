@@ -62,7 +62,7 @@ export const SystemPanel = () => {
                 </div>
                 <div className="flex items-center justify-between text-xs gap-2">
                   <span className="text-brand-10/60 flex-none">Laps Uploaded</span>
-                  <span className="font-mono text-brand-30/80 font-bold flex-none">{systemInfo.last_upload.total_laps} laps</span>
+                  <span className="font-mono text-brand-10/80 font-bold flex-none">{systemInfo.last_upload.total_laps} laps</span>
                 </div>
               </>
             ) : (
@@ -80,11 +80,11 @@ export const SystemPanel = () => {
               </div>
               <div className="bg-brand-60 p-3 rounded-lg border border-brand-60/80">
                 <div className="text-xs text-brand-10/40">Sessions</div>
-                <div className="text-base font-bold font-mono text-brand-30/80">{systemInfo.total_sessions}</div>
+                <div className="text-base font-bold font-mono text-brand-10">{systemInfo.total_sessions}</div>
               </div>
               <div className="bg-brand-60 p-3 rounded-lg border border-brand-60/80">
                 <div className="text-xs text-brand-10/40">Laps</div>
-                <div className="text-base font-bold font-mono text-brand-30/80">{systemInfo.total_laps}</div>
+                <div className="text-base font-bold font-mono text-brand-10">{systemInfo.total_laps}</div>
               </div>
             </div>
           </div>

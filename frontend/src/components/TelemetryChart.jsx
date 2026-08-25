@@ -363,16 +363,16 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-brand-bg p-2 sm:p-4 min-w-0">
+    <div className="flex-1 flex flex-col h-full bg-brand-bg min-w-0">
       {/* Controls Header (High Tap Targets for Mobile) */}
-      <div className="flex flex-wrap justify-between items-center mb-3 pb-3 border-b border-brand-60 flex-none gap-2 min-w-0">
+      <div className="flex flex-wrap justify-between items-center mb-0 pb-0 border-b-0 flex-none gap-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap min-h-[38px]">
             {selectedLap ? (
               <div className="flex items-center gap-2 flex-none">
                 <span className="text-xs sm:text-sm font-bold text-brand-10 flex-none">
                   Lap {selectedLap.lap_number}
                 </span>
-                <span className="bg-brand-30/15 text-brand-30/90 border border-brand-30/30 px-3 py-0.5 rounded-full text-[11px] font-mono font-bold flex-none">
+                <span className="text-[11px] font-mono font-bold text-brand-10/80 flex-none">
                   {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Outlap'}
                 </span>
               </div>
@@ -435,7 +435,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
           )}
 
           {/* Toggle Pills */}
-          <div className="flex items-center gap-1 bg-brand-60 border border-brand-60 rounded-lg p-0.5 flex-none flex-wrap">
+          <div className="flex items-center gap-1 flex-none flex-wrap">
             {[
               { id: 'speed', label: 'SPD', color: 'text-red-400' },
               { id: 'throttle', label: 'THR', color: 'text-green-400' },
@@ -449,8 +449,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                 onClick={() => toggleChart(c.id)}
                 className={`px-2 py-1 rounded-md text-xs font-mono transition-all cursor-pointer min-h-[26px] min-w-[32px] flex items-center justify-center active:scale-95 ${
                   visibleCharts[c.id]
-                    ? `${c.color} bg-brand-60 font-extrabold border border-brand-60 shadow-sm`
-                    : 'text-brand-10/40 hover:text-brand-10/80 bg-transparent border border-transparent'
+                    ? `${c.color} font-extrabold`
+                    : 'text-brand-10/40 hover:text-brand-10/80'
                 }`}
                 title={`Toggle ${c.id} chart`}
               >
@@ -463,7 +463,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       
       {/* Charts Scroll Container */}
       <div 
-        className="w-full flex-1 flex flex-col gap-3 overflow-x-hidden overflow-y-auto custom-scrollbar pr-1 min-w-0"
+        className="w-full flex-1 flex flex-col gap-1 overflow-x-hidden overflow-y-auto custom-scrollbar pr-1 min-w-0"
         onMouseEnter={() => setIsUserHovering(true)}
         onMouseLeave={() => setIsUserHovering(false)}
         onTouchStart={() => setIsUserHovering(true)}
