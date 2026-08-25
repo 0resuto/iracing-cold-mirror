@@ -1,10 +1,18 @@
 import json
 import os
-import shutil
 import tempfile
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy.orm import selectinload
@@ -198,6 +206,9 @@ def get_history(skip: int = 0, limit: int = Query(10, le=100), db: DBSession = D
     return players
 
 
+MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500 MB
+
+
 @router.post(
     "/sessions/upload",
     tags=["Session"],
@@ -205,20 +216,41 @@ def get_history(skip: int = 0, limit: int = Query(10, le=100), db: DBSession = D
     dependencies=[Depends(verify_api_key)],
 )
 def upload_file(
-    file: UploadFile = File(...), background_tasks: BackgroundTasks = BackgroundTasks()
+    request: Request,
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     if not file.filename.endswith(".ibt"):
         raise HTTPException(status_code=400, detail="Only .ibt files are allowed")
+    # Fast header check before data reading
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > MAX_UPLOAD_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum allowed size is {MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
+        )
+    # Protected writing to disk with real bytes count
     tmp_path = None
     try:
+        total_bytes = 0
         with tempfile.NamedTemporaryFile(delete=False, suffix=".ibt") as tmp:
-            shutil.copyfileobj(file.file, tmp)
+            while chunk := file.file.read(1024 * 1024):
+                total_bytes += len(chunk)
+                if total_bytes > MAX_UPLOAD_SIZE:
+                    tmp.close()
+                    os.remove(tmp.name)
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"File too large. Maximum allowed size is {MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
+                    )
+                tmp.write(chunk)
             tmp_path = tmp.name
-
         task_id = str(uuid.uuid4())
         redis_sync.setex(f"import:{task_id}", 600, json.dumps({"status": "processing"}))
         background_tasks.add_task(process_file_in_background, tmp_path, task_id)
         return {"status": "accepted", "task_id": task_id}
+    except HTTPException:
+        raise
     except Exception:
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)

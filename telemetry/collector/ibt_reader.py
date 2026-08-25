@@ -17,7 +17,10 @@ def safe_int(val, default=0):
 class IBTReader:
     def __init__(self, file_path="dev/telemetry.ibt"):
         self.ibt = irsdk.IBT()
-        self.ibt.open(file_path)
+        if not self.ibt.open(file_path) or not getattr(self.ibt, "_header", None):
+            raise ValueError(
+                f"Failed to parse '{file_path}': not a valid iRacing IBT telemetry file"
+            )
 
         # Calculate total samples
         session_time = self.ibt.get_all("SessionTime")

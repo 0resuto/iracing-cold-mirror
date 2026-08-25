@@ -55,7 +55,7 @@ async def websocket_telemetry(websocket: WebSocket):
 @router.websocket("/ws/telemetry/publish")
 async def websocket_publish_telemetry(websocket: WebSocket):
     if settings.api_key and settings.api_key.strip():
-        token = websocket.query_params.get("token")
+        token = websocket.headers.get("X-API-Key")
         if not token or not secrets.compare_digest(token, settings.api_key):
             await websocket.close(code=4003, reason="Forbidden")
             return

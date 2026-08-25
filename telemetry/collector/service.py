@@ -22,12 +22,13 @@ def run(reader):
         settings.server_url.replace("https://", "wss://").replace("http://", "ws://")
         + "/api/v1/ws/telemetry/publish"
     )
-    if settings.api_key and settings.api_key.strip():
-        ws_url += f"?token={settings.api_key}"
+    headers = (
+        {"X-API-Key": settings.api_key} if settings.api_key and settings.api_key.strip() else {}
+    )
 
     while True:
         try:
-            with connect(ws_url) as ws:
+            with connect(ws_url, additional_headers=headers) as ws:
                 logger.info("Connected to server")
 
                 packet_count = 0
