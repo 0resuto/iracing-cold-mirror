@@ -3,7 +3,7 @@ from telemetry.db.models import Lap, Player, Session
 
 
 def test_get_status(client):
-    response = client.get("/api/status")
+    response = client.get("/api/v1/status")
 
     assert response.status_code == 200
 
@@ -17,20 +17,20 @@ def test_upload_api_key_protection(client, monkeypatch):
     monkeypatch.setattr(settings, "api_key", "secret123")
 
     response = client.post(
-        "/api/sessions/upload",
+        "/api/v1/sessions/upload",
         files={"file": ("test.ibt", b"dummy content", "application/octet-stream")},
     )
     assert response.status_code == 401
 
     response = client.post(
-        "/api/sessions/upload",
+        "/api/v1/sessions/upload",
         files={"file": ("test.ibt", b"dummy content", "application/octet-stream")},
         headers={"X-API-Key": "wrong_key"},
     )
     assert response.status_code == 401
 
     response = client.post(
-        "/api/sessions/upload",
+        "/api/v1/sessions/upload",
         files={"file": ("test.txt", b"dummy content", "text/plain")},
         headers={"X-API-Key": "secret123"},
     )
@@ -39,7 +39,7 @@ def test_upload_api_key_protection(client, monkeypatch):
 
 
 def test_players_history_empty(client):
-    response = client.get("/api/players_history")
+    response = client.get("/api/v1/players_history")
     assert response.status_code == 200
     assert response.json() == []
 
@@ -49,7 +49,7 @@ def test_players_history_with_data(client, db_session):
     db_session.add(player)
     db_session.commit()
 
-    response = client.get("/api/players_history")
+    response = client.get("/api/v1/players_history")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
@@ -57,7 +57,7 @@ def test_players_history_with_data(client, db_session):
 
 
 def test_system_info(client, db_session):
-    response = client.get("/api/system_info")
+    response = client.get("/api/v1/system_info")
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
@@ -66,7 +66,7 @@ def test_system_info(client, db_session):
 
 
 def test_get_best_lap_not_found(client):
-    response = client.get("/api/players/1/best_lap?track_name=Spa")
+    response = client.get("/api/v1/players/1/best_lap?track_name=Spa")
     assert response.status_code == 404
     assert response.json()["detail"] == "Best lap not found"
 
@@ -85,7 +85,7 @@ def test_get_best_lap_success(client, db_session):
     db_session.add_all([lap1, lap2])
     db_session.commit()
 
-    response = client.get(f"/api/players/{player.id}/best_lap?track_name=Spa")
+    response = client.get(f"/api/v1/players/{player.id}/best_lap?track_name=Spa")
     assert response.status_code == 200
     data = response.json()
     assert data["lap_time"] == 125.2

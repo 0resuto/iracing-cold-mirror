@@ -658,7 +658,7 @@ class SimulatorControlGUI:
         footer = ttk.Frame(self.root, style="TFrame", padding="12 4 12 8")
         footer.pack(fill="x", side="bottom")
 
-        server_target = f"{settings.server_url}/ws/telemetry/publish"
+        server_target = f"{settings.server_url}/api/v1/ws/telemetry/publish"
         self.lbl_footer_status = ttk.Label(
             footer,
             text=f"Server Target: {server_target} | Engine: Running (60 FPS)",

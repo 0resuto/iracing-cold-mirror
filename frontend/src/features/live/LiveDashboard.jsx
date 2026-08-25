@@ -38,7 +38,7 @@ export function LiveDashboard() {
           Start the live telemetry collector service in iRacing to display live dashboard, standings, and radar.
         </p>
         <span className="text-[11px] font-mono text-brand-10/30 px-3 py-1 rounded bg-brand-60/20 border border-brand-60/40">
-          Waiting for WebSocket stream at /ws/telemetry/live
+          Waiting for WebSocket stream at /api/v1/ws/telemetry/live
         </span>
       </div>
     );

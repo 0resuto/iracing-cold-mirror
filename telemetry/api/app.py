@@ -48,8 +48,8 @@ app = FastAPI(
 )
 
 
-app.include_router(history.router, prefix="/api")
-app.include_router(live.router)
+app.include_router(history.router, prefix="/api/v1")
+app.include_router(live.router, prefix="/api/v1")
 
 
 app.add_middleware(
@@ -76,6 +76,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.get("/api/status", tags=["System"])
+@app.get("/api/v1/status", tags=["System"])
 def get_status():
     return {"status": "ok", "message": "API is running"}

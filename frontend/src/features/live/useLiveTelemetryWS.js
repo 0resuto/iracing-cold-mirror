@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 const WS_URL = import.meta.env.VITE_WS_URL || (() => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${window.location.host}/ws/telemetry/live`;
+  return `${protocol}//${window.location.host}/api/v1/ws/telemetry/live`;
 })();
 
 export function useLiveTelemetryWS(isLiveActive) {

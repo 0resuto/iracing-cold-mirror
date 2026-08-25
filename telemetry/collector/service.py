@@ -20,7 +20,7 @@ def run(reader):
 
     ws_url = (
         settings.server_url.replace("https://", "wss://").replace("http://", "ws://")
-        + "/ws/telemetry/publish"
+        + "/api/v1/ws/telemetry/publish"
     )
     if settings.api_key and settings.api_key.strip():
         ws_url += f"?token={settings.api_key}"
