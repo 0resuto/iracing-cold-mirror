@@ -170,8 +170,8 @@ class IRacingLiveReader:
             "rf_speed": self._get_val("RFspeed", speed_ms) * 3.6,
             "lr_speed": self._get_val("LRspeed", speed_ms) * 3.6,
             "rr_speed": self._get_val("RRspeed", speed_ms) * 3.6,
-            "abs_active": 0,
-            "tc_active": 0,
+            "abs_active": False,
+            "tc_active": False,
         }
 
         data["slip_angle"] = (

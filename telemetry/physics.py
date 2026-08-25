@@ -20,22 +20,22 @@ def calculate_wheel_physics(data: dict) -> dict:
     lr = data.get("lr_speed", 0.0)
     rr = data.get("rr_speed", 0.0)
 
-    data["abs_active"] = 0.0
-    data["tc_active"] = 0.0
-    data["wheel_lock"] = 0.0
+    data["abs_active"] = False
+    data["tc_active"] = False
+    data["wheel_lock"] = False
 
     if speed > MIN_SPEED_KMH:
         if brake > BRAKE_THRESHOLD:
             min_wheel_speed = min(lf, rf, lr, rr)
             slip_ratio = (speed - min_wheel_speed) / speed
             if slip_ratio > SLIP_RATIO_THRESHOLD:
-                data["abs_active"] = 1.0
+                data["abs_active"] = True
             if min_wheel_speed < WHEEL_LOCK_SPEED:
-                data["wheel_lock"] = 1.0
+                data["wheel_lock"] = True
 
         if throttle > THROTTLE_THRESHOLD:
             max_rear_speed = max(lr, rr)
             if max_rear_speed > speed * TC_OVERSPEED_RATIO:
-                data["tc_active"] = 1.0
+                data["tc_active"] = True
 
     return data

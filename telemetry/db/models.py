@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from telemetry.db import Base, engine
@@ -84,9 +84,9 @@ class Telemetry(Base):
     lr_speed = Column(Float, nullable=True)  # Left rear wheel speed (m/s)
     rr_speed = Column(Float, nullable=True)  # Right rear wheel speed (m/s)
 
-    abs_active = Column(Float, nullable=True)  # ABS active flag (0.0 or 1.0)
-    tc_active = Column(Float, nullable=True)  # Traction Control active flag (0.0 or 1.0)
-    wheel_lock = Column(Float, nullable=True)  # Any wheel locked flag (0.0 or 1.0)
+    abs_active = Column(Boolean, default=False, nullable=True)  # ABS active flag
+    tc_active = Column(Boolean, default=False, nullable=True)  # Traction Control active flag
+    wheel_lock = Column(Boolean, default=False, nullable=True)  # Any wheel locked flag
 
     lap = relationship("Lap", back_populates="telemetry_data")
 

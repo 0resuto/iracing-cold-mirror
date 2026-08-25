@@ -31,9 +31,9 @@ class TelemetryResponse(BaseModel):
     rf_speed: float | None = Field(None, description="Right front wheel speed (m/s)")
     lr_speed: float | None = Field(None, description="Left rear wheel speed (m/s)")
     rr_speed: float | None = Field(None, description="Right rear wheel speed (m/s)")
-    abs_active: float | None = Field(None, description="ABS active flag (0.0 or 1.0)")
-    tc_active: float | None = Field(None, description="Traction Control active flag (0.0 or 1.0)")
-    wheel_lock: float | None = Field(None, description="Wheel lock flag (0.0 or 1.0)")
+    abs_active: bool | None = Field(False, description="ABS active flag")
+    tc_active: bool | None = Field(False, description="Traction Control active flag")
+    wheel_lock: bool | None = Field(False, description="Wheel lock flag")
 
     model_config = ConfigDict(from_attributes=True)
 

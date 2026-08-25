@@ -71,9 +71,9 @@ def _build_telemetry(lap_id: int, session_time: float, data: dict) -> Telemetry:
         rf_speed=data.get("rf_speed"),
         lr_speed=data.get("lr_speed"),
         rr_speed=data.get("rr_speed"),
-        abs_active=data.get("abs_active"),
-        tc_active=data.get("tc_active"),
-        wheel_lock=data.get("wheel_lock"),
+        abs_active=bool(data.get("abs_active")),
+        tc_active=bool(data.get("tc_active")),
+        wheel_lock=bool(data.get("wheel_lock")),
     )
 
 
