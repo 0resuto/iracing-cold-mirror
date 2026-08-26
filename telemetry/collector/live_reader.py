@@ -182,10 +182,48 @@ class IRacingLiveReader:
 
         data["car_left_right"] = self._get_val("CarLeftRight", 0)
 
-        data["lap_delta_to_best_lap"] = self._get_val("LapDeltaToBestLap", 0)
-        data["lap_delta_to_session_best_lap"] = self._get_val("LapDeltaToSessionBestLap", 0)
-        data["lap_current_lap_time"] = self._get_val("LapCurrentLapTime", 0)
-        data["lap_best_lap_time"] = self._get_val("LapBestLapTime", 0)
+        data["lap_delta_to_best_lap"] = self._get_val("LapDeltaToBestLap", 0.0)
+        data["lap_delta_to_best_lap_ok"] = bool(self._get_val("LapDeltaToBestLap_OK", True))
+        data["lap_delta_to_session_best_lap"] = self._get_val("LapDeltaToSessionBestLap", 0.0)
+        data["lap_delta_to_session_best_lap_ok"] = bool(
+            self._get_val("LapDeltaToSessionBestLap_OK", True)
+        )
+        data["lap_delta_to_optimal_lap"] = self._get_val("LapDeltaToOptimalLap", 0.0)
+        data["lap_delta_to_optimal_lap_ok"] = bool(self._get_val("LapDeltaToOptimalLap_OK", True))
+        data["lap_delta_to_session_optimal_lap"] = self._get_val("LapDeltaToSessionOptimalLap", 0.0)
+        data["lap_delta_to_session_optimal_lap_ok"] = bool(
+            self._get_val("LapDeltaToSessionOptimalLap_OK", True)
+        )
+
+        last_lap_delta = self._get_val(
+            "LapDeltaToSessionLastlLap", self._get_val("LapDeltaToSessionLastLap", 0.0)
+        )
+        last_lap_delta_ok = self._get_val(
+            "LapDeltaToSessionLastlLap_OK", self._get_val("LapDeltaToSessionLastLap_OK", True)
+        )
+        data["lap_delta_to_session_last_lap"] = last_lap_delta
+        data["lap_delta_to_session_last_lap_ok"] = bool(last_lap_delta_ok)
+
+        data["lap_delta_to_all_time_best_lap"] = self._get_val("LapDeltaToAllTimeBestLap", 0.0)
+        data["lap_delta_to_all_time_best_lap_ok"] = bool(
+            self._get_val("LapDeltaToAllTimeBestLap_OK", True)
+        )
+        data["lap_delta_to_all_time_optimal_lap"] = self._get_val(
+            "LapDeltaToAllTimeOptimalLap", 0.0
+        )
+        data["lap_delta_to_all_time_optimal_lap_ok"] = bool(
+            self._get_val("LapDeltaToAllTimeOptimalLap_OK", True)
+        )
+
+        data["lap_current_lap_time"] = self._get_val("LapCurrentLapTime", 0.0)
+        data["lap_best_lap_time"] = self._get_val("LapBestLapTime", 0.0)
+        data["lap_last_lap_time"] = self._get_val("LapLastLapTime", 0.0)
+        data["lap_optimal_lap_time"] = self._get_val("LapOptimalLapTime", 0.0)
+        data["session_optimal_lap_time"] = self._get_val(
+            "SessionOptimalLapTime", self._get_val("LapSessionOptimalLapTime", 0.0)
+        )
+        data["all_time_best_lap_time"] = self._get_val("AllTimeBestLapTime", 0.0)
+        data["all_time_optimal_lap_time"] = self._get_val("AllTimeOptimalLapTime", 0.0)
 
         data = calculate_wheel_physics(data)
 

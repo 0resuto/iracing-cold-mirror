@@ -178,6 +178,20 @@ class SimulatorEngine:
             round(current_elapsed - best_at_position, 4) if best_at_position > 0 else 0
         )
 
+        is_delta_ok = player.lap > 1 and not player.on_pit_road and player.best_lap_time is not None
+        optimal_lap_time = (player.best_lap_time - 0.4) if player.best_lap_time else None
+        optimal_at_pos = (
+            (optimal_lap_time * player.lap_dist_pct)
+            if optimal_lap_time and player.lap_dist_pct > 0
+            else 0
+        )
+        lap_delta_optimal = round(current_elapsed - optimal_at_pos, 4) if optimal_at_pos > 0 else 0
+        last_lap_delta = (
+            round(current_elapsed - (player.last_lap_time * player.lap_dist_pct), 4)
+            if player.last_lap_time and player.lap_dist_pct > 0
+            else 0
+        )
+
         # Determine effective spotter value (override vs auto)
         effective_car_left_right = grid_data["car_left_right"]
         if self.spotter_override == 1:
@@ -208,9 +222,26 @@ class SimulatorEngine:
             "session_flags": global_flags["session_flags"],
             "session_best_lap_time": grid_data["session_best_lap_time"],
             "lap_delta_to_best_lap": lap_delta,
+            "lap_delta_to_best_lap_ok": is_delta_ok,
             "lap_delta_to_session_best_lap": lap_delta_to_session,
+            "lap_delta_to_session_best_lap_ok": is_delta_ok,
+            "lap_delta_to_optimal_lap": lap_delta_optimal,
+            "lap_delta_to_optimal_lap_ok": is_delta_ok,
+            "lap_delta_to_session_optimal_lap": lap_delta_optimal,
+            "lap_delta_to_session_optimal_lap_ok": is_delta_ok,
+            "lap_delta_to_session_last_lap": last_lap_delta,
+            "lap_delta_to_session_last_lap_ok": is_delta_ok and player.last_lap_time is not None,
+            "lap_delta_to_all_time_best_lap": lap_delta,
+            "lap_delta_to_all_time_best_lap_ok": is_delta_ok,
+            "lap_delta_to_all_time_optimal_lap": lap_delta_optimal,
+            "lap_delta_to_all_time_optimal_lap_ok": is_delta_ok,
             "lap_current_lap_time": round(current_elapsed, 3),
             "lap_best_lap_time": player.best_lap_time,
+            "lap_last_lap_time": player.last_lap_time,
+            "lap_optimal_lap_time": optimal_lap_time,
+            "session_optimal_lap_time": optimal_lap_time,
+            "all_time_best_lap_time": player.best_lap_time,
+            "all_time_optimal_lap_time": optimal_lap_time,
             # Vehicle Dynamics & Controls
             **input_frame,
             # Fuel

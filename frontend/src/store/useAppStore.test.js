@@ -14,6 +14,12 @@ describe('useAppStore', () => {
     expect(state.isSidebarOpen).toBe(true);
     expect(state.hoveredData).toBeNull();
     expect(state.steeringMax).toBe(450);
+    expect(state.liveDeltaReferenceMode).toBe('optimal');
+  });
+
+  it('should update liveDeltaReferenceMode', () => {
+    useAppStore.getState().setLiveDeltaReferenceMode('sessionBest');
+    expect(useAppStore.getState().liveDeltaReferenceMode).toBe('sessionBest');
   });
 
   it('should update selected lap and clear hovered data', () => {

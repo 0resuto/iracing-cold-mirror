@@ -9,6 +9,8 @@ export const LiveStreamPanel = () => {
   const toggleColumn = useAppStore(state => state.toggleStandingsColumn);
   const showClassName = useAppStore(state => state.showClassName);
   const toggleShowClassName = useAppStore(state => state.toggleShowClassName);
+  const liveDeltaReferenceMode = useAppStore(state => state.liveDeltaReferenceMode);
+  const setLiveDeltaReferenceMode = useAppStore(state => state.setLiveDeltaReferenceMode);
 
   return (
     <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar min-w-0 p-5">
@@ -33,6 +35,27 @@ export const LiveStreamPanel = () => {
             {isStreaming ? '🟢 iRacing Streaming' : '⚪ Waiting for iRacing...'}
           </span>
         </div>
+      </div>
+
+      <div className="bg-brand-bg border border-brand-60 rounded-xl flex flex-col p-4">
+        <h3 className="text-[10px] uppercase tracking-widest text-brand-10/60 font-bold mb-3">Delta Reference</h3>
+        <select
+          value={liveDeltaReferenceMode}
+          onChange={(e) => setLiveDeltaReferenceMode(e.target.value)}
+          aria-label="Delta Reference Mode"
+          className="bg-brand-60/50 border border-brand-60 text-brand-10 text-xs rounded-lg px-3 py-2 outline-none hover:border-brand-30/50 cursor-pointer transition-colors w-full"
+        >
+          <option value="sessionBest">Session Best (SB)</option>
+          <option value="personalBest">Personal Best (PB)</option>
+          <option value="optimal">Optimal Lap (OPT)</option>
+          <option value="sessionOptimal">Session Optimal (S-OPT)</option>
+          <option value="lastLap">Last Lap (LAST)</option>
+          <option value="allTimeBest">All-Time Best (ATB)</option>
+          <option value="allTimeOptimal">All-Time Optimal (AT-OPT)</option>
+        </select>
+        <span className="text-[10px] text-brand-10/40 mt-2">
+          Target lap used by LiveDelta widget for realtime delta calculations.
+        </span>
       </div>
 
       <div className="bg-brand-bg border border-brand-60 rounded-xl flex flex-col p-4">

@@ -62,11 +62,30 @@ export function mapLiveTelemetry(raw) {
     player_name: raw.player_name || '',
     grid: grid,
 
-    // Lap Delta
+    // Lap Delta & Reference Timing
     LapDeltaToBestLap: Number(raw.lap_delta_to_best_lap) || 0,
+    LapDeltaToBestLap_OK: raw.lap_delta_to_best_lap_ok !== undefined ? Boolean(raw.lap_delta_to_best_lap_ok) : true,
     LapDeltaToSessionBestLap: Number(raw.lap_delta_to_session_best_lap) || 0,
+    LapDeltaToSessionBestLap_OK: raw.lap_delta_to_session_best_lap_ok !== undefined ? Boolean(raw.lap_delta_to_session_best_lap_ok) : true,
+    LapDeltaToOptimalLap: Number(raw.lap_delta_to_optimal_lap) || 0,
+    LapDeltaToOptimalLap_OK: raw.lap_delta_to_optimal_lap_ok !== undefined ? Boolean(raw.lap_delta_to_optimal_lap_ok) : true,
+    LapDeltaToSessionOptimalLap: Number(raw.lap_delta_to_session_optimal_lap) || 0,
+    LapDeltaToSessionOptimalLap_OK: raw.lap_delta_to_session_optimal_lap_ok !== undefined ? Boolean(raw.lap_delta_to_session_optimal_lap_ok) : true,
+    LapDeltaToSessionLastlLap: Number(raw.lap_delta_to_session_last_lap ?? raw.lap_delta_to_last_lap) || 0,
+    LapDeltaToSessionLastlLap_OK: (raw.lap_delta_to_session_last_lap_ok !== undefined ? Boolean(raw.lap_delta_to_session_last_lap_ok) : raw.lap_delta_to_last_lap_ok !== undefined ? Boolean(raw.lap_delta_to_last_lap_ok) : true),
+    LapDeltaToAllTimeBestLap: Number(raw.lap_delta_to_all_time_best_lap) || 0,
+    LapDeltaToAllTimeBestLap_OK: raw.lap_delta_to_all_time_best_lap_ok !== undefined ? Boolean(raw.lap_delta_to_all_time_best_lap_ok) : true,
+    LapDeltaToAllTimeOptimalLap: Number(raw.lap_delta_to_all_time_optimal_lap) || 0,
+    LapDeltaToAllTimeOptimalLap_OK: raw.lap_delta_to_all_time_optimal_lap_ok !== undefined ? Boolean(raw.lap_delta_to_all_time_optimal_lap_ok) : true,
+
     LapCurrentLapTime: Number(raw.lap_current_lap_time) || 0,
     LapBestLapTime: Number(raw.lap_best_lap_time) || 0,
+    LapLastLapTime: Number(raw.lap_last_lap_time) || 0,
+    LapOptimalLapTime: Number(raw.lap_optimal_lap_time) || 0,
+    SessionOptimalLapTime: Number(raw.session_optimal_lap_time) || 0,
+    AllTimeBestLapTime: Number(raw.all_time_best_lap_time) || 0,
+    AllTimeOptimalLapTime: Number(raw.all_time_optimal_lap_time) || 0,
+
     Lap: Number(raw.lap_number) || 0,
     LapDistPct: Number(raw.lap_dist_pct) || 0,
   };

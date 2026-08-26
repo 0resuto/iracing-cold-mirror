@@ -71,4 +71,60 @@ describe('mapLiveTelemetry', () => {
     expect(mapped.player_name).toBe('Test Driver');
     expect(mapped.SessionBestLapTime).toBe(91.2);
   });
+
+  it('maps all delta channels, OK validity flags, and reference lap times', () => {
+    const raw = {
+      lap_delta_to_best_lap: -0.234,
+      lap_delta_to_best_lap_ok: true,
+      lap_delta_to_session_best_lap: 0.512,
+      lap_delta_to_session_best_lap_ok: true,
+      lap_delta_to_optimal_lap: -0.456,
+      lap_delta_to_optimal_lap_ok: true,
+      lap_delta_to_session_optimal_lap: 0.123,
+      lap_delta_to_session_optimal_lap_ok: false,
+      lap_delta_to_session_last_lap: -0.05,
+      lap_delta_to_session_last_lap_ok: true,
+      lap_delta_to_all_time_best_lap: 0.88,
+      lap_delta_to_all_time_best_lap_ok: true,
+      lap_delta_to_all_time_optimal_lap: 0.42,
+      lap_delta_to_all_time_optimal_lap_ok: false,
+      lap_current_lap_time: 45.67,
+      lap_best_lap_time: 92.1,
+      lap_last_lap_time: 93.4,
+      lap_optimal_lap_time: 91.5,
+      session_optimal_lap_time: 90.8,
+      all_time_best_lap_time: 89.9,
+      all_time_optimal_lap_time: 89.2,
+      lap_number: 5,
+      lap_dist_pct: 0.55,
+    };
+
+    const mapped = mapLiveTelemetry(raw);
+
+    expect(mapped.LapDeltaToBestLap).toBe(-0.234);
+    expect(mapped.LapDeltaToBestLap_OK).toBe(true);
+    expect(mapped.LapDeltaToSessionBestLap).toBe(0.512);
+    expect(mapped.LapDeltaToSessionBestLap_OK).toBe(true);
+    expect(mapped.LapDeltaToOptimalLap).toBe(-0.456);
+    expect(mapped.LapDeltaToOptimalLap_OK).toBe(true);
+    expect(mapped.LapDeltaToSessionOptimalLap).toBe(0.123);
+    expect(mapped.LapDeltaToSessionOptimalLap_OK).toBe(false);
+    expect(mapped.LapDeltaToSessionLastlLap).toBe(-0.05);
+    expect(mapped.LapDeltaToSessionLastlLap_OK).toBe(true);
+    expect(mapped.LapDeltaToAllTimeBestLap).toBe(0.88);
+    expect(mapped.LapDeltaToAllTimeBestLap_OK).toBe(true);
+    expect(mapped.LapDeltaToAllTimeOptimalLap).toBe(0.42);
+    expect(mapped.LapDeltaToAllTimeOptimalLap_OK).toBe(false);
+
+    expect(mapped.LapCurrentLapTime).toBe(45.67);
+    expect(mapped.LapBestLapTime).toBe(92.1);
+    expect(mapped.LapLastLapTime).toBe(93.4);
+    expect(mapped.LapOptimalLapTime).toBe(91.5);
+    expect(mapped.SessionOptimalLapTime).toBe(90.8);
+    expect(mapped.AllTimeBestLapTime).toBe(89.9);
+    expect(mapped.AllTimeOptimalLapTime).toBe(89.2);
+
+    expect(mapped.Lap).toBe(5);
+    expect(mapped.LapDistPct).toBe(0.55);
+  });
 });

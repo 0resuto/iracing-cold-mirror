@@ -14,7 +14,8 @@ import {
   LiveRelative,
   LiveStandings,
   LiveDelta,
-  LiveFlags
+  LiveFlags,
+  DELTA_MODES,
 } from 'cold-mirror-widgets';
 import { Activity } from 'lucide-react';
 
@@ -26,6 +27,8 @@ export function LiveDashboard() {
   const isStreaming = useLiveStore((state) => state.isStreaming);
   const columns = useAppStore((state) => state.standingsColumns);
   const showClassName = useAppStore((state) => state.showClassName);
+  const liveDeltaReferenceMode = useAppStore((state) => state.liveDeltaReferenceMode);
+  const setLiveDeltaReferenceMode = useAppStore((state) => state.setLiveDeltaReferenceMode);
 
   const [activeTab, setActiveTab] = useState('standings'); // 'standings' | 'relative'
   const [groupByClass, setGroupByClass] = useState(true);
@@ -92,11 +95,28 @@ export function LiveDashboard() {
 
             {/* Left Column: Delta + Fuel stacked */}
             <div className="flex-none w-[240px] flex flex-col gap-3">
-              <div className="h-[280px] min-h-[280px] flex-none border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl">
-                <div style={{ '--widget-bg-color': 'transparent' }} className="h-full overflow-hidden">
+              <div className="h-[280px] min-h-[280px] flex-none border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl flex flex-col overflow-hidden">
+                {/* Delta Header with Quick Mode Selector */}
+                <div className="flex items-center border-b border-brand-60/60 px-3 py-1.5 flex-none">
+                  <select
+                    value={liveDeltaReferenceMode}
+                    onChange={(e) => setLiveDeltaReferenceMode(e.target.value)}
+                    aria-label="Select delta reference time"
+                    className="w-full bg-brand-60/20 hover:bg-brand-60/40 border border-brand-60/60 text-brand-10 text-xs font-semibold rounded-lg px-2.5 py-1 outline-none hover:border-brand-30/50 cursor-pointer transition-colors"
+                  >
+                    <option value={DELTA_MODES.SESSION_BEST} className="bg-brand-bg text-brand-10">Session Best (SB)</option>
+                    <option value={DELTA_MODES.PERSONAL_BEST} className="bg-brand-bg text-brand-10">Personal Best (PB)</option>
+                    <option value={DELTA_MODES.OPTIMAL} className="bg-brand-bg text-brand-10">Optimal Lap (OPT)</option>
+                    <option value={DELTA_MODES.SESSION_OPTIMAL} className="bg-brand-bg text-brand-10">Session Optimal (S-OPT)</option>
+                    <option value={DELTA_MODES.LAST_LAP} className="bg-brand-bg text-brand-10">Last Lap (LAST)</option>
+                    <option value={DELTA_MODES.ALL_TIME_BEST} className="bg-brand-bg text-brand-10">All-Time Best (ATB)</option>
+                    <option value={DELTA_MODES.ALL_TIME_OPTIMAL} className="bg-brand-bg text-brand-10">All-Time Optimal (AT-OPT)</option>
+                  </select>
+                </div>
+                <div style={{ '--widget-bg-color': 'transparent' }} className="flex-1 overflow-hidden">
                   <LiveDelta
                     variant="split"
-                    referenceMode="sessionBest"
+                    referenceMode={liveDeltaReferenceMode}
                     range={2}
                     showLapTime={true}
                     throttleMs={16}

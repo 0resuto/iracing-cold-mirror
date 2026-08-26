@@ -14,6 +14,8 @@ export const useAppStore = create((set) => ({
   setIsUserHovering: (isHovering) => set({ isUserHovering: isHovering }),
   steeringMax: 450,
   setSteeringMax: (val) => set({ steeringMax: val }),
+  liveDeltaReferenceMode: 'optimal',
+  setLiveDeltaReferenceMode: (mode) => set({ liveDeltaReferenceMode: mode }),
   standingsColumns: {
     pos: true,
     driver: true,

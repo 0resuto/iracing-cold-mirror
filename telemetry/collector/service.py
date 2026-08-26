@@ -101,12 +101,49 @@ def run(reader):
                         "session_laps_remain": data.get("session_laps_remain", 0),
                         "player_car_idx": data.get("player_car_idx"),
                         "session_best_lap_time": data.get("session_best_lap_time", -1),
-                        "lap_delta_to_best_lap": data.get("lap_delta_to_best_lap", 0),
+                        "lap_delta_to_best_lap": data.get("lap_delta_to_best_lap", 0.0),
+                        "lap_delta_to_best_lap_ok": data.get("lap_delta_to_best_lap_ok", True),
                         "lap_delta_to_session_best_lap": data.get(
-                            "lap_delta_to_session_best_lap", 0
+                            "lap_delta_to_session_best_lap", 0.0
                         ),
-                        "lap_current_lap_time": data.get("lap_current_lap_time", 0),
-                        "lap_best_lap_time": data.get("lap_best_lap_time", 0),
+                        "lap_delta_to_session_best_lap_ok": data.get(
+                            "lap_delta_to_session_best_lap_ok", True
+                        ),
+                        "lap_delta_to_optimal_lap": data.get("lap_delta_to_optimal_lap", 0.0),
+                        "lap_delta_to_optimal_lap_ok": data.get(
+                            "lap_delta_to_optimal_lap_ok", True
+                        ),
+                        "lap_delta_to_session_optimal_lap": data.get(
+                            "lap_delta_to_session_optimal_lap", 0.0
+                        ),
+                        "lap_delta_to_session_optimal_lap_ok": data.get(
+                            "lap_delta_to_session_optimal_lap_ok", True
+                        ),
+                        "lap_delta_to_session_last_lap": data.get(
+                            "lap_delta_to_session_last_lap", 0.0
+                        ),
+                        "lap_delta_to_session_last_lap_ok": data.get(
+                            "lap_delta_to_session_last_lap_ok", True
+                        ),
+                        "lap_delta_to_all_time_best_lap": data.get(
+                            "lap_delta_to_all_time_best_lap", 0.0
+                        ),
+                        "lap_delta_to_all_time_best_lap_ok": data.get(
+                            "lap_delta_to_all_time_best_lap_ok", True
+                        ),
+                        "lap_delta_to_all_time_optimal_lap": data.get(
+                            "lap_delta_to_all_time_optimal_lap", 0.0
+                        ),
+                        "lap_delta_to_all_time_optimal_lap_ok": data.get(
+                            "lap_delta_to_all_time_optimal_lap_ok", True
+                        ),
+                        "lap_current_lap_time": data.get("lap_current_lap_time", 0.0),
+                        "lap_best_lap_time": data.get("lap_best_lap_time", 0.0),
+                        "lap_last_lap_time": data.get("lap_last_lap_time", 0.0),
+                        "lap_optimal_lap_time": data.get("lap_optimal_lap_time", 0.0),
+                        "session_optimal_lap_time": data.get("session_optimal_lap_time", 0.0),
+                        "all_time_best_lap_time": data.get("all_time_best_lap_time", 0.0),
+                        "all_time_optimal_lap_time": data.get("all_time_optimal_lap_time", 0.0),
                         "grid": data.get("grid", {}),
                     }
 
