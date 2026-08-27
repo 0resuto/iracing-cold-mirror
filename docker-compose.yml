@@ -1,5 +1,13 @@
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   postgres:
+    <<: *default-logging
     image: postgres:16
     container_name: iracing-postgres
     restart: unless-stopped
@@ -7,8 +15,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-iracing}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-iracing_local}
       POSTGRES_DB: ${POSTGRES_DB:-telemetry}
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -18,11 +24,10 @@ services:
       retries: 10
 
   redis:
+    <<: *default-logging
     image: redis:alpine
     container_name: iracing-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s
@@ -30,17 +35,22 @@ services:
       retries: 5
 
   api:
+    <<: *default-logging
     build:
       context: .
       dockerfile: deploy/Dockerfile
     container_name: iracing-api
     restart: unless-stopped
-    ports:
-      - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-iracing}:${POSTGRES_PASSWORD:-iracing_local}@postgres:5432/${POSTGRES_DB:-telemetry}
       - REDIS_HOST=redis
       - API_KEY=${API_KEY}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/status')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,13 +58,15 @@ services:
         condition: service_healthy
 
   frontend:
+    <<: *default-logging
     build: ./frontend
     container_name: iracing-frontend
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "${FRONTEND_PORT:-8080}:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   pgdata:
