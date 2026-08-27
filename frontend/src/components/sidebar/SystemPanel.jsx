@@ -1,8 +1,12 @@
 import React from 'react';
 import { useSystemInfoQuery } from '../../api/queries';
+import { useAppStore } from '../../store/useAppStore';
+import { Checkbox } from '../Checkbox';
 
 export const SystemPanel = () => {
   const { data: systemInfo, isLoading, isError } = useSystemInfoQuery();
+  const showOutlaps = useAppStore(state => state.showOutlaps);
+  const toggleShowOutlaps = useAppStore(state => state.toggleShowOutlaps);
 
   return (
     <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar min-w-0 p-5">
@@ -11,6 +15,21 @@ export const SystemPanel = () => {
         <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-30/10 border border-brand-30/20 text-brand-30/80 text-xs font-bold">
           v0.2.0
         </span>
+      </div>
+
+      {/* Display Preferences Card */}
+      <div className="bg-brand-bg rounded-xl border border-brand-60 flex flex-col gap-2.5 p-4">
+        <span className="text-xs uppercase tracking-wider text-brand-10/40 font-bold">Display Preferences</span>
+        <div className="flex items-center justify-between text-xs mt-1">
+          <div className="flex flex-col pr-2">
+            <span className="text-brand-10/90 font-semibold">Show Outlaps</span>
+            <span className="text-[10px] text-brand-10/40 leading-tight">Display outlap (lap 0) and incomplete laps</span>
+          </div>
+          <Checkbox
+            checked={showOutlaps}
+            onChange={toggleShowOutlaps}
+          />
+        </div>
       </div>
 
       {isLoading ? (

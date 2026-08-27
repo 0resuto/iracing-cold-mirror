@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Flag, ChevronDown, ChevronRight } from 'lucide-react';
 import { SessionItem } from './SessionItem';
+import { useAppStore } from '../../store/useAppStore';
 
 export const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, isOpen, onToggle, selectedLapId, setSelectedLap, onSelectLap }) {
   // Accordion state for sessions within this track
   const [openSessionId, setOpenSessionId] = useState(null);
+  const showOutlaps = useAppStore(state => state.showOutlaps);
 
   useEffect(() => {
     if (selectedLapId && sessions) {
@@ -16,8 +18,11 @@ export const TrackItem = React.memo(function TrackItem({ trackName, sessions, pl
   }, [selectedLapId, sessions]);
 
   const totalLaps = useMemo(() => {
-    return sessions.reduce((sum, s) => sum + (s.laps?.length || 0), 0);
-  }, [sessions]);
+    return sessions.reduce((sum, s) => {
+      const sLaps = showOutlaps ? (s.laps || []) : (s.laps || []).filter(l => l.lap_number > 0 && l.lap_time > 0);
+      return sum + sLaps.length;
+    }, 0);
+  }, [sessions, showOutlaps]);
 
   return (
     <div className="flex flex-col min-w-0">

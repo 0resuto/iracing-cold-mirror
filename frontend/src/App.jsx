@@ -12,6 +12,8 @@ import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront
 import { useTelemetryData } from './features/telemetry/useTelemetryData';
 import { useLiveStore } from './store/useLiveStore';
 
+import { Checkbox } from './components/Checkbox';
+
 function AppContent() {
   const location = useLocation();
   const pathname = location.pathname;
@@ -24,6 +26,7 @@ function AppContent() {
   const isSidebarOpen = useAppStore(state => state.isSidebarOpen);
   const toggleSidebar = useAppStore(state => state.toggleSidebar);
   const steeringMax = useAppStore(state => state.steeringMax);
+  const showOutlaps = useAppStore(state => state.showOutlaps);
 
   const { lapData, players } = useTelemetryData();
 
@@ -179,26 +182,44 @@ function AppContent() {
 
         {/* Main Content Body */}
         {isSystem ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-brand-10/60 gap-4 glass rounded-xl border border-brand-60/60 p-6 m-4">
+          <div className="flex-1 flex flex-col items-center justify-center text-brand-10/60 gap-4 glass rounded-xl border border-brand-60/60 p-6 m-4 overflow-y-auto">
             <div className="w-14 h-14 rounded-full bg-brand-60 border border-brand-60 flex items-center justify-center text-2xl">
               <Settings size={28} className="text-brand-10/40" />
             </div>
-            <div className="text-center max-w-md">
+            <div className="text-center max-w-md w-full">
               <p className="text-base tracking-wide font-semibold text-brand-10">System Parameters Panel</p>
-              <div className="mt-8 p-4 border border-brand-60/80 bg-brand-60/20 rounded-xl flex flex-col items-center gap-4">
-                <div className="flex flex-col items-center gap-2">
-                  <label className="text-xs font-bold text-brand-10/80 uppercase tracking-widest">Steering Lock (Degrees)</label>
-                  <p className="text-[10px] text-brand-10/40 -mt-1 mb-2">Total wheel rotation (e.g. 900 = 450° each way)</p>
-                  <div className="flex items-center gap-3">
-                    <input 
-                      type="number" 
-                      value={steeringMax * 2} 
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value);
-                        if (!isNaN(val) && val > 0) useAppStore.getState().setSteeringMax(val / 2);
-                      }}
-                      className="bg-brand-bg border border-brand-60 text-brand-10 px-3 py-2 rounded-lg w-24 text-center font-mono font-bold focus:outline-none focus:border-brand-30 transition-colors shadow-inner"
-                      step="10"
+              <div className="mt-6 flex flex-col gap-4">
+                {/* Steering Lock Parameter */}
+                <div className="p-4 border border-brand-60/80 bg-brand-60/20 rounded-xl flex flex-col items-center gap-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <label className="text-xs font-bold text-brand-10/80 uppercase tracking-widest">Steering Lock (Degrees)</label>
+                    <p className="text-[10px] text-brand-10/40 -mt-1 mb-2">Total wheel rotation (e.g. 900 = 450° each way)</p>
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="number" 
+                        value={steeringMax * 2} 
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val) && val > 0) useAppStore.getState().setSteeringMax(val / 2);
+                        }}
+                        className="bg-brand-bg border border-brand-60 text-brand-10 px-3 py-2 rounded-lg w-24 text-center font-mono font-bold focus:outline-none focus:border-brand-30 transition-colors shadow-inner"
+                        step="10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Display Preferences Card */}
+                <div className="p-4 border border-brand-60/80 bg-brand-60/20 rounded-xl flex flex-col items-start gap-2 text-left">
+                  <span className="text-xs font-bold text-brand-10/80 uppercase tracking-widest">Display Preferences</span>
+                  <div className="mt-1 flex items-center justify-between w-full">
+                    <div className="flex flex-col pr-3">
+                      <span className="text-xs font-semibold text-brand-10">Show Outlaps in Sessions</span>
+                      <span className="text-[10px] text-brand-10/40 leading-tight">Display outlap (lap 0) and incomplete laps in history</span>
+                    </div>
+                    <Checkbox
+                      checked={showOutlaps}
+                      onChange={(e) => useAppStore.getState().setShowOutlaps(e.target.checked)}
                     />
                   </div>
                 </div>

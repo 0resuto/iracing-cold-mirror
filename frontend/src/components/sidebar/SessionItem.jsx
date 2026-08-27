@@ -2,9 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, ChevronDown, ChevronRight, Car, Clock } from 'lucide-react';
 import { formatSessionTime } from './utils';
 import { LapItem } from './LapItem';
+import { useAppStore } from '../../store/useAppStore';
 
 export const SessionItem = React.memo(function SessionItem({ session, player, trackName, isOpen, onToggle, selectedLapId, setSelectedLap, onSelectLap }) {
   const [showAllLaps, setShowAllLaps] = useState(false);
+  const showOutlaps = useAppStore(state => state.showOutlaps);
 
   const bestLapId = useMemo(() => {
     let best = null;
@@ -18,7 +20,11 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
     return best;
   }, [session.laps]);
 
-  const laps = session.laps || [];
+  const laps = useMemo(() => {
+    const rawLaps = session.laps || [];
+    if (showOutlaps) return rawLaps;
+    return rawLaps.filter(l => l.lap_number > 0 && l.lap_time > 0);
+  }, [session.laps, showOutlaps]);
   const visibleLaps = showAllLaps ? laps : laps.slice(0, 15);
   const hiddenCount = laps.length - visibleLaps.length;
 

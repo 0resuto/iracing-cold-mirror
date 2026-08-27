@@ -44,4 +44,12 @@ describe('useAppStore', () => {
     useAppStore.getState().toggleStandingsColumn('pos');
     expect(useAppStore.getState().standingsColumns.pos).toBe(!initialPos);
   });
+
+  it('should have showOutlaps false by default and support toggling', () => {
+    expect(useAppStore.getState().showOutlaps).toBe(false);
+    useAppStore.getState().setShowOutlaps(true);
+    expect(useAppStore.getState().showOutlaps).toBe(true);
+    useAppStore.getState().toggleShowOutlaps();
+    expect(useAppStore.getState().showOutlaps).toBe(false);
+  });
 });
