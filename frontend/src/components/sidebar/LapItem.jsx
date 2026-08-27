@@ -1,5 +1,6 @@
 import React from 'react';
-import { Timer, Award } from 'lucide-react';
+import { Timer } from 'lucide-react';
+import { Badge } from '@0resuto/ui-kit';
 
 export const LapItem = React.memo(function LapItem({ lap, player, trackName, selectedLapId, bestLapId, setSelectedLap, onSelectLap, carName }) {
   const isSelected = selectedLapId === lap.id;
@@ -24,16 +25,16 @@ export const LapItem = React.memo(function LapItem({ lap, player, trackName, sel
             : 'hover:bg-brand-60/70 text-brand-10/80 hover:text-brand-10 border-l-2 border-transparent'
       }`}
     >
-      <div className="flex items-center gap-3 min-w-0 pr-2">
-        <Timer size={16} className={isSelected ? 'text-brand-30/80 flex-none' : 'text-brand-10/40 group-hover:text-brand-10/60 flex-none'} />
-        <span className="truncate font-semibold text-xs sm:text-sm">{lapLabel}</span>
+      <div className="flex items-center gap-2.5 min-w-0 pr-2">
+        <Timer size={15} className={isSelected ? 'text-brand-30/90 flex-none' : 'text-brand-10/40 group-hover:text-brand-10/60 flex-none'} />
+        <span className="truncate font-semibold text-xs">{lapLabel}</span>
         {isBest && (
-          <span className="flex items-center gap-1 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-500/25 text-purple-200 border border-purple-500/40 flex-none">
+          <Badge color="purple" active size="sm" className="text-[9px] py-0 px-1.5 font-mono">
             BEST
-          </span>
+          </Badge>
         )}
       </div>
-      <span className={`font-mono font-bold text-xs sm:text-sm flex-none ml-2 pr-1 ${isBest ? 'text-purple-400' : 'text-brand-10/80'}`}>
+      <span className={`font-mono digital-number font-bold text-xs flex-none ml-2 pr-1 ${isBest ? 'text-purple-300' : 'text-brand-10/90'}`}>
         {timeText}
       </span>
     </div>

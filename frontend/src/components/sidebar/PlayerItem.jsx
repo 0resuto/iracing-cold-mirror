@@ -42,7 +42,7 @@ export const PlayerItem = React.memo(function PlayerItem({ player, isOpen, onTog
           <User size={18} className="text-brand-30/80 flex-none" />
           <div className="flex flex-col min-w-0">
             <span className="text-sky-100 font-extrabold text-xs sm:text-sm truncate">{player.name}</span>
-            <span className="text-[10px] font-mono text-brand-10/50 font-normal truncate leading-tight">
+            <span className="text-[10px] font-mono digital-number text-brand-10/50 font-normal truncate leading-tight">
               {tracksCount} tracks · {sessionsCount} sess
             </span>
           </div>

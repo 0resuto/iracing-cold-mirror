@@ -32,14 +32,14 @@ export const TrackItem = React.memo(function TrackItem({ trackName, sessions, pl
         className={`px-3 py-1.5 flex justify-between items-center cursor-pointer font-bold text-xs sm:text-sm transition-all min-w-0 rounded-xl overflow-hidden border-l-4 border-brand-30 border-y border-r border-brand-30/30 active:scale-[0.99] min-h-[34px] relative z-10 ${
           isOpen 
             ? 'bg-brand-60 text-brand-10 border border-brand-30/40 shadow-sm' 
-            : 'glass hover:bg-brand-60/70 text-brand-10/90'
+            : 'glass-card hover:bg-brand-60/50 text-brand-10/90'
         }`}
       >
         <span className="flex items-start gap-2.5 min-w-0 pr-2">
           <Flag size={16} className="text-brand-30/80 flex-none mt-0.5" />
           <div className="flex flex-col min-w-0">
             <span className="truncate text-xs sm:text-sm font-extrabold">{trackName}</span>
-            <span className="text-[10px] text-brand-10/40 font-mono truncate mt-0.5">
+            <span className="text-[10px] text-brand-10/50 font-mono digital-number truncate mt-0.5">
               {sessions.length} sess · {totalLaps} laps
             </span>
           </div>

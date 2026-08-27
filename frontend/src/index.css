@@ -65,33 +65,10 @@
   font-weight: 600;
 }
 
+/* Focus indicator */
 *:focus-visible {
   outline: 2px solid var(--color-brand-30);
   outline-offset: 2px;
-}
-
-/* Custom Premium Scrollbar */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-brand-60) transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-brand-60);
-  border-radius: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-brand-30);
 }
 
 .hide-inputs-graph .bg-black\/40 {

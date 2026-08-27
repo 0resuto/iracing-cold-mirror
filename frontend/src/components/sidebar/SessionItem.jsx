@@ -39,7 +39,7 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
         className={`px-2.5 py-2 flex flex-col gap-1 cursor-pointer rounded-xl overflow-hidden border-l-4 border-emerald-500 border-y border-r border-emerald-500/30 transition-all active:scale-[0.99] min-h-[36px] relative z-10 ${
           isOpen
             ? 'bg-brand-60 text-brand-10 shadow-md'
-            : 'glass hover:glass text-brand-10/80'
+            : 'glass-card hover:bg-brand-60/50 text-brand-10/85'
         }`}
       >
         <div className="flex items-center justify-between text-xs sm:text-sm font-bold min-w-0">
@@ -47,11 +47,11 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
             <Calendar size={15} className="text-emerald-400 flex-none" />
             <div className="flex flex-col min-w-0">
               <span className="truncate text-brand-10 font-bold text-[11px] leading-tight">{date}</span>
-              {timeRange && <span className="text-[10px] font-mono text-brand-10/60 font-normal truncate leading-tight">{timeRange}</span>}
+              {timeRange && <span className="text-[10px] font-mono digital-number text-brand-10/60 font-normal truncate leading-tight">{timeRange}</span>}
             </div>
           </div>
           <div className="flex items-center gap-2 flex-none ml-1">
-            <span className="text-[11px] font-mono font-bold text-brand-10/60">
+            <span className="text-[11px] font-mono digital-number font-bold text-brand-10/60">
               {laps.length} laps
             </span>
             {isOpen ? <ChevronDown size={18} className="text-emerald-400" /> : <ChevronRight size={18} className="text-brand-10/60" />}
@@ -65,7 +65,7 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
             <span className="truncate">{carName}</span>
           </span>
           {duration && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-mono text-brand-10/60 flex-none font-medium">
+            <span className="inline-flex items-center gap-1.5 text-xs font-mono digital-number text-brand-10/60 flex-none font-medium">
               <Clock size={12} className="text-brand-10/40" />
               {duration}
             </span>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TelemetryChart } from './components/TelemetryChart';
 import { LiveDashboard } from './features/live/LiveDashboard';
@@ -11,7 +11,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront, Calendar } from 'lucide-react';
 import { useTelemetryData } from './features/telemetry/useTelemetryData';
 import { useLiveStore } from './store/useLiveStore';
-import { Checkbox } from '@0resuto/ui-kit';
+import { Button, Checkbox, NumberStepper, SegmentedTabs } from '@0resuto/ui-kit';
 
 function AppContent() {
   const location = useLocation();
@@ -56,6 +56,12 @@ function AppContent() {
 
   // Mobile View Tab state
   const [mobileView, setMobileView] = useState('charts'); // 'charts' | 'map' | 'stats'
+
+  const mobileViewTabs = useMemo(() => [
+    { id: 'charts', label: 'Charts', icon: Activity },
+    { id: 'map', label: 'Map', icon: Map },
+    { id: 'stats', label: 'Stats', icon: BarChart2 },
+  ], []);
 
   // Initialize live telemetry websocket when on '/live' route
   useLiveTelemetryWS(isLive);
@@ -127,56 +133,27 @@ function AppContent() {
             )}
           </div>
 
-          {/* View Switcher Buttons on Mobile (Charts, Map, Stats) - Takes flex-1 width */}
+          {/* View Switcher on Mobile (Charts, Map, Stats) */}
           {isHistory && (
-            <div className="grid grid-cols-3 gap-1 glass p-1 rounded-xl border border-brand-60/90 md:hidden flex-1 shadow-inner min-w-0">
-              <button
-                onClick={() => setMobileView('charts')}
-                className={`py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[36px] active:scale-95 min-w-0 ${
-                  mobileView === 'charts' 
-                    ? 'bg-brand-30/20 text-brand-30/90 border border-brand-30/40 shadow-sm font-extrabold' 
-                    : 'text-brand-10/60 hover:text-brand-10/90'
-                }`}
-                title="Charts View"
-              >
-                <Activity size={14} className="flex-none" />
-                <span className="truncate">Charts</span>
-              </button>
-              <button
-                onClick={() => setMobileView('map')}
-                className={`py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[36px] active:scale-95 min-w-0 ${
-                  mobileView === 'map' 
-                    ? 'bg-brand-30/20 text-brand-10 border border-brand-30/40 shadow-sm font-extrabold' 
-                    : 'text-brand-10/60 hover:text-brand-10/90'
-                }`}
-                title="Track Map View"
-              >
-                <Map size={14} className="flex-none" />
-                <span className="truncate">Map</span>
-              </button>
-              <button
-                onClick={() => setMobileView('stats')}
-                className={`py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all min-h-[36px] active:scale-95 min-w-0 ${
-                  mobileView === 'stats' 
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm font-extrabold' 
-                    : 'text-brand-10/60 hover:text-brand-10/90'
-                }`}
-                title="Sectors & Stats View"
-              >
-                <BarChart2 size={14} className="flex-none" />
-                <span className="truncate">Stats</span>
-              </button>
+            <div className="md:hidden flex-1 min-w-0">
+              <SegmentedTabs
+                tabs={mobileViewTabs}
+                activeTab={mobileView}
+                onChange={setMobileView}
+              />
             </div>
           )}
 
-          {/* Gray Icon-Only Menu Toggle Button (Mobile Only) */}
-          <button 
+          {/* Menu Toggle Button (Mobile Only) */}
+          <Button 
+            variant="secondary"
+            size="icon"
             onClick={toggleSidebar}
-            className="md:hidden p-2 rounded-xl bg-brand-60 border border-brand-60 hover:border-brand-60 active:bg-brand-60 text-brand-10/80 hover:text-brand-10 transition-all flex items-center justify-center cursor-pointer flex-none min-w-[38px] min-h-[38px] shadow-sm active:scale-95"
+            className="md:hidden flex-none"
             title="Toggle Menu"
           >
             <Menu size={18} />
-          </button>
+          </Button>
         </div>
 
         {/* Main Content Body */}
@@ -189,28 +166,29 @@ function AppContent() {
               <p className="text-base tracking-wide font-semibold text-brand-10">System Parameters Panel</p>
               <div className="mt-6 flex flex-col gap-4">
                 {/* Steering Lock Parameter */}
-                <div className="p-4 border border-brand-60/80 bg-brand-60/20 rounded-xl flex flex-col items-center gap-4">
-                  <div className="flex flex-col items-center gap-2">
-                    <label className="text-xs font-bold text-brand-10/80 uppercase tracking-widest">Steering Lock (Degrees)</label>
-                    <p className="text-[10px] text-brand-10/40 -mt-1 mb-2">Total wheel rotation (e.g. 900 = 450° each way)</p>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="number" 
-                        value={steeringMax * 2} 
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value);
-                          if (!isNaN(val) && val > 0) useAppStore.getState().setSteeringMax(val / 2);
-                        }}
-                        className="bg-brand-bg border border-brand-60 text-brand-10 px-3 py-2 rounded-lg w-24 text-center font-mono font-bold focus:outline-none focus:border-brand-30 transition-colors shadow-inner"
-                        step="10"
-                      />
-                    </div>
+                <div className="p-4 border border-brand-10/10 glass-card rounded-xl flex flex-col items-center gap-3">
+                  <div className="flex flex-col items-center gap-1">
+                    <label className="text-xs font-bold text-brand-10 uppercase tracking-widest">Steering Lock</label>
+                    <p className="text-[10px] text-brand-10/50">Total wheel rotation (e.g. 900 = 450° each way)</p>
                   </div>
+                  <NumberStepper
+                    value={steeringMax * 2}
+                    onChange={(val) => {
+                      const num = typeof val === 'number' ? val : parseInt(val, 10);
+                      if (!isNaN(num) && num > 0) useAppStore.getState().setSteeringMax(num / 2);
+                    }}
+                    step={10}
+                    min={90}
+                    max={1080}
+                    unit="°"
+                    size="md"
+                    className="w-36"
+                  />
                 </div>
 
                 {/* Display Preferences Card */}
-                <div className="p-4 border border-brand-60/80 bg-brand-60/20 rounded-xl flex flex-col items-start gap-2 text-left">
-                  <span className="text-xs font-bold text-brand-10/80 uppercase tracking-widest">Display Preferences</span>
+                <div className="p-4 border border-brand-10/10 glass-card rounded-xl flex flex-col items-start gap-2 text-left">
+                  <span className="text-xs font-bold text-brand-10 uppercase tracking-widest">Display Preferences</span>
                   <div className="mt-1 flex items-center justify-between w-full">
                     <div className="flex flex-col pr-3">
                       <span className="text-xs font-semibold text-brand-10">Show Outlaps in Sessions</span>
@@ -238,14 +216,17 @@ function AppContent() {
               <p className="text-base tracking-wide font-medium text-brand-10/90">No Lap Selected</p>
               <p className="text-xs text-brand-10/60 mt-1 max-w-xs">Select a lap from the menu to analyze telemetry curves and track lines.</p>
             </div>
-            <button 
+            <Button 
+              variant="primary"
+              size="md"
+              leftIcon={<Clock size={16} />}
               onClick={() => {
                 if (!isSidebarOpen) toggleSidebar();
               }}
-              className="mt-2 bg-brand-30 hover:bg-brand-30/80 text-zinc-950 font-bold px-4 py-2.5 rounded-lg text-xs transition-all shadow-lg shadow-brand-30/10 cursor-pointer flex items-center gap-2 min-h-[40px] active:scale-95"
+              className="mt-2"
             >
-              <Clock size={16} /> Open Telemetry Menu
-            </button>
+              Open Telemetry Menu
+            </Button>
           </div>
         ) : (
           <div className="flex flex-1 gap-2 md:gap-3 min-h-0 w-full overflow-hidden flex-col md:flex-row p-2 md:p-3">
