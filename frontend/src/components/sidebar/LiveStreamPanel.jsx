@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useLiveStore } from '../../store/useLiveStore';
 import { useAppStore } from '../../store/useAppStore';
-import { Checkbox } from '../Checkbox';
+import { Badge, Checkbox, Select, SidebarCard } from '@0resuto/ui-kit';
+import { Radio, Sliders, Layers } from 'lucide-react';
 
 export const LiveStreamPanel = () => {
   const isStreaming = useLiveStore(state => state.isStreaming);
@@ -12,54 +13,53 @@ export const LiveStreamPanel = () => {
   const liveDeltaReferenceMode = useAppStore(state => state.liveDeltaReferenceMode);
   const setLiveDeltaReferenceMode = useAppStore(state => state.setLiveDeltaReferenceMode);
 
+  const deltaOptions = useMemo(() => [
+    { value: 'sessionBest', label: 'Session Best (SB)' },
+    { value: 'personalBest', label: 'Personal Best (PB)' },
+    { value: 'optimal', label: 'Optimal Lap (OPT)' },
+    { value: 'sessionOptimal', label: 'Session Optimal (S-OPT)' },
+    { value: 'lastLap', label: 'Last Lap (LAST)' },
+    { value: 'allTimeBest', label: 'All-Time Best (ATB)' },
+    { value: 'allTimeOptimal', label: 'All-Time Optimal (AT-OPT)' },
+  ], []);
+
   return (
     <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar min-w-0 p-5">
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex justify-between items-center mb-1">
         <h2 className="text-xs uppercase tracking-wider text-brand-10/60 font-bold m-0">Live Stream</h2>
         {isStreaming ? (
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+          <Badge color="red" beacon active>
             LIVE
-          </span>
+          </Badge>
         ) : (
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-60 border border-brand-60 text-brand-10/60 text-xs font-medium">
+          <Badge color="neutral" active={false}>
             OFFLINE
-          </span>
+          </Badge>
         )}
       </div>
 
-      <div className="bg-brand-bg border border-brand-60 rounded-xl flex flex-col gap-3 p-4">
-        <div className="text-xs text-brand-10/60 flex justify-between items-center">
-          <span>Collector Status</span>
-          <span className={`font-semibold flex items-center gap-1.5 ${isStreaming ? 'text-green-400' : 'text-brand-10/40'}`}>
-            {isStreaming ? '🟢 iRacing Streaming' : '⚪ Waiting for iRacing...'}
+      <SidebarCard title="Collector Status" icon={Radio}>
+        <div className="text-xs text-brand-10/80 flex justify-between items-center">
+          <span>iRacing Service</span>
+          <span className={`font-semibold flex items-center gap-1.5 ${isStreaming ? 'text-emerald-400' : 'text-brand-10/40'}`}>
+            {isStreaming ? '🟢 Streaming Data' : '⚪ Waiting for iRacing...'}
           </span>
         </div>
-      </div>
+      </SidebarCard>
 
-      <div className="bg-brand-bg border border-brand-60 rounded-xl flex flex-col p-4">
-        <h3 className="text-[10px] uppercase tracking-widest text-brand-10/60 font-bold mb-3">Delta Reference</h3>
-        <select
+      <SidebarCard title="Delta Reference" icon={Sliders}>
+        <Select
+          size="md"
           value={liveDeltaReferenceMode}
-          onChange={(e) => setLiveDeltaReferenceMode(e.target.value)}
-          aria-label="Delta Reference Mode"
-          className="bg-brand-60/50 border border-brand-60 text-brand-10 text-xs rounded-lg px-3 py-2 outline-none hover:border-brand-30/50 cursor-pointer transition-colors w-full"
-        >
-          <option value="sessionBest">Session Best (SB)</option>
-          <option value="personalBest">Personal Best (PB)</option>
-          <option value="optimal">Optimal Lap (OPT)</option>
-          <option value="sessionOptimal">Session Optimal (S-OPT)</option>
-          <option value="lastLap">Last Lap (LAST)</option>
-          <option value="allTimeBest">All-Time Best (ATB)</option>
-          <option value="allTimeOptimal">All-Time Optimal (AT-OPT)</option>
-        </select>
-        <span className="text-[10px] text-brand-10/40 mt-2">
+          onChange={setLiveDeltaReferenceMode}
+          options={deltaOptions}
+        />
+        <span className="text-[10px] text-brand-10/40 leading-tight block">
           Target lap used by LiveDelta widget for realtime delta calculations.
         </span>
-      </div>
+      </SidebarCard>
 
-      <div className="bg-brand-bg border border-brand-60 rounded-xl flex flex-col p-4">
-        <h3 className="text-[10px] uppercase tracking-widest text-brand-10/60 font-bold mb-3">Standings Columns</h3>
+      <SidebarCard title="Standings Columns" icon={Layers}>
         <div className="flex flex-col gap-2.5">
           {Object.entries({
             pos: 'Position',
@@ -78,7 +78,7 @@ export const LiveStreamPanel = () => {
               onChange={() => toggleColumn(key)}
             />
           ))}
-          <div className="border-t border-brand-60 pt-2.5 mt-1">
+          <div className="border-t border-brand-10/10 pt-2.5 mt-1">
             <Checkbox
               label="Show Class Name in Standings"
               checked={showClassName}
@@ -86,7 +86,7 @@ export const LiveStreamPanel = () => {
             />
           </div>
         </div>
-      </div>
+      </SidebarCard>
 
       {!isStreaming && (
         <div className="text-xs text-amber-400/90 leading-relaxed bg-amber-500/10 rounded-xl border border-amber-500/20 p-4">

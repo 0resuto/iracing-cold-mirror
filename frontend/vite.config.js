@@ -21,7 +21,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'framer-motion', 'cold-mirror-widgets'],
+    include: ['react', 'react-dom', 'framer-motion', 'cold-mirror-widgets', '@0resuto/ui-kit'],
   },
   server: {
     proxy: {

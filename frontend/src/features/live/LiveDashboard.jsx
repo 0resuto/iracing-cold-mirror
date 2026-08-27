@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLiveStore } from '../../store/useLiveStore';
 import { useAppStore } from '../../store/useAppStore';
-import { Checkbox } from '../../components/Checkbox';
+import { Checkbox, SlidingPill } from '@0resuto/ui-kit';
 import {
   TelemetryProvider,
   DigitalDash,
@@ -131,36 +131,24 @@ export function LiveDashboard() {
 
             {/* Right Column: Standings / Relative Table */}
             <div className="flex-1 flex flex-col border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl overflow-hidden min-h-[320px] min-w-0">
-            {/* Section Header & Tabs */}
+            {/* Tab Header */}
             <div className="flex items-center justify-between border-b border-brand-60/60 px-3.5 py-2 flex-none flex-wrap gap-2">
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setActiveTab('standings')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    activeTab === 'standings'
-                      ? 'bg-brand-30/20 text-brand-10 border border-brand-30/40 shadow-sm'
-                      : 'text-brand-10/60 hover:text-brand-10'
-                  }`}
-                >
-                  Standings
-                </button>
-                <button
-                  onClick={() => setActiveTab('relative')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    activeTab === 'relative'
-                      ? 'bg-brand-30/20 text-brand-10 border border-brand-30/40 shadow-sm'
-                      : 'text-brand-10/60 hover:text-brand-10'
-                  }`}
-                >
-                  Relative
-                </button>
-              </div>
+              <SlidingPill
+                size="sm"
+                value={activeTab}
+                onChange={setActiveTab}
+                options={[
+                  { value: 'standings', label: 'Standings' },
+                  { value: 'relative', label: 'Relative' },
+                ]}
+                width="w-44"
+              />
 
               {activeTab === 'standings' && (
                 <Checkbox
                   label="Group by Class"
                   checked={groupByClass}
-                  onChange={(e) => setGroupByClass(e.target.checked)}
+                  onChange={(val) => setGroupByClass(typeof val === 'boolean' ? val : val.target.checked)}
                 />
               )}
             </div>

@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@0resuto/ui-kit": "github:0resuto/ui-kit",
     "@tanstack/react-query": "^5.101.2",
     "cold-mirror-widgets": "github:0resuto/cold-mirror-widgets",
     "d3-selection": "^3.0.0",

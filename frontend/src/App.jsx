@@ -11,8 +11,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront, Calendar } from 'lucide-react';
 import { useTelemetryData } from './features/telemetry/useTelemetryData';
 import { useLiveStore } from './store/useLiveStore';
-
-import { Checkbox } from './components/Checkbox';
+import { Checkbox } from '@0resuto/ui-kit';
 
 function AppContent() {
   const location = useLocation();
@@ -219,7 +218,7 @@ function AppContent() {
                     </div>
                     <Checkbox
                       checked={showOutlaps}
-                      onChange={(e) => useAppStore.getState().setShowOutlaps(e.target.checked)}
+                      onChange={(val) => useAppStore.getState().setShowOutlaps(typeof val === 'boolean' ? val : val.target.checked)}
                     />
                   </div>
                 </div>
