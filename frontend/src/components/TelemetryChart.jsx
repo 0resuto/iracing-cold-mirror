@@ -184,20 +184,26 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
   }, []);
 
   const availableLaps = useMemo(() => {
-      if (!selectedLap || !players) return [];
-      const player = players.find(p => p.id === selectedLap.player_id);
-      if (!player) return [];
-      const laps = [];
+    if (!selectedLap || !players) return [];
+    const targetTrack = selectedLap.track_name;
+    const targetCar = selectedLap.car_name || '';
+    const laps = [];
+
+    players.forEach(player => {
       (player.sessions || []).forEach(s => {
-          if (s.track_name === selectedLap.track_name) {
-              const sessionDate = s.start_time ? new Date(s.start_time).toLocaleString(undefined, {
-                  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-              }) : `Session ${s.id}`;
-              const sessionLaps = (s.laps || []).map(l => ({ ...l, sessionName: sessionDate }));
-              laps.push(...sessionLaps);
-          }
+        if (s.track_name === targetTrack && (s.car_name || '') === targetCar) {
+          const sessionDate = s.start_time ? new Date(s.start_time).toLocaleString(undefined, {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          }) : `Session ${s.id}`;
+          const sessionLabel = `${player.name} (${sessionDate})`;
+          const sessionLaps = (s.laps || [])
+            .filter(l => l.lap_number > 0 && l.lap_time > 0)
+            .map(l => ({ ...l, sessionName: sessionLabel }));
+          laps.push(...sessionLaps);
+        }
       });
-      return laps.filter(l => l.lap_number > 0 && l.lap_time > 0).sort((a,b) => a.lap_time - b.lap_time);
+    });
+    return laps.sort((a, b) => a.lap_time - b.lap_time);
   }, [selectedLap, players]);
 
   const processLap = (data) => {
@@ -412,7 +418,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                                             value={l.id}
                                             className={l.id === bestLapId ? 'text-brand-30/80 font-bold' : 'text-inherit'}
                                         >
-                                            Lap {l.lap_number} ({l.lap_time.toFixed(2)}s)
+                                            {l.id === bestLapId ? '★ ' : ''}Lap {l.lap_number} ({l.lap_time.toFixed(2)}s)
                                         </option>
                                     ))}
                                 </optgroup>

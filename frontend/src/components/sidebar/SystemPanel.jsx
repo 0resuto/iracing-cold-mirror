@@ -9,7 +9,7 @@ export const SystemPanel = () => {
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xs uppercase tracking-wider text-brand-10/60 font-bold m-0">System Parameters</h2>
         <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-30/10 border border-brand-30/20 text-brand-30/80 text-xs font-bold">
-          v0.1.0
+          v0.2.0
         </span>
       </div>
 

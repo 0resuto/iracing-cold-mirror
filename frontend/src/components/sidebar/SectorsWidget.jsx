@@ -8,14 +8,20 @@ export const SectorsWidget = React.memo(function SectorsWidget({ selectedLap, pl
     
     let bestLap = null;
     const safePlayers = players || [];
-    const player = safePlayers.find(p => p.id === selectedLap.player_id);
-    if (player) {
-      (player.sessions || []).filter(s => s.track_name === selectedLap.track_name).forEach(s => {
-        (s.laps || []).filter(l => l.lap_time > 0).forEach(l => {
-          if (!bestLap || l.lap_time < bestLap.lap_time) bestLap = l;
-        });
+    const targetTrack = selectedLap.track_name;
+    const targetCar = selectedLap.car_name || '';
+
+    safePlayers.forEach(player => {
+      (player.sessions || []).forEach(s => {
+        if (s.track_name === targetTrack && (s.car_name || '') === targetCar) {
+          (s.laps || []).forEach(l => {
+            if (l.lap_number > 0 && l.lap_time > 0) {
+              if (!bestLap || l.lap_time < bestLap.lap_time) bestLap = l;
+            }
+          });
+        }
       });
-    }
+    });
     
     const mapped = selectedLap.sectors.map(sector => {
       let delta = null;

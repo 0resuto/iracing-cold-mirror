@@ -20,11 +20,12 @@ export function useTelemetryData() {
     let bestLap = null;
     let refValid = false;
     let minTime = Infinity;
-    const player = players.find(p => p.id === selectedLap.player_id);
+    const targetTrack = selectedLap.track_name;
+    const targetCar = selectedLap.car_name || '';
 
-    if (player) {
+    for (const player of players) {
       for (const s of (player.sessions || [])) {
-        if (s.track_name === selectedLap.track_name) {
+        if (s.track_name === targetTrack && (s.car_name || '') === targetCar) {
           for (const l of (s.laps || [])) {
             if (l.id === referenceLapId) refValid = true;
             if (l.lap_number > 0 && l.lap_time > 0) {

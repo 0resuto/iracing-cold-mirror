@@ -39,7 +39,7 @@ export const StatsWidget = React.memo(function StatsWidget() {
     if (!selectedLap || !players?.length) return 8500;
     const player = players.find(p => p.id === selectedLap.player_id);
     if (!player) return 8500;
-    const session = player.sessions?.find(s => s.track_name === selectedLap.track_name);
+    const session = player.sessions?.find(s => s.laps?.some(l => l.id === selectedLap.id));
     return session?.redline_rpm || 8500;
   }, [selectedLap, players]);
 

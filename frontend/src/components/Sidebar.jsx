@@ -53,18 +53,21 @@ export const Sidebar = React.memo(function Sidebar() {
     }
   };
 
-  // Extract unique players, tracks, and cars
+  // Extract unique players, tracks, and cars (only from valid sessions with complete laps)
   const { uniquePlayers, uniqueTracks, uniqueCars } = useMemo(() => {
     const playersList = [];
     const tracksSet = new Set();
     const carsSet = new Set();
 
     (rawPlayers || []).forEach(p => {
-      playersList.push({ id: p.id, name: p.name });
-      (p.sessions || []).forEach(s => {
-        if (s.track_name) tracksSet.add(s.track_name);
-        if (s.car_name) carsSet.add(s.car_name);
-      });
+      const validSessions = (p.sessions || []).filter(s => (s.laps || []).some(l => l.lap_number > 0 && l.lap_time > 0));
+      if (validSessions.length > 0) {
+        playersList.push({ id: p.id, name: p.name });
+        validSessions.forEach(s => {
+          if (s.track_name) tracksSet.add(s.track_name);
+          if (s.car_name) carsSet.add(s.car_name);
+        });
+      }
     });
 
     return {
@@ -74,7 +77,7 @@ export const Sidebar = React.memo(function Sidebar() {
     };
   }, [rawPlayers]);
 
-  // Filter and Sort Data
+  // Filter and Sort Data (excludes garbage sessions with no complete laps)
   const processedPlayers = useMemo(() => {
     if (!rawPlayers || rawPlayers.length === 0) return [];
 
@@ -86,8 +89,11 @@ export const Sidebar = React.memo(function Sidebar() {
         return null;
       }
 
-      // Filter sessions by track, car, and text search
+      // Filter sessions: only valid sessions with complete laps, matching track, car, and text search
       let sessions = (p.sessions || []).filter(s => {
+        const hasValidLaps = (s.laps || []).some(l => l.lap_number > 0 && l.lap_time > 0);
+        if (!hasValidLaps) return false;
+
         if (filterTrack !== 'all' && s.track_name !== filterTrack) return false;
         if (filterCar !== 'all' && (s.car_name || 'Unknown Car') !== filterCar) return false;
         
@@ -101,7 +107,7 @@ export const Sidebar = React.memo(function Sidebar() {
         return true;
       });
 
-      if (sessions.length === 0 && (filterTrack !== 'all' || filterCar !== 'all' || q)) return null;
+      if (sessions.length === 0) return null;
 
       // Helper to compute best lap time of session
       const getBestTime = (session) => {
@@ -142,13 +148,38 @@ export const Sidebar = React.memo(function Sidebar() {
     return filtered;
   }, [rawPlayers, filterPlayer, filterTrack, filterCar, sortBy, searchQuery]);
 
-  // Auto-select latest session on load
+  // Auto-select first complete lap of the latest uploaded session on load
   useEffect(() => {
     if (rawPlayers.length > 0 && !selectedLapId) {
-      const latestPlayer = rawPlayers[rawPlayers.length - 1];
-      const latestSession = (latestPlayer.sessions || [])[latestPlayer.sessions?.length - 1];
-      if (latestSession?.laps?.length > 0) {
-        setSelectedLap({ ...latestSession.laps[0], player_id: latestPlayer.id, track_name: latestSession.track_name });
+      let latestSession = null;
+      let targetPlayer = null;
+
+      // Find the session with the maximum ID that has valid complete laps
+      for (const player of rawPlayers) {
+        for (const session of (player.sessions || [])) {
+          const validLaps = (session.laps || []).filter(l => l.lap_number > 0 && l.lap_time > 0);
+          if (validLaps.length > 0) {
+            if (!latestSession || (session.id || 0) > (latestSession.id || 0)) {
+              latestSession = session;
+              targetPlayer = player;
+            }
+          }
+        }
+      }
+
+      if (latestSession && targetPlayer) {
+        const validLaps = (latestSession.laps || [])
+          .filter(l => l.lap_number > 0 && l.lap_time > 0)
+          .sort((a, b) => a.lap_number - b.lap_number);
+
+        if (validLaps.length > 0) {
+          setSelectedLap({
+            ...validLaps[0],
+            player_id: targetPlayer.id,
+            track_name: latestSession.track_name,
+            car_name: latestSession.car_name
+          });
+        }
       }
     }
   }, [rawPlayers, selectedLapId, setSelectedLap]);
