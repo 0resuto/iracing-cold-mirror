@@ -162,6 +162,7 @@ class IRacingLiveReader:
             "lat": self._get_val("Lat", None),
             "lon": self._get_val("Lon", None),
             "yaw": self._get_val("Yaw"),
+            "yaw_north": self._get_val("YawNorth"),
             "yaw_rate": self._get_val("YawRate"),
             "vx": velocity_x,
             "vy": velocity_y,

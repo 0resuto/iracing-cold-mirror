@@ -45,6 +45,7 @@ export function mapLiveTelemetry(raw) {
     WindVel: Number(raw.wind_vel) || 0,
     WindDir: Number(raw.wind_dir) || 0,
     Yaw: Number(raw.yaw) || 0,
+    YawNorth: Number(raw.yaw_north) || 0,
     Skies: Number(raw.skies) || 0,
 
     // Pit & Spotter

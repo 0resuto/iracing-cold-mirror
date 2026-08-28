@@ -134,6 +134,7 @@ class IBTReader:
         data["track_id"] = getattr(self, "track_id", 165)
 
         data["yaw"] = get_val("Yaw")
+        data["yaw_north"] = get_val("YawNorth")
         data["yaw_rate"] = get_val("YawRate")
         data["vx"] = get_val("VelocityX")
         data["vy"] = get_val("VelocityY")

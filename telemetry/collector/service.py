@@ -72,6 +72,8 @@ def run(reader):
                         "lat_accel": data.get("g_lat"),
                         "long_accel": data.get("g_lon"),
                         "yaw_rate": data.get("yaw_rate"),
+                        "yaw": data.get("yaw"),
+                        "yaw_north": data.get("yaw_north"),
                         "velocity_x": data.get("vx"),
                         "velocity_z": data.get("vz"),
                         "slip_angle": data.get("slip_angle"),

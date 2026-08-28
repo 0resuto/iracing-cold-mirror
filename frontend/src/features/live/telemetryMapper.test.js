@@ -32,6 +32,7 @@ describe('mapLiveTelemetry', () => {
       wind_vel: 4.5,
       wind_dir: 1.2,
       yaw: 0.4,
+      yaw_north: 2.5,
       skies: 1,
       on_pit_road: true,
       pit_sv_flags: 15,
@@ -62,6 +63,7 @@ describe('mapLiveTelemetry', () => {
     expect(mapped.WindVel).toBe(4.5);
     expect(mapped.WindDir).toBe(1.2);
     expect(mapped.Yaw).toBe(0.4);
+    expect(mapped.YawNorth).toBe(2.5);
     expect(mapped.Skies).toBe(1);
     expect(mapped.OnPitRoad).toBe(true);
     expect(mapped.PitSvFlags).toBe(15);

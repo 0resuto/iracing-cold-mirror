@@ -14,7 +14,7 @@
   "dependencies": {
     "@0resuto/ui-kit": "github:0resuto/ui-kit",
     "@tanstack/react-query": "^5.101.2",
-    "cold-mirror-widgets": "github:0resuto/cold-mirror-widgets",
+    "cold-mirror-widgets": "github:0resuto/cold-mirror-widgets#0ef16fc",
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
     "framer-motion": "^13.1.0",
@@ -39,7 +39,7 @@
     "vitest": "^4.1.10"
   },
   "allowScripts": {
-    "github:0resuto/cold-mirror-widgets#489fcd1afc10690f267ddfc87e7d49886e32a06a": true,
+    "github:0resuto/cold-mirror-widgets#0ef16fcfa0076c4ac6e77174728890d8f8e47164": true,
     "github:0resuto/ui-kit#8f70ed91608db02354cd1f6c219556cfd8811e65": true
   }
 }
