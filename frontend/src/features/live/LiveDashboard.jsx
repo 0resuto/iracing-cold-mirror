@@ -176,7 +176,7 @@ export function LiveDashboard() {
         </div>
 
         {/* 5. Bottom Pinned Live Inputs Bar (Full width, 102px height, edge-to-edge) */}
-        <div className="w-full h-[102px] min-h-[102px] flex-none border-t border-brand-60/60 bg-[#121214]/95 backdrop-blur-md p-0 z-30 shadow-2xl flex items-center overflow-hidden">
+        <div className="w-full h-[102px] min-h-[102px] flex-none border-t border-brand-60/60 bg-zinc-900/95 backdrop-blur-md p-0 z-30 shadow-2xl flex items-center overflow-hidden">
           <LiveInputs throttleMs={33} timeRange={3} isLocked={true} />
         </div>
       </div>

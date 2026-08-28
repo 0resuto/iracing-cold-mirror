@@ -1,21 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Flag, ChevronDown, ChevronRight } from 'lucide-react';
 import { SessionItem } from './SessionItem';
 import { useAppStore } from '../../store/useAppStore';
 
 export const TrackItem = React.memo(function TrackItem({ trackName, sessions, player, isOpen, onToggle, selectedLapId, setSelectedLap, onSelectLap }) {
-  // Accordion state for sessions within this track
-  const [openSessionId, setOpenSessionId] = useState(null);
+  // Session accordion: null = auto-follow selected lap; else { selectedLapId, value } override
+  const [sessionOverride, setSessionOverride] = useState(null);
   const showOutlaps = useAppStore(state => state.showOutlaps);
 
-  useEffect(() => {
+  const activeSessionId = useMemo(() => {
     if (selectedLapId && sessions) {
-      const sessionWithLap = sessions.find(s => s.laps?.some(l => l.id === selectedLapId));
-      if (sessionWithLap) {
-        setOpenSessionId(sessionWithLap.id);
-      }
+      return sessions.find(s => s.laps?.some(l => l.id === selectedLapId))?.id ?? null;
     }
+    return null;
   }, [selectedLapId, sessions]);
+
+  const effectiveOpenSessionId =
+    sessionOverride && sessionOverride.selectedLapId === selectedLapId
+      ? (sessionOverride.value === 'closed' ? null : sessionOverride.value)
+      : activeSessionId;
 
   const totalLaps = useMemo(() => {
     return sessions.reduce((sum, s) => {
@@ -64,8 +67,8 @@ export const TrackItem = React.memo(function TrackItem({ trackName, sessions, pl
                 session={session} 
                 player={player} 
                 trackName={trackName}
-                isOpen={openSessionId === session.id}
-                onToggle={() => setOpenSessionId(openSessionId === session.id ? null : session.id)}
+                isOpen={effectiveOpenSessionId === session.id}
+                onToggle={() => setSessionOverride({ selectedLapId, value: effectiveOpenSessionId === session.id ? 'closed' : session.id })}
                 selectedLapId={selectedLapId} 
                 setSelectedLap={setSelectedLap} 
                 onSelectLap={onSelectLap}

@@ -1,19 +1,22 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { User, ChevronDown, ChevronRight } from 'lucide-react';
 import { TrackItem } from './TrackItem';
 
 export const PlayerItem = React.memo(function PlayerItem({ player, isOpen, onToggle, selectedLapId, setSelectedLap, onSelectLap }) {
-  // Accordion state for tracks within this player
-  const [openTrackName, setOpenTrackName] = useState(null);
+  // Track accordion: null = auto-follow selected lap; else { selectedLapId, value } override
+  const [trackOverride, setTrackOverride] = useState(null);
 
-  useEffect(() => {
+  const activeTrack = useMemo(() => {
     if (selectedLapId && player.sessions) {
-      const trackWithLap = player.sessions.find(s => s.laps?.some(l => l.id === selectedLapId))?.track_name;
-      if (trackWithLap) {
-        setOpenTrackName(trackWithLap);
-      }
+      return player.sessions.find(s => s.laps?.some(l => l.id === selectedLapId))?.track_name || null;
     }
+    return null;
   }, [selectedLapId, player.sessions]);
+
+  const effectiveOpenTrack =
+    trackOverride && trackOverride.selectedLapId === selectedLapId
+      ? (trackOverride.value === 'closed' ? null : trackOverride.value)
+      : activeTrack;
 
   // Group sessions by Track Name for this player
   const trackGroups = useMemo(() => {
@@ -64,8 +67,8 @@ export const PlayerItem = React.memo(function PlayerItem({ player, isOpen, onTog
                 trackName={trackName} 
                 sessions={sessions} 
                 player={player} 
-                isOpen={openTrackName === trackName}
-                onToggle={() => setOpenTrackName(openTrackName === trackName ? null : trackName)}
+                isOpen={effectiveOpenTrack === trackName}
+                onToggle={() => setTrackOverride({ selectedLapId, value: effectiveOpenTrack === trackName ? 'closed' : trackName })}
                 selectedLapId={selectedLapId} 
                 setSelectedLap={setSelectedLap} 
                 onSelectLap={onSelectLap}

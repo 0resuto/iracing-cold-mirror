@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@0resuto/ui-kit';
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -22,12 +23,12 @@ export class ErrorBoundary extends React.Component {
           <p className="text-brand-10/60 text-sm max-w-md mb-4">
             An unexpected error occurred while rendering telemetry visuals.
           </p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-brand-60 hover:bg-brand-60/80 text-xs font-semibold rounded-md transition-colors"
+          <Button
+            variant="secondary"
+            onClick={() => window.location.reload()}
           >
             Reload Page
-          </button>
+          </Button>
         </div>
       );
     }

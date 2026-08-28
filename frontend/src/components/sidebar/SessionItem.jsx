@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, ChevronDown, ChevronRight, Car, Clock } from 'lucide-react';
+import { Button } from '@0resuto/ui-kit';
 import { formatSessionTime } from './utils';
 import { LapItem } from './LapItem';
 import { useAppStore } from '../../store/useAppStore';
@@ -100,12 +101,16 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
                   />
                 ))}
                 {hiddenCount > 0 && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    fullWidth
                     onClick={() => setShowAllLaps(true)}
-                    className="px-4 py-2 mt-1 text-xs text-brand-30/80 hover:text-brand-30/90 font-mono text-left cursor-pointer transition-colors font-bold min-h-[38px]"
+                    className="justify-start mt-1 font-mono"
+                    title="Show all laps"
                   >
-                    + Show {hiddenCount} more laps
-                  </button>
+                    <span className="text-brand-30/90 hover:text-brand-30">+ Show {hiddenCount} more laps</span>
+                  </Button>
                 )}
               </>
             )}

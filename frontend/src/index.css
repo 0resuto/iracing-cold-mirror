@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: "Exo 2", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Red Hat Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Brand Theme */
   --color-brand-60: #383a44;
   --color-brand-30: #e63946;
   --color-brand-10: #eaeaea;
   --color-brand-bg: #2b2d34;
+  --color-brand-bg-deep: #1a1b1e;
   
   /* Semantic Chart Colors (Required for TelemetryChart) */
   --color-accent-blue: #38BDF8;
@@ -16,6 +17,14 @@
   --color-accent-red: #EF4444;
   --color-accent-purple: #A855F7;
   --color-accent-yellow: #F59E0B;
+
+  /* Neutral Chart Grays (referenced via var() in SVG/recharts attributes) */
+  --color-zinc-800: #27272a;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-600: #52525b;
+  --color-zinc-400: #a1a1aa;
+  --color-slate-500: #64748b;
+  --color-slate-400: #94a3b8;
 }
 
 @layer base {
@@ -42,14 +51,6 @@
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-}
-
-@layer utilities {
-  .glass {
-    background-color: color-mix(in srgb, var(--color-brand-bg) 40%, transparent);
-    backdrop-filter: blur(40px) saturate(150%);
-    -webkit-backdrop-filter: blur(40px) saturate(150%);
   }
 }
 

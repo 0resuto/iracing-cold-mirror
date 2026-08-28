@@ -1,17 +1,23 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { Sidebar } from './components/Sidebar';
-import { TelemetryChart } from './components/TelemetryChart';
-import { LiveDashboard } from './features/live/LiveDashboard';
-import { TrackMap } from './components/TrackMap';
-import { StatsWidget } from './components/StatsWidget';
 import { useAppStore } from './store/useAppStore';
 import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
-import { Toaster } from 'react-hot-toast';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront, Calendar } from 'lucide-react';
 import { useTelemetryData } from './features/telemetry/useTelemetryData';
 import { useLiveStore } from './store/useLiveStore';
-import { Button, Checkbox, NumberStepper, SegmentedTabs } from '@0resuto/ui-kit';
+import { Button, Checkbox, NumberStepper, SegmentedTabs, ProgressBar } from '@0resuto/ui-kit';
+
+const TelemetryChart = React.lazy(() => import('./components/TelemetryChart').then(m => ({ default: m.TelemetryChart })));
+const TrackMap = React.lazy(() => import('./components/TrackMap').then(m => ({ default: m.TrackMap })));
+const StatsWidget = React.lazy(() => import('./components/StatsWidget').then(m => ({ default: m.StatsWidget })));
+const LiveDashboard = React.lazy(() => import('./features/live/LiveDashboard').then(m => ({ default: m.LiveDashboard })));
+
+const PanelFallback = () => (
+  <div className="flex-1 flex items-center justify-center p-4">
+    <ProgressBar value={100} pulse size="sm" className="w-40" />
+  </div>
+);
 
 function AppContent() {
   const location = useLocation();
@@ -67,14 +73,6 @@ function AppContent() {
 
   return (
     <div className="w-full h-screen flex overflow-hidden bg-brand-bg text-brand-10 relative font-sans">
-      <Toaster 
-        position="bottom-right"
-        toastOptions={{
-          style: { background: '#18181b', color: '#f4f4f5', border: '1px solid #27272a' },
-          success: { iconTheme: { primary: '#10b981', secondary: '#18181b' } },
-          error: { iconTheme: { primary: '#ef4444', secondary: '#18181b' } },
-        }} 
-      />
       
       {/* Mobile Backdrop Overlay */}
       {isSidebarOpen && (
@@ -203,7 +201,9 @@ function AppContent() {
             </div>
           </div>
         ) : isLive ? (
-          <LiveDashboard />
+          <Suspense fallback={<PanelFallback />}>
+            <LiveDashboard />
+          </Suspense>
         ) : !selectedLap ? (
           <div className="flex-1 flex flex-col items-center justify-center text-brand-10/40 gap-4 glass rounded-xl border border-brand-60/60 p-6 m-4">
             <div className="w-14 h-14 rounded-full bg-brand-60 border border-brand-60 flex items-center justify-center">
@@ -230,26 +230,32 @@ function AppContent() {
         ) : (
           <div className="flex flex-1 gap-2 md:gap-3 min-h-0 w-full overflow-hidden flex-col md:flex-row p-2 md:p-3">
               {/* Telemetry Charts (Visible on desktop or when mobileView === 'charts') */}
-              <div className={`flex-[2] min-w-0 flex flex-col h-full overflow-y-scroll custom-scrollbar pb-20 ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
-                <TelemetryChart />
+              <div className={`flex-[2] min-w-0 flex flex-col h-full overflow-y-scroll custom-scrollbar ${mobileView === 'charts' ? 'flex' : 'hidden'} md:flex`}>
+                <Suspense fallback={<PanelFallback />}>
+                  <TelemetryChart />
+                </Suspense>
               </div>
               
               {/* Track Map & Stats Column (Visible on desktop or when mobileView === 'map' / 'stats') */}
-              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-2 overflow-x-hidden overflow-y-scroll h-full pl-1 custom-scrollbar pb-20 ${
+              <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-2 overflow-x-hidden overflow-y-scroll h-full pl-1 custom-scrollbar ${
                 mobileView !== 'charts' ? 'flex' : 'hidden md:flex'
               }`}>
                 {/* Track Map */}
                 <div className={`flex-1 flex-col min-h-[260px] overflow-hidden relative ${
                   mobileView === 'map' ? 'flex' : 'hidden'
                 } md:flex`}>
-                  <TrackMap />
+                  <Suspense fallback={<PanelFallback />}>
+                    <TrackMap />
+                  </Suspense>
                 </div>
 
                 {/* Stats & Sectors */}
                 <div className={`flex-none p-0 overflow-visible ${
                   mobileView === 'stats' ? 'block' : 'hidden'
                 } md:block`}>
-                  <StatsWidget />
+                  <Suspense fallback={<PanelFallback />}>
+                    <StatsWidget />
+                  </Suspense>
                 </div>
               </div>
           </div>

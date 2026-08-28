@@ -3,6 +3,7 @@ import { useAppStore } from '../store/useAppStore';
 import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Timer, Radio, Settings, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button, SegmentedTabs } from '@0resuto/ui-kit';
 
 import { LiveStreamPanel } from './sidebar/LiveStreamPanel';
 import { SystemPanel } from './sidebar/SystemPanel';
@@ -34,17 +35,21 @@ export const Sidebar = React.memo(function Sidebar() {
   const { data: rawPlayers = [], isLoading, isError } = useHistoryQuery();
   const { data: idealLap } = useIdealLapQuery(selectedLap?.player_id, selectedLap?.track_name);
 
-  // Accordion state for players
-  const [openPlayerId, setOpenPlayerId] = useState(null);
+  // Accordion state for players: null = auto-follow selected lap; else { selectedLapId, value } override
+  const [playerOverride, setPlayerOverride] = useState(null);
 
-  useEffect(() => {
+  const activePlayerId = useMemo(() => {
     if (selectedLapId && rawPlayers.length > 0) {
       const playerWithLap = rawPlayers.find(p => p.sessions?.some(s => s.laps?.some(l => l.id === selectedLapId)));
-      if (playerWithLap) {
-        setOpenPlayerId(playerWithLap.id);
-      }
+      return playerWithLap ? playerWithLap.id : null;
     }
+    return null;
   }, [selectedLapId, rawPlayers]);
+
+  const effectiveOpenPlayerId =
+    playerOverride && playerOverride.selectedLapId === selectedLapId
+      ? (playerOverride.value === 'closed' ? null : playerOverride.value)
+      : activePlayerId;
 
   // Auto-close sidebar on mobile when selecting a lap
   const handleSelectLapMobile = () => {
@@ -190,13 +195,15 @@ export const Sidebar = React.memo(function Sidebar() {
       {/* Left Icon Navigation Bar (DESKTOP ONLY) */}
       <div className="hidden md:flex w-11 min-w-[44px] border-r border-brand-60 flex-col items-center py-4 bg-brand-bg flex-none z-10">
         {/* Toggle Sidebar Arrow Button */}
-        <button 
-          onClick={toggleSidebar} 
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleSidebar}
           title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-          className="p-2 rounded-xl hover:bg-brand-60 text-brand-10/60 hover:text-brand-10 transition-all flex items-center justify-center cursor-pointer mt-1 mb-10 w-9 h-9 border border-transparent hover:border-brand-60 active:scale-95"
+          className="mt-1 mb-10"
         >
           {isOpen ? <ChevronLeft size={20} strokeWidth={2.5} /> : <ChevronRight size={20} strokeWidth={2.5} />}
-        </button>
+        </Button>
 
         <div className="flex flex-col gap-4 w-full">
           {/* History Tab */}
@@ -248,41 +255,28 @@ export const Sidebar = React.memo(function Sidebar() {
         
         {/* MOBILE TOP BAR (Segmented Tabs + Close Button) */}
         <div className="flex md:hidden items-center justify-between bg-brand-bg border-b border-brand-60 flex-none gap-3 min-h-[60px] px-5 py-4">
-          <div className="flex items-center gap-2 bg-brand-60 p-1.5 rounded-xl border border-brand-60 flex-1">
-            <button
-              onClick={() => navigate('/history')}
-              className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                isHistory ? 'bg-transparent text-accent-blue border border-accent-blue/40 shadow-sm font-extrabold' : 'text-brand-10/60'
-              }`}
-            >
-              <Timer size={16} /> History
-            </button>
-            <button
-              onClick={() => navigate('/live')}
-              className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                isLive ? 'bg-transparent text-accent-red border border-accent-red/40 shadow-sm font-extrabold' : 'text-brand-10/60'
-              }`}
-            >
-              <Radio size={16} /> Live
-            </button>
-            <button
-              onClick={() => navigate('/system')}
-              className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[42px] active:scale-95 ${
-                isSystem ? 'bg-transparent text-accent-green border border-accent-green/40 shadow-sm font-extrabold' : 'text-brand-10/60'
-              }`}
-            >
-              <Settings size={16} /> System
-            </button>
+          <div className="flex-1 min-w-0">
+            <SegmentedTabs
+              tabs={[
+                { id: 'history', label: 'History', icon: Timer },
+                { id: 'live', label: 'Live', icon: Radio },
+                { id: 'system', label: 'System', icon: Settings },
+              ]}
+              activeTab={isHistory ? 'history' : isLive ? 'live' : 'system'}
+              onChange={(id) => navigate('/' + id)}
+            />
           </div>
 
           {/* Close Drawer Button */}
-          <button
+          <Button
+            variant="secondary"
+            size="icon"
             onClick={toggleSidebar}
-            className="p-2.5 rounded-xl bg-brand-60 border border-brand-60 text-brand-10/60 hover:text-brand-10 flex-none min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
+            className="min-w-[44px] min-h-[44px]"
             title="Close Drawer"
           >
             <X size={22} />
-          </button>
+          </Button>
         </div>
 
         {isHistory ? (
@@ -320,8 +314,8 @@ export const Sidebar = React.memo(function Sidebar() {
                     <PlayerItem 
                       key={player.id} 
                       player={player} 
-                      isOpen={openPlayerId === player.id}
-                      onToggle={() => setOpenPlayerId(openPlayerId === player.id ? null : player.id)}
+                      isOpen={effectiveOpenPlayerId === player.id}
+                      onToggle={() => setPlayerOverride({ selectedLapId, value: effectiveOpenPlayerId === player.id ? 'closed' : player.id })}
                       selectedLapId={selectedLapId} 
                       setSelectedLap={setSelectedLap} 
                       onSelectLap={handleSelectLapMobile}

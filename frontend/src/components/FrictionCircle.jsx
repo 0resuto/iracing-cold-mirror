@@ -34,16 +34,16 @@ export function FrictionCircle({ latAccel = 0, longAccel = 0, maxG = 2 }) {
         className="glass rounded-full border-2 border-brand-60 shadow-inner"
       >
         {/* Crosshairs */}
-        <line x1={radius} y1="0" x2={radius} y2={size} stroke="#3f3f46" strokeWidth="1" />
-        <line x1="0" y1={radius} x2={size} y2={radius} stroke="#3f3f46" strokeWidth="1" />
+        <line x1={radius} y1="0" x2={radius} y2={size} stroke="var(--color-zinc-700)" strokeWidth="1" />
+        <line x1="0" y1={radius} x2={size} y2={radius} stroke="var(--color-zinc-700)" strokeWidth="1" />
         
         {/* 1G reference circle */}
         {maxG > 1 && (
-          <circle cx={radius} cy={radius} r={innerRadius * (1 / maxG)} fill="none" stroke="#52525b" strokeWidth="1" strokeDasharray="3 3" />
+          <circle cx={radius} cy={radius} r={innerRadius * (1 / maxG)} fill="none" stroke="var(--color-zinc-600)" strokeWidth="1" strokeDasharray="3 3" />
         )}
         
         {/* The G-Force dot */}
-        <circle cx={dotX} cy={dotY} r="5" fill="#ef4444" />
+        <circle cx={dotX} cy={dotY} r="5" fill="var(--color-accent-red)" />
       </svg>
       <div className="font-mono text-xs mt-2 text-brand-10/60 font-bold tracking-wider">
         {Math.abs(renderLat).toFixed(2)}G | {Math.abs(renderLong).toFixed(2)}G

@@ -3,7 +3,7 @@ import * as d3Selection from 'd3-selection';
 import { zoom as d3Zoom, zoomIdentity } from 'd3-zoom';
 import { useAppStore } from '../../store/useAppStore';
 import { useTelemetryData } from '../../features/telemetry/useTelemetryData';
-import { Select } from '@0resuto/ui-kit';
+import { Select, ProgressBar } from '@0resuto/ui-kit';
 import trackPaths from '../../assets/track_paths.json';
 import { buildTrackScene } from '../../utils/trackScene';
 import { buildColorSegments } from './colorSegments';
@@ -196,7 +196,7 @@ export const TrackMap = React.memo(function TrackMap() {
           const travelAngle = Math.atan2(dy, dx) * (180 / Math.PI);
           setFallbackCarPos({ x: pt.x, y: pt.y, travelAngle, isValid: true });
         }
-      } catch (_e) {
+      } catch {
         setFallbackCarPos({ x: 0, y: 0, travelAngle: 0, isValid: false });
       }
     }
@@ -360,7 +360,7 @@ export const TrackMap = React.memo(function TrackMap() {
               stroke="white"
               strokeWidth="0.4"
             />
-            <path d="M -1 -3 L 3 -2.5 L 3 2.5 L -1 3 Z" fill={bodyFill === '#ef4444' ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.6)'} />
+            <path d="M -1 -3 L 3 -2.5 L 3 2.5 L -1 3 Z" fill={bodyFill === 'var(--color-accent-red)' ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.6)'} />
           </g>
         </g>
       </g>
@@ -412,10 +412,10 @@ export const TrackMap = React.memo(function TrackMap() {
         )}
       </div>
 
-      <div ref={containerRef} className="flex-1 w-full relative overflow-hidden mt-1 bg-[#09090b] rounded-xl border border-white/10 shadow-inner">
+      <div ref={containerRef} className="flex-1 w-full relative overflow-hidden mt-1 bg-brand-bg-deep rounded-xl border border-white/10 shadow-inner">
         {isLive && (!lapData || lapData.length === 0) && !fallbackPathD ? (
-          <div className="w-full h-full flex flex-col items-center justify-center text-brand-10/40 gap-3">
-            <span className="w-6 h-6 border-2 border-brand-60 border-t-zinc-400 rounded-full animate-spin"></span>
+          <div className="w-full h-full flex flex-col items-center justify-center text-brand-10/40 gap-4">
+            <ProgressBar value={100} pulse size="sm" className="w-40" />
             <span>Waiting for live GPS data...</span>
           </div>
         ) : (!isLive && (lapTime === undefined || lapTime === null)) ? (
@@ -482,7 +482,7 @@ export const TrackMap = React.memo(function TrackMap() {
                   <path
                     d={svgData.lapPath}
                     fill="none"
-                    stroke="#ef4444"
+                    stroke="var(--color-accent-red)"
                     strokeWidth="1.5"
                     vectorEffect="non-scaling-stroke"
                     strokeLinecap="round"
@@ -497,18 +497,18 @@ export const TrackMap = React.memo(function TrackMap() {
                     cx={boundary.x}
                     cy={boundary.y}
                     r="4"
-                    fill="#09090b"
-                    stroke="#38bdf8"
+                    fill="var(--color-brand-bg-deep)"
+                    stroke="var(--color-accent-blue)"
                     strokeWidth="1.5"
                     vectorEffect="non-scaling-stroke"
                   />
                 ))}
 
                 {/* Car Position and Vectors */}
-                {renderCar(carState, '#ef4444')}
+                {renderCar(carState, 'var(--color-accent-red)')}
 
                 {/* Ghost Reference Car */}
-                {renderCar(refCarState, '#64748b')}
+                {renderCar(refCarState, 'var(--color-slate-500)')}
               </g>
             </svg>
           </div>
@@ -526,7 +526,7 @@ export const TrackMap = React.memo(function TrackMap() {
                   ref={fallbackPathRef}
                   d={fallbackPathD}
                   fill="none"
-                  stroke="#94a3b8"
+                  stroke="var(--color-slate-400)"
                   strokeWidth="1.5"
                   vectorEffect="non-scaling-stroke"
                   strokeLinecap="round"
@@ -537,7 +537,7 @@ export const TrackMap = React.memo(function TrackMap() {
                   <g transform={`translate(${fallbackCarPos.x}, ${fallbackCarPos.y}) rotate(${fallbackCarPos.travelAngle})`}>
                     <path
                       d="M -10 -4 L 4 -4 L 10 -1.5 L 10 1.5 L 4 4 L -10 4 Z"
-                      fill="#ef4444"
+                      fill="var(--color-accent-red)"
                       stroke="white"
                       strokeWidth={fallbackBBox ? Math.max(1, fallbackBBox.width / 800) : 2}
                       transform={fallbackBBox ? `scale(${Math.max(1, fallbackBBox.width / 500)})` : "scale(1)"}
@@ -559,7 +559,7 @@ export const TrackMap = React.memo(function TrackMap() {
       </div>
 
       <div className="mt-2 text-xs text-brand-10/60 text-center font-mono font-bold px-3 py-1 rounded-full">
-        Progress: {(progress * 100).toFixed(1)}% <span className="mx-2 text-border-strong">|</span> <span className="text-xs">Time: {displayTime.toFixed(1)}s / {lapTime ? lapTime.toFixed(1) : '0.0'}s</span>
+        Progress: {(progress * 100).toFixed(1)}% <span className="mx-2 text-brand-10/40">|</span> <span className="text-xs">Time: {displayTime.toFixed(1)}s / {lapTime ? lapTime.toFixed(1) : '0.0'}s</span>
       </div>
     </div>
   );

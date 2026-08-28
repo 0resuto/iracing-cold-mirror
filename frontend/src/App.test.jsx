@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ToastProvider } from '@0resuto/ui-kit';
 import App from './App';
 
 describe('App Component', () => {
@@ -10,9 +11,11 @@ describe('App Component', () => {
     });
 
     render(
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
+      <ToastProvider>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </ToastProvider>
     );
     
     // Check if the History tab exists (it has title="History")

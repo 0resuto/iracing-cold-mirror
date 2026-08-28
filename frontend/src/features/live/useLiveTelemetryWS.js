@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useLiveStore } from '../../store/useLiveStore';
 import { useAppStore } from '../../store/useAppStore';
 import { mapLiveTelemetry } from './telemetryMapper';
-import toast from 'react-hot-toast';
+import { useToast } from '@0resuto/ui-kit';
 
 const WS_URL = import.meta.env.VITE_WS_URL || (() => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -12,8 +12,9 @@ const WS_URL = import.meta.env.VITE_WS_URL || (() => {
 export function useLiveTelemetryWS(isLiveActive) {
   const clearLiveData = useLiveStore((state) => state.clearLiveData);
   const lastSessionTimeRef = useRef(null);
-  const lastUpdateTimestampRef = useRef(Date.now());
+  const lastUpdateTimestampRef = useRef(0);
   const staleTimeoutRef = useRef(null);
+  const toast = useToast();
 
   useEffect(() => {
     if (!isLiveActive) {
@@ -63,7 +64,7 @@ export function useLiveTelemetryWS(isLiveActive) {
 
           if (rawData.status === 'waiting for data') {
             if (useLiveStore.getState().isStreaming) {
-              toast('iRacing is waiting for data...', { icon: '🟡', id: 'waiting-data' });
+              toast('iRacing is waiting for data...');
             }
             useLiveStore.setState({ isStreaming: false, latestTelemetry: null });
             return;
@@ -90,7 +91,7 @@ export function useLiveTelemetryWS(isLiveActive) {
           }
 
           if (!useLiveStore.getState().isStreaming) {
-            toast.success('Connected to iRacing Live Telemetry', { id: 'connected' });
+            toast.success('Connected to iRacing Live Telemetry');
             storeUpdates.isStreaming = true;
             storeUpdates.liveTrackName = rawData.track_name;
             storeUpdates.livePlayerName = rawData.player_name;
@@ -113,14 +114,14 @@ export function useLiveTelemetryWS(isLiveActive) {
         
         console.error('Live WS connection error:', err);
         if (useLiveStore.getState().isStreaming) {
-           toast.error('Lost connection to Telemetry Server', { id: 'lost-conn' });
+           toast.error('Lost connection to Telemetry Server');
         }
         useLiveStore.setState({ isStreaming: false });
       };
 
       ws.onclose = () => {
         if (useLiveStore.getState().isStreaming) {
-           toast.error('Connection closed', { id: 'closed-conn' });
+           toast.error('Connection closed');
         }
         useLiveStore.setState({ isStreaming: false });
         
@@ -142,5 +143,5 @@ export function useLiveTelemetryWS(isLiveActive) {
       clearLiveData();
       useLiveStore.setState({ isStreaming: false, latestTelemetry: null });
     };
-  }, [isLiveActive, clearLiveData]);
+  }, [isLiveActive, clearLiveData, toast]);
 }
