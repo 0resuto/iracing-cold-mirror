@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Calendar, ChevronDown, ChevronRight, Car, Clock } from 'lucide-react';
 import { formatSessionTime } from './utils';
 import { LapItem } from './LapItem';

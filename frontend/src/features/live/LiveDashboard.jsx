@@ -4,13 +4,10 @@ import { useAppStore } from '../../store/useAppStore';
 import { Checkbox, Select, SlidingPill } from '@0resuto/ui-kit';
 import {
   TelemetryProvider,
-  DigitalDash,
   LiveInputs,
   LiveFuel,
   LiveWeather,
-  PitHelper,
   LinearTrackMap,
-  LiveRadar,
   LiveRelative,
   LiveStandings,
   LiveDelta,

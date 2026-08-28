@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TelemetryChart } from './components/TelemetryChart';
 import { LiveDashboard } from './features/live/LiveDashboard';
@@ -27,12 +27,11 @@ function AppContent() {
   const steeringMax = useAppStore(state => state.steeringMax);
   const showOutlaps = useAppStore(state => state.showOutlaps);
 
-  const { lapData, players } = useTelemetryData();
+  const { players } = useTelemetryData();
 
   const liveTrackName = useLiveStore(state => state.liveTrackName);
   const livePlayerName = useLiveStore(state => state.livePlayerName);
   const liveCarName = useLiveStore(state => state.liveCarName);
-  const isStreaming = useLiveStore(state => state.isStreaming);
 
   const trackName = isLive ? liveTrackName : selectedLap?.track_name;
   

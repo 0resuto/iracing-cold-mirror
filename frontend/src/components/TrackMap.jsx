@@ -6,6 +6,34 @@ import { useTelemetryData } from '../features/telemetry/useTelemetryData';
 import { Select } from '@0resuto/ui-kit';
 import trackPaths from '../assets/track_paths.json';
 
+// Catmull-Rom cubic Bezier spline generator for 100% smooth trajectory curvature
+function getCatmullRomSpline(points, closed = false) {
+  if (!points || points.length < 2) return '';
+  if (points.length === 2) {
+    return `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)} L ${points[1].x.toFixed(2)} ${points[1].y.toFixed(2)}`;
+  }
+  
+  let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+  const pts = closed ? [points[points.length - 1], ...points, points[0], points[1]] : points;
+  const start = closed ? 1 : 0;
+  const end = closed ? pts.length - 2 : pts.length - 1;
+
+  for (let i = start; i < end; i++) {
+    const p0 = pts[i - 1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1] || p1;
+    const p3 = pts[i + 2] || p2;
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+  }
+  return d + (closed ? ' Z' : '');
+}
+
 export const TrackMap = React.memo(function TrackMap() {
   const [colorMode, setColorMode] = useState('default');
   const [mapMode, setMapMode] = useState('gps'); // 'gps' | 'schematic'
@@ -100,17 +128,24 @@ export const TrackMap = React.memo(function TrackMap() {
     });
 
     const scaledBase = refGpsPoints ? refGpsPoints.map(p => projectToScreen(p.lon, p.lat)) : [];
-    const basePath = scaledBase.length > 0 ? scaledBase.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z' : null;
+    const basePath = scaledBase.length >= 2 ? getCatmullRomSpline(scaledBase, true) : null;
 
     let lapPath = null;
-    if (lapGpsPoints) {
+    if (lapGpsPoints && lapGpsPoints.length >= 2) {
       const scaledLap = lapGpsPoints.map(p => projectToScreen(p.lon, p.lat));
-      lapPath = scaledLap.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+      lapPath = getCatmullRomSpline(scaledLap, true);
     }
+
+    const METERS_PER_DEGREE_LAT = 111139;
+    const metersPerVbUnit = METERS_PER_DEGREE_LAT / (scale || 1);
+    const REAL_CAR_LENGTH_METERS = 4.8; // Real GT/Formula car length (~4.8m)
+    const BASE_CAR_PATH_LENGTH = 20; // Length of SVG car path
+    const realisticCarScale = (REAL_CAR_LENGTH_METERS * (scale / METERS_PER_DEGREE_LAT)) / BASE_CAR_PATH_LENGTH;
 
     return { 
       basePath, 
       lapPath, 
+      projectToScreen,
       points: lapGpsPoints ? lapGpsPoints.map(p => projectToScreen(p.lon, p.lat)) : scaledBase, 
       vbWidth, 
       vbHeight, 
@@ -119,9 +154,11 @@ export const TrackMap = React.memo(function TrackMap() {
       yOffset, 
       minX, 
       minY, 
-      lonScale 
+      lonScale,
+      realisticCarScale,
+      metersPerVbUnit
     };
-  }, [refGpsPoints, lapGpsPoints]);
+  }, [refGpsPoints, lapGpsPoints, isLive]);
 
   const carState = useMemo(() => {
     if (!svgData) return { x: 0, y: 0, travelAngle: 0, headingAngle: 0, isValid: false };
@@ -211,7 +248,7 @@ export const TrackMap = React.memo(function TrackMap() {
       speed: currentData.speed || 0,
       isValid: true 
     };
-  }, [svgData, hoveredData, lapData]);
+  }, [svgData, hoveredData, lapData, refGpsPoints]);
 
   const refCarState = useMemo(() => {
     if (!svgData || !referenceData || referenceData.length === 0) return { x: 0, y: 0, travelAngle: 0, headingAngle: 0, isValid: false };
@@ -363,25 +400,31 @@ export const TrackMap = React.memo(function TrackMap() {
     };
 
     const pathsByColor = {};
-    for (let i = 0; i < lapGpsPoints.length - 1; i++) {
-      const p1 = lapGpsPoints[i];
-      const p2 = lapGpsPoints[i+1];
-      
-      const px1 = p1.lon * svgData.lonScale;
-      const py1 = p1.lat;
-      const x1 = (px1 - svgData.minX) * svgData.scale + svgData.xOffset;
-      const y1 = svgData.vbHeight - ((py1 - svgData.minY) * svgData.scale + svgData.yOffset);
+    const pts = [lapGpsPoints[lapGpsPoints.length - 1], ...lapGpsPoints, lapGpsPoints[0], lapGpsPoints[1]];
+    
+    for (let i = 1; i < pts.length - 2; i++) {
+      const p0 = pts[i - 1];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2];
 
-      const px2 = p2.lon * svgData.lonScale;
-      const py2 = p2.lat;
-      const x2 = (px2 - svgData.minX) * svgData.scale + svgData.xOffset;
-      const y2 = svgData.vbHeight - ((py2 - svgData.minY) * svgData.scale + svgData.yOffset);
+      const s0 = svgData.projectToScreen(p0.lon, p0.lat);
+      const s1 = svgData.projectToScreen(p1.lon, p1.lat);
+      const s2 = svgData.projectToScreen(p2.lon, p2.lat);
+      const s3 = svgData.projectToScreen(p3.lon, p3.lat);
+
+      const cp1x = s1.x + (s2.x - s0.x) / 6;
+      const cp1y = s1.y + (s2.y - s0.y) / 6;
+      const cp2x = s2.x - (s3.x - s1.x) / 6;
+      const cp2y = s2.y - (s3.y - s1.y) / 6;
 
       const color = getColor(p1, p2);
+      const segCmd = `M ${s1.x.toFixed(2)} ${s1.y.toFixed(2)} C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${s2.x.toFixed(2)} ${s2.y.toFixed(2)}`;
+
       if (!pathsByColor[color]) {
-        pathsByColor[color] = `M ${x1} ${y1} L ${x2} ${y2}`;
+        pathsByColor[color] = segCmd;
       } else {
-        pathsByColor[color] += ` M ${x1} ${y1} L ${x2} ${y2}`;
+        pathsByColor[color] += ` ${segCmd}`;
       }
     }
     
@@ -423,7 +466,7 @@ export const TrackMap = React.memo(function TrackMap() {
           const travelAngle = Math.atan2(dy, dx) * (180 / Math.PI);
           setFallbackCarPos({ x: pt.x, y: pt.y, travelAngle, isValid: true });
         }
-      } catch (e) {
+      } catch (_e) {
         setFallbackCarPos({ x: 0, y: 0, travelAngle: 0, isValid: false });
       }
     }
@@ -431,8 +474,63 @@ export const TrackMap = React.memo(function TrackMap() {
 
   const svgRef = useRef(null);
   const gRef = useRef(null);
+  const containerRef = useRef(null);
   const zoomKRef = useRef(1);
+  const [zoomK, setZoomK] = useState(1);
+  const [containerWidth, setContainerWidth] = useState(500);
   const zoomBehaviorRef = useRef(null);
+
+  // Measure actual container pixel width for accurate physical map scale
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0) {
+          setContainerWidth(entry.contentRect.width);
+        }
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Compute dynamic scale bar (e.g. 25m, 50m, 100m, 250m) based on current zoom and track projection
+  const scaleBarInfo = useMemo(() => {
+    if (!svgData || !svgData.metersPerVbUnit) return null;
+    
+    // 1 screen pixel in real-world meters:
+    const vbToScreen = (containerWidth || 500) / svgData.vbWidth;
+    const metersPerScreenPx = (svgData.metersPerVbUnit / (zoomK || 1)) / (vbToScreen || 0.5);
+
+    // Target scale bar width ~ 65-85px
+    const targetPx = 75;
+    const approxMeters = metersPerScreenPx * targetPx;
+
+    const SCALE_STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000];
+    let chosenDist = SCALE_STEPS[0];
+    for (const step of SCALE_STEPS) {
+      if (step <= approxMeters * 1.25) {
+        chosenDist = step;
+      } else {
+        break;
+      }
+    }
+
+    const widthPx = Math.max(30, Math.min(130, Math.round(chosenDist / metersPerScreenPx)));
+    const label = chosenDist >= 1000 ? `${chosenDist / 1000} km` : `${chosenDist} m`;
+
+    return { widthPx, label };
+  }, [svgData, zoomK, containerWidth]);
+
+  const MIN_CAR_SCREEN_PX = 18;
+  const BASE_CAR_PATH_LENGTH = 20;
+
+  const getAdaptiveCarScale = (k, svgDataObj, contWidth) => {
+    if (!svgDataObj) return 1;
+    const vbToScreen = (contWidth || 500) / svgDataObj.vbWidth;
+    const minScaleForZoom = MIN_CAR_SCREEN_PX / (BASE_CAR_PATH_LENGTH * (vbToScreen || 0.5) * (k || 1));
+    return Math.max(svgDataObj.realisticCarScale, minScaleForZoom);
+  };
 
   useEffect(() => {
     if (!svgRef.current || !gRef.current || !svgData) return;
@@ -455,6 +553,7 @@ export const TrackMap = React.memo(function TrackMap() {
       .on('zoom', (event) => {
         const { transform } = event;
         zoomKRef.current = transform.k;
+        setZoomK(transform.k);
         d3Selection.select(gRef.current).attr('transform', transform);
         
         const visualThickness = BASE_THICKNESS / Math.sqrt(transform.k);
@@ -466,11 +565,28 @@ export const TrackMap = React.memo(function TrackMap() {
           gRef.current.style.setProperty('--path-stroke', svgStrokeWidth);
           gRef.current.style.setProperty('--circle-stroke', (visualThickness / 2) / transform.k);
           gRef.current.style.setProperty('--circle-r', svgRadius);
-          gRef.current.style.setProperty('--car-scale', 1 / transform.k);
+          
+          const carScale = getAdaptiveCarScale(transform.k, svgData, containerWidth);
+          gRef.current.style.setProperty('--car-scale', carScale);
         }
       });
 
       svg.call(zoomBehaviorRef.current);
+    }
+
+    // Set initial scale properties based on current zoom level
+    if (gRef.current && svgData) {
+      const k = zoomKRef.current || 1;
+      const visualThickness = BASE_THICKNESS / Math.sqrt(k);
+      const svgStrokeWidth = visualThickness / k;
+      const visualRadius = (BASE_THICKNESS * 2) / Math.sqrt(k);
+      const svgRadius = visualRadius / k;
+      const carScale = getAdaptiveCarScale(k, svgData, containerWidth);
+
+      gRef.current.style.setProperty('--path-stroke', svgStrokeWidth);
+      gRef.current.style.setProperty('--circle-stroke', (visualThickness / 2) / k);
+      gRef.current.style.setProperty('--circle-r', svgRadius);
+      gRef.current.style.setProperty('--car-scale', carScale);
     }
 
     // Initial center is handled by viewBox, reset zoom when track layout changes or leaving live mode
@@ -483,7 +599,7 @@ export const TrackMap = React.memo(function TrackMap() {
       svg.on('.zoom', null);
       zoomBehaviorRef.current = null;
     };
-  }, [svgData?.basePath, isLive]);
+  }, [svgData, isLive, containerWidth]);
 
   // Auto-center map on car during live telemetry
   useEffect(() => {
@@ -495,7 +611,7 @@ export const TrackMap = React.memo(function TrackMap() {
       
       svg.call(zoomBehaviorRef.current.transform, zoomIdentity.translate(tx, ty).scale(k));
     }
-  }, [carState.x, carState.y, isLive, svgData]);
+  }, [carState.x, carState.y, carState.isValid, isLive, svgData]);
 
   return (
     <div className="flex flex-col items-center h-full">
@@ -542,7 +658,7 @@ export const TrackMap = React.memo(function TrackMap() {
         )}
       </div>
       
-      <div className="flex-1 w-full relative overflow-hidden mt-1">
+      <div ref={containerRef} className="flex-1 w-full relative overflow-hidden mt-1 bg-[#09090b] rounded-xl border border-white/10 shadow-inner">
         {isLive && (!lapData || lapData.length === 0) && !fallbackPathD ? (
           <div className="w-full h-full flex flex-col items-center justify-center text-brand-10/40 gap-3">
             <span className="w-6 h-6 border-2 border-brand-60 border-t-zinc-400 rounded-full animate-spin"></span>
@@ -554,18 +670,40 @@ export const TrackMap = React.memo(function TrackMap() {
           </div>
         ) : svgData && mapMode === 'gps' ? (
           <div className="w-full h-full cursor-grab active:cursor-grabbing absolute top-0 left-0">
-            <svg ref={svgRef} width="100%" height="100%" style={{ minHeight: '300px', cursor: 'grab' }} viewBox={`0 0 ${svgData.vbWidth} ${svgData.vbHeight}`} preserveAspectRatio="xMidYMid meet">
+            {/* Dynamic Map Scale Bar (Top-Left HUD) */}
+            {scaleBarInfo && (
+              <div className="absolute top-3 left-3 pointer-events-none flex flex-col items-start bg-black/80 backdrop-blur-md border border-white/15 px-2.5 py-1.5 rounded-lg text-[10px] font-mono text-brand-10 shadow-xl select-none z-10">
+                <span className="text-[10px] font-bold text-slate-200 leading-none mb-1">{scaleBarInfo.label}</span>
+                <div 
+                  className="h-1 bg-white/40 rounded-xs flex items-center justify-between"
+                  style={{ width: `${scaleBarInfo.widthPx}px` }}
+                >
+                  <div className="w-0.5 h-2.5 bg-brand-30 -ml-0.5 rounded-full"></div>
+                  <div className="w-0.5 h-2.5 bg-brand-30 -mr-0.5 rounded-full"></div>
+                </div>
+              </div>
+            )}
+
+            <svg 
+              ref={svgRef} 
+              width="100%" 
+              height="100%" 
+              shapeRendering="geometricPrecision"
+              style={{ minHeight: '300px', cursor: 'grab' }} 
+              viewBox={`0 0 ${svgData.vbWidth} ${svgData.vbHeight}`} 
+              preserveAspectRatio="xMidYMid meet"
+            >
               <g ref={gRef}>
                 {/* Background rect to catch pointer events for panning everywhere */}
                 <rect width={svgData.vbWidth} height={svgData.vbHeight} fill="transparent" />
                 
                 {/* Reference Lap Trajectory */}
                 <path 
-                  className="adaptive-path"
                   d={svgData.basePath} 
                   fill="none" 
-                  stroke="rgba(59, 130, 246, 0.5)" 
-                  style={{ strokeWidth: 'var(--path-stroke, 4px)' }}
+                  stroke="rgba(56, 189, 248, 0.45)" 
+                  strokeWidth="1.5"
+                  vectorEffect="non-scaling-stroke"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -576,10 +714,10 @@ export const TrackMap = React.memo(function TrackMap() {
                     {lapSegments.map((seg, i) => (
                       <path 
                         key={`seg-${i}`}
-                        className="adaptive-path"
                         d={seg.d}
                         stroke={seg.color}
-                        style={{ strokeWidth: 'var(--path-stroke, 4px)' }}
+                        strokeWidth="1.5"
+                        vectorEffect="non-scaling-stroke"
                         fill="none"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -588,11 +726,11 @@ export const TrackMap = React.memo(function TrackMap() {
                   </g>
                 ) : (
                   <path 
-                    className="adaptive-path"
                     d={svgData.lapPath} 
                     fill="none" 
-                    stroke="var(--color-accent-red)" 
-                    style={{ strokeWidth: 'var(--path-stroke, 4px)' }}
+                    stroke="#ef4444" 
+                    strokeWidth="1.5"
+                    vectorEffect="non-scaling-stroke"
                     strokeLinecap="round"
                     strokeLinejoin="round" 
                   />
@@ -602,12 +740,13 @@ export const TrackMap = React.memo(function TrackMap() {
                 {sectorBoundaries.map((boundary, i) => (
                   <circle 
                     key={`sector-${i}`}
-                    className="adaptive-circle" 
                     cx={boundary.x} 
                     cy={boundary.y} 
-                    fill="var(--color-brand-60)" 
-                    stroke="var(--color-accent-blue)" 
-                    style={{ r: 'var(--circle-r, 5px)', strokeWidth: 'var(--circle-stroke, 3px)' }}
+                    r="4"
+                    fill="#09090b" 
+                    stroke="#38bdf8" 
+                    strokeWidth="1.5"
+                    vectorEffect="non-scaling-stroke"
                   />
                 ))}
 
@@ -618,22 +757,22 @@ export const TrackMap = React.memo(function TrackMap() {
                       {/* Velocity Vector (shows true direction of travel) */}
                       {carState.speed > 5 && (
                         <g transform={`rotate(${carState.travelAngle})`}>
-                          <line x1="0" y1="0" x2="40" y2="0" stroke="var(--color-accent-blue)" strokeWidth="3" strokeDasharray="4 4" />
-                          <polygon points="40,-4 48,0 40,4" fill="var(--color-accent-blue)" />
+                          <line x1="0" y1="0" x2="40" y2="0" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
+                          <polygon points="40,-4 48,0 40,4" fill="#38bdf8" />
                         </g>
                       )}
 
                       {/* Car Body (rotated by heading) */}
                       <g transform={`rotate(${carState.headingAngle})`}>
-                        {/* Car shape */}
+                        {/* Car shape: 20 units long, 8 units wide */}
                         <path 
-                          d="M -12 -7 L 6 -7 L 12 -2 L 12 2 L 6 7 L -12 7 Z" 
-                          fill="var(--color-accent-red)" 
+                          d="M -10 -4 L 4 -4 L 10 -1.5 L 10 1.5 L 4 4 L -10 4 Z" 
+                          fill="#ef4444" 
                           stroke="white" 
-                          strokeWidth="2" 
+                          strokeWidth="1" 
                         />
-                        {/* Windshield to indicate front clearly */}
-                        <path d="M 0 -5 L 4 -4 L 4 4 L 0 5 Z" fill="rgba(255,255,255,0.5)" />
+                        {/* Windshield */}
+                        <path d="M -1 -3 L 3 -2.5 L 3 2.5 L -1 3 Z" fill="rgba(255,255,255,0.75)" />
                       </g>
                     </g>
                   </g>
@@ -642,15 +781,15 @@ export const TrackMap = React.memo(function TrackMap() {
                 {/* Ghost Reference Car */}
                 {refCarState.isValid && (
                   <g transform={`translate(${refCarState.x}, ${refCarState.y})`}>
-                    <g className="car-scale" style={{ transform: 'scale(var(--car-scale, 1))', opacity: 0.5 }}>
+                    <g className="car-scale" style={{ transform: 'scale(var(--car-scale, 1))', opacity: 0.6 }}>
                       <g transform={`rotate(${refCarState.headingAngle})`}>
                         <path 
-                          d="M -12 -7 L 6 -7 L 12 -2 L 12 2 L 6 7 L -12 7 Z" 
-                          fill="var(--color-text-muted)" 
+                          d="M -10 -4 L 4 -4 L 10 -1.5 L 10 1.5 L 4 4 L -10 4 Z" 
+                          fill="#64748b" 
                           stroke="white" 
-                          strokeWidth="2" 
+                          strokeWidth="1" 
                         />
-                        <path d="M 0 -5 L 4 -4 L 4 4 L 0 5 Z" fill="rgba(255,255,255,0.5)" />
+                        <path d="M -1 -3 L 3 -2.5 L 3 2.5 L -1 3 Z" fill="rgba(255,255,255,0.6)" />
                       </g>
                     </g>
                   </g>
@@ -660,14 +799,21 @@ export const TrackMap = React.memo(function TrackMap() {
           </div>
         ) : fallbackPathD ? (
           <div className="w-full h-full absolute top-0 left-0">
-            <svg width="100%" height="100%" viewBox={fallbackBBox ? `${fallbackBBox.x - 50} ${fallbackBBox.y - 50} ${fallbackBBox.width + 100} ${fallbackBBox.height + 100}` : "0 0 1000 1000"} preserveAspectRatio="xMidYMid meet">
+            <svg 
+              width="100%" 
+              height="100%" 
+              shapeRendering="geometricPrecision"
+              viewBox={fallbackBBox ? `${fallbackBBox.x - 50} ${fallbackBBox.y - 50} ${fallbackBBox.width + 100} ${fallbackBBox.height + 100}` : "0 0 1000 1000"} 
+              preserveAspectRatio="xMidYMid meet"
+            >
               <g>
                 <path
                   ref={fallbackPathRef}
                   d={fallbackPathD}
                   fill="none"
-                  stroke="var(--color-text-muted)"
-                  strokeWidth={fallbackBBox ? Math.max(1, fallbackBBox.width / 200) : 4}
+                  stroke="#94a3b8"
+                  strokeWidth="1.5"
+                  vectorEffect="non-scaling-stroke"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -675,8 +821,8 @@ export const TrackMap = React.memo(function TrackMap() {
                 {fallbackCarPos.isValid && (
                   <g transform={`translate(${fallbackCarPos.x}, ${fallbackCarPos.y}) rotate(${fallbackCarPos.travelAngle})`}>
                     <path 
-                      d="M -12 -7 L 6 -7 L 12 -2 L 12 2 L 6 7 L -12 7 Z" 
-                      fill="var(--color-accent-red)" 
+                      d="M -10 -4 L 4 -4 L 10 -1.5 L 10 1.5 L 4 4 L -10 4 Z" 
+                      fill="#ef4444" 
                       stroke="white" 
                       strokeWidth={fallbackBBox ? Math.max(1, fallbackBBox.width / 800) : 2} 
                       transform={fallbackBBox ? `scale(${Math.max(1, fallbackBBox.width / 500)})` : "scale(1)"}
