@@ -16,20 +16,22 @@ echo  [2]  Start Frontend Only (Vite Dev Server)
 echo  [3]  Start Infrastructure (Postgres + Redis)
 echo  [4]  Start IBT Sync Agent (Background Uploader)
 echo  [5]  Start Simulator Studio GUI (Engine + Streamer)
-echo  [6]  Run Tests (pytest)
-echo  [7]  Stop Infrastructure (Docker Down)
+echo  [6]  Run Local Live Telemetry Streamer (localhost dev API)
+echo  [7]  Run Tests (pytest)
+echo  [8]  Stop Infrastructure (Docker Down)
 echo.
 echo  [0]  Exit
 echo ======================================================================
-set /p CHOICE="Select an option [0-7]: "
+set /p CHOICE="Select an option [0-8]: "
 
 if "%CHOICE%"=="1" goto DEV_FULLSTACK
 if "%CHOICE%"=="2" goto DEV_FRONTEND
 if "%CHOICE%"=="3" goto INFRA_ONLY
 if "%CHOICE%"=="4" goto RUN_AGENT
 if "%CHOICE%"=="5" goto RUN_SIM_GUI
-if "%CHOICE%"=="6" goto RUN_TESTS
-if "%CHOICE%"=="7" goto STOP_DOCKER
+if "%CHOICE%"=="6" goto RUN_LIVE_LOCAL
+if "%CHOICE%"=="7" goto RUN_TESTS
+if "%CHOICE%"=="8" goto STOP_DOCKER
 if "%CHOICE%"=="0" exit /b 0
 
 echo Invalid choice. Please try again.
@@ -147,6 +149,22 @@ if not exist "venv\Scripts\activate.bat" (
 )
 echo Launching Simulator Studio GUI...
 start "" "%CD%\venv\Scripts\pythonw.exe" "%CD%\scripts\simulator_gui.py"
+goto MENU
+
+:RUN_LIVE_LOCAL
+cls
+if not exist "venv\Scripts\activate.bat" (
+    echo [ERROR] Python virtual environment not found. Run setup.bat first.
+    pause
+    goto MENU
+)
+echo Cleaning up orphaned local live telemetry streamers...
+powershell -noprofile -command "Get-WmiObject Win32_Process -Filter \"name='python.exe'\" | Where-Object { $_.CommandLine -match 'scripts.run_live_local' } | ForEach-Object { $_.Terminate() }" >nul 2>&1
+
+echo Starting Local Live Telemetry Streamer (localhost dev API)...
+call venv\Scripts\activate.bat
+python -m scripts.run_live_local
+pause
 goto MENU
 
 :RUN_TESTS

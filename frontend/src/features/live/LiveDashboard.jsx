@@ -87,11 +87,11 @@ export function LiveDashboard() {
             </div>
           </div>
 
-          {/* 3. Delta + Fuel (left) alongside Standings Table (right) */}
-          <div className="flex-1 flex gap-3 min-h-0 min-w-0">
+          {/* 3. Delta + Fuel (left) alongside Standings Table (right); stack on mobile */}
+          <div className="flex-1 flex flex-col sm:flex-row gap-3 min-h-0 min-w-0">
 
             {/* Left Column: Delta + Fuel stacked */}
-            <div className="flex-none w-[240px] flex flex-col gap-3">
+            <div className="w-full sm:w-[240px] sm:flex-none flex flex-col gap-3">
               <div className="h-[280px] min-h-[280px] flex-none border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl flex flex-col overflow-hidden">
                 {/* Delta Header with Quick Mode Selector */}
                 <div className="flex items-center border-b border-brand-60/60 px-2 py-1.5 flex-none">
