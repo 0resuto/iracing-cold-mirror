@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLiveStore } from '../../store/useLiveStore';
 import { useAppStore } from '../../store/useAppStore';
-import { Checkbox, SlidingPill } from '@0resuto/ui-kit';
+import { Checkbox, Select, SlidingPill } from '@0resuto/ui-kit';
 import {
   TelemetryProvider,
   DigitalDash,
@@ -97,21 +97,22 @@ export function LiveDashboard() {
             <div className="flex-none w-[240px] flex flex-col gap-3">
               <div className="h-[280px] min-h-[280px] flex-none border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl flex flex-col overflow-hidden">
                 {/* Delta Header with Quick Mode Selector */}
-                <div className="flex items-center border-b border-brand-60/60 px-3 py-1.5 flex-none">
-                  <select
+                <div className="flex items-center border-b border-brand-60/60 px-2 py-1.5 flex-none">
+                  <Select
+                    size="sm"
                     value={liveDeltaReferenceMode}
-                    onChange={(e) => setLiveDeltaReferenceMode(e.target.value)}
-                    aria-label="Select delta reference time"
-                    className="w-full bg-brand-60/20 hover:bg-brand-60/40 border border-brand-60/60 text-brand-10 text-xs font-semibold rounded-lg px-2.5 py-1 outline-none hover:border-brand-30/50 cursor-pointer transition-colors"
-                  >
-                    <option value={DELTA_MODES.SESSION_BEST} className="bg-brand-bg text-brand-10">Session Best (SB)</option>
-                    <option value={DELTA_MODES.PERSONAL_BEST} className="bg-brand-bg text-brand-10">Personal Best (PB)</option>
-                    <option value={DELTA_MODES.OPTIMAL} className="bg-brand-bg text-brand-10">Optimal Lap (OPT)</option>
-                    <option value={DELTA_MODES.SESSION_OPTIMAL} className="bg-brand-bg text-brand-10">Session Optimal (S-OPT)</option>
-                    <option value={DELTA_MODES.LAST_LAP} className="bg-brand-bg text-brand-10">Last Lap (LAST)</option>
-                    <option value={DELTA_MODES.ALL_TIME_BEST} className="bg-brand-bg text-brand-10">All-Time Best (ATB)</option>
-                    <option value={DELTA_MODES.ALL_TIME_OPTIMAL} className="bg-brand-bg text-brand-10">All-Time Optimal (AT-OPT)</option>
-                  </select>
+                    onChange={setLiveDeltaReferenceMode}
+                    options={[
+                      { value: DELTA_MODES.SESSION_BEST, label: 'Session Best (SB)' },
+                      { value: DELTA_MODES.PERSONAL_BEST, label: 'Personal Best (PB)' },
+                      { value: DELTA_MODES.OPTIMAL, label: 'Optimal Lap (OPT)' },
+                      { value: DELTA_MODES.SESSION_OPTIMAL, label: 'Session Optimal (S-OPT)' },
+                      { value: DELTA_MODES.LAST_LAP, label: 'Last Lap (LAST)' },
+                      { value: DELTA_MODES.ALL_TIME_BEST, label: 'All-Time Best (ATB)' },
+                      { value: DELTA_MODES.ALL_TIME_OPTIMAL, label: 'All-Time Optimal (AT-OPT)' },
+                    ]}
+                    className="w-full"
+                  />
                 </div>
                 <div style={{ '--widget-bg-color': 'transparent' }} className="flex-1 overflow-hidden">
                   <LiveDelta

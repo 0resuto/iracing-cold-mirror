@@ -3,6 +3,7 @@ import * as d3Selection from 'd3-selection';
 import { zoom as d3Zoom, zoomIdentity } from 'd3-zoom';
 import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
+import { Select } from '@0resuto/ui-kit';
 import trackPaths from '../assets/track_paths.json';
 
 export const TrackMap = React.memo(function TrackMap() {
@@ -500,23 +501,27 @@ export const TrackMap = React.memo(function TrackMap() {
     <div className="flex flex-col items-center h-full">
       <div className="w-full flex justify-between items-center px-2 pt-1 pb-0.5">
         <div className="flex items-center gap-2">
-          <select 
+          <Select 
+            size="sm"
             value={mapMode}
-            onChange={(e) => setMapMode(e.target.value)}
-            className="bg-brand-60 text-brand-10 border border-brand-60 px-2 py-1 rounded-md text-xs cursor-pointer outline-none focus:border-accent-blue font-mono font-semibold"
-          >
-            <option value="gps">GPS</option>
-            <option value="schematic">Schematic</option>
-          </select>
-          <select 
+            onChange={setMapMode}
+            options={[
+              { value: 'gps', label: 'GPS' },
+              { value: 'schematic', label: 'Schematic' }
+            ]}
+            className="w-28"
+          />
+          <Select 
+            size="sm"
             value={colorMode}
-            onChange={(e) => setColorMode(e.target.value)}
-            className="bg-brand-60 text-brand-10 border border-brand-60 px-2 py-1 rounded-md text-xs cursor-pointer outline-none focus:border-accent-blue font-mono font-semibold"
-          >
-            <option value="default">Default</option>
-            <option value="speed">Speed</option>
-            <option value="delta">Delta</option>
-          </select>
+            onChange={setColorMode}
+            options={[
+              { value: 'default', label: 'Default' },
+              { value: 'speed', label: 'Speed' },
+              { value: 'delta', label: 'Delta' }
+            ]}
+            className="w-28"
+          />
         </div>
         {colorMode !== 'default' && (
           <div className="flex items-center gap-2 text-[10px] text-brand-10/80 font-mono">

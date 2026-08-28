@@ -38,5 +38,9 @@
     "tailwindcss": "^4.3.3",
     "vite": "^8.1.1",
     "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "github:0resuto/cold-mirror-widgets#489fcd1afc10690f267ddfc87e7d49886e32a06a": true,
+    "github:0resuto/ui-kit#8f70ed91608db02354cd1f6c219556cfd8811e65": true
   }
 }

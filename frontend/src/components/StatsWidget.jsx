@@ -121,9 +121,9 @@ export const StatsWidget = React.memo(function StatsWidget() {
         </div>
 
         {/* Inputs + RPM combined block */}
-        <div className="flex flex-col border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl overflow-hidden h-[160px]">
-          <div className="w-[160px] h-[120px] hide-inputs-graph" style={{ '--widget-bg-color': 'transparent' }}>
-            <LiveInputs throttleMs={1} timeRange={3} isLocked={true} />
+        <div className="flex-none w-[192px] h-[160px] flex flex-col border border-brand-60/60 rounded-xl bg-[var(--widget-bg-color)] shadow-xl overflow-hidden">
+          <div className="w-full h-[120px]" style={{ '--widget-bg-color': 'transparent' }}>
+            <LiveInputs showGraph={false} throttleMs={1} timeRange={3} isLocked={true} />
           </div>
           <div className="px-3 pb-3">
             <RpmBar rpm={data.rpm} maxRpm={maxRpm} />

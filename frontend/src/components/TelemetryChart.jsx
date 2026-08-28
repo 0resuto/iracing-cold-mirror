@@ -4,6 +4,7 @@ import {
 } from 'recharts';
 import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
+import { Select } from '@0resuto/ui-kit';
 import { TelemetrySubChart } from './TelemetrySubChart';
 
 const FastDot = (props) => {
@@ -395,35 +396,32 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
                     }
                 });
                 
-                const groupedLaps = availableLaps.reduce((acc, lap) => {
-                    const group = lap.sessionName || 'Unknown Session';
-                    if (!acc[group]) acc[group] = [];
-                    acc[group].push(lap);
+                const grouped = availableLaps.reduce((acc, l) => {
+                    const session = l.sessionName || 'Laps';
+                    if (!acc[session]) acc[session] = [];
+                    acc[session].push({
+                        value: l.id,
+                        label: `${l.id === bestLapId ? '★ ' : ''}Lap ${l.lap_number} (${l.lap_time.toFixed(2)}s)`
+                    });
                     return acc;
                 }, {});
 
+                const refOptions = Object.entries(grouped).map(([group, items]) => ({
+                    group,
+                    items
+                }));
+
                 return (
-                    <div className="flex items-center gap-1.5 flex-none">
-                        <span className="text-xs text-brand-10/60 font-bold">Ref:</span>
-                        <select 
+                    <div className="flex items-center gap-1.5 flex-none w-52">
+                        <span className="text-xs text-brand-10/60 font-bold flex-none">Ref:</span>
+                        <Select 
+                            size="sm"
                             value={activeRefId || ''} 
-                            onChange={e => setReferenceLapId(parseInt(e.target.value))}
-                            className="bg-brand-60 text-brand-10 border border-brand-60 px-2 py-1 rounded-lg text-xs cursor-pointer outline-none focus:border-brand-30 font-mono truncate max-w-[170px] min-h-[28px] font-semibold"
-                        >
-                            {Object.entries(groupedLaps).map(([group, laps]) => (
-                                <optgroup key={group} label={group}>
-                                    {laps.map(l => (
-                                        <option 
-                                            key={l.id} 
-                                            value={l.id}
-                                            className={l.id === bestLapId ? 'text-brand-30/80 font-bold' : 'text-inherit'}
-                                        >
-                                            {l.id === bestLapId ? '★ ' : ''}Lap {l.lap_number} ({l.lap_time.toFixed(2)}s)
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            ))}
-                        </select>
+                            onChange={(val) => setReferenceLapId(val ? Number(val) : null)}
+                            options={refOptions}
+                            placeholder="Select Ref Lap..."
+                            className="flex-1 min-w-0"
+                        />
                     </div>
                 );
             })()}
