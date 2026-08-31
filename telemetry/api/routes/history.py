@@ -17,7 +17,7 @@ from sqlalchemy import func, text
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy.orm import selectinload
 
-from telemetry.api.deps import get_db, verify_api_key
+from telemetry.api.deps import get_current_admin, get_db, verify_api_key
 from telemetry.api.schemas import (
     DeltaPointResponse,
     IdealLapResponse,
@@ -299,3 +299,30 @@ def get_system_info(db: DBSession = Depends(get_db)):
         total_laps=total_laps,
         last_upload=last_upload,
     )
+
+
+@router.delete(
+    "/sessions/{session_id}",
+    tags=["Session"],
+    summary="Delete telemetry session (Admin only)",
+    dependencies=[Depends(get_current_admin)],
+)
+def delete_session(session_id: int, db: DBSession = Depends(get_db)):
+    session = db.query(Session).filter(Session.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    player_id = session.player_id
+    db.delete(session)
+
+    remaining_sessions = (
+        db.query(Session).filter(Session.player_id == player_id, Session.id != session_id).count()
+    )
+    if remaining_sessions == 0:
+        player = db.query(Player).filter(Player.id == player_id).first()
+        if player:
+            db.delete(player)
+
+    db.commit()
+
+    return {"status": "deleted", "session_id": session_id}

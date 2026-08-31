@@ -1,13 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, ChevronDown, ChevronRight, Car, Clock } from 'lucide-react';
-import { Button } from '@0resuto/ui-kit';
+import { Calendar, ChevronDown, ChevronRight, Car, Clock, Trash2 } from 'lucide-react';
+import { Button, Modal, useToast } from '@0resuto/ui-kit';
 import { formatSessionTime } from './utils';
 import { LapItem } from './LapItem';
 import { useAppStore } from '../../store/useAppStore';
+import { useDeleteSessionMutation } from '../../api/queries';
+import { AdminOnly } from '../auth/AdminOnly';
 
 export const SessionItem = React.memo(function SessionItem({ session, player, trackName, isOpen, onToggle, selectedLapId, setSelectedLap, onSelectLap }) {
   const [showAllLaps, setShowAllLaps] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const showOutlaps = useAppStore(state => state.showOutlaps);
+  const deleteSessionMutation = useDeleteSessionMutation();
+  const toast = useToast();
 
   const bestLapId = useMemo(() => {
     let best = null;
@@ -32,12 +37,60 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
   const { date, timeRange, duration } = formatSessionTime(session.start_time, session.duration_seconds, session.created_at);
   const carName = session.car_name || 'Unknown Car';
 
+  const handleDeleteSession = async (e) => {
+    e.stopPropagation();
+    try {
+      await deleteSessionMutation.mutateAsync(session.id);
+
+      // Reset selectedLap if it belonged to the deleted session
+      const currentLap = useAppStore.getState().selectedLap;
+      const deletedLapIds = (session.laps || []).map(l => l.id);
+      if (currentLap && deletedLapIds.includes(currentLap.id)) {
+        useAppStore.getState().setSelectedLap(null);
+      }
+
+      toast.success('Session Deleted', `Deleted session #${session.id} (${laps.length} laps)`);
+      setIsDeleteModalOpen(false);
+    } catch (err) {
+      toast.error('Deletion Failed', err.message || 'Could not delete session');
+    }
+  };
+
   return (
     <div className="flex flex-col relative min-w-0">
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Telemetry Session"
+        description={`Are you sure you want to permanently delete session #${session.id} for ${player?.name || 'Driver'} on ${trackName}? This will remove all ${session.laps?.length || 0} associated laps and raw telemetry.`}
+        size="sm"
+      >
+        <div className="flex justify-end gap-2 pt-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsDeleteModalOpen(false)}
+            disabled={deleteSessionMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            isLoading={deleteSessionMutation.isPending}
+            leftIcon={<Trash2 size={14} />}
+            onClick={handleDeleteSession}
+          >
+            Delete Session
+          </Button>
+        </div>
+      </Modal>
+
       {/* Session Header Card */}
       <div
         onClick={onToggle}
-        className={`px-2.5 py-2 flex flex-col gap-1 cursor-pointer rounded-xl overflow-hidden border-l-4 border-emerald-500 border-y border-r border-emerald-500/30 transition-all active:scale-[0.99] min-h-[36px] relative z-10 ${
+        className={`group px-2.5 py-2 flex flex-col gap-1 cursor-pointer rounded-xl overflow-hidden border-l-4 border-emerald-500 border-y border-r border-emerald-500/30 transition-all active:scale-[0.99] min-h-[36px] relative z-10 ${
           isOpen
             ? 'bg-brand-60 text-brand-10 shadow-md'
             : 'glass-card hover:bg-brand-60/50 text-brand-10/85'
@@ -55,6 +108,23 @@ export const SessionItem = React.memo(function SessionItem({ session, player, tr
             <span className="text-[11px] font-mono digital-number font-bold text-brand-10/60">
               {laps.length} laps
             </span>
+
+            {/* Admin Delete Action */}
+            <AdminOnly>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDeleteModalOpen(true);
+                }}
+                className="opacity-0 group-hover:opacity-100 text-brand-10/40 hover:text-accent-red hover:bg-accent-red/10 h-6 w-6 transition-opacity"
+                title="Delete session"
+              >
+                <Trash2 size={13} />
+              </Button>
+            </AdminOnly>
+
             {isOpen ? <ChevronDown size={18} className="text-emerald-400" /> : <ChevronRight size={18} className="text-brand-10/60" />}
           </div>
         </div>

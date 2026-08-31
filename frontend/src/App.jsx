@@ -1,12 +1,15 @@
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { useAppStore } from './store/useAppStore';
+import { useAuthStore } from './store/useAuthStore';
 import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront, Calendar } from 'lucide-react';
+import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront, Calendar, ShieldCheck, Shield, LogOut, Sparkles } from 'lucide-react';
 import { useTelemetryData } from './features/telemetry/useTelemetryData';
 import { useLiveStore } from './store/useLiveStore';
-import { Button, Checkbox, NumberStepper, SegmentedTabs, ProgressBar } from '@0resuto/ui-kit';
+import { Button, Checkbox, NumberStepper, SegmentedTabs, ProgressBar, Badge, useToast } from '@0resuto/ui-kit';
+import { LoginModal } from './components/auth/LoginModal';
+import { AiAnalysisCard } from './components/AiAnalysisCard';
 
 const TelemetryChart = React.lazy(() => import('./components/TelemetryChart').then(m => ({ default: m.TelemetryChart })));
 const TrackMap = React.lazy(() => import('./components/TrackMap').then(m => ({ default: m.TrackMap })));
@@ -22,6 +25,7 @@ const PanelFallback = () => (
 function AppContent() {
   const location = useLocation();
   const pathname = location.pathname;
+  const toast = useToast();
   
   const isLive = pathname === '/live';
   const isSystem = pathname === '/system';
@@ -32,6 +36,17 @@ function AppContent() {
   const toggleSidebar = useAppStore(state => state.toggleSidebar);
   const steeringMax = useAppStore(state => state.steeringMax);
   const showOutlaps = useAppStore(state => state.showOutlaps);
+
+  const isAdmin = useAuthStore(state => state.isAdmin);
+  const logout = useAuthStore(state => state.logout);
+  const checkAuth = useAuthStore(state => state.checkAuth);
+
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  // Validate active auth token on application mount
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const { players } = useTelemetryData();
 
@@ -60,19 +75,26 @@ function AppContent() {
   }
 
   // Mobile View Tab state
-  const [mobileView, setMobileView] = useState('charts'); // 'charts' | 'map' | 'stats'
+  const [mobileView, setMobileView] = useState('charts'); // 'charts' | 'map' | 'stats' | 'ai'
 
   const mobileViewTabs = useMemo(() => [
     { id: 'charts', label: 'Charts', icon: Activity },
     { id: 'map', label: 'Map', icon: Map },
     { id: 'stats', label: 'Stats', icon: BarChart2 },
+    { id: 'ai', label: 'AI Coach', icon: Sparkles },
   ], []);
 
   // Initialize live telemetry websocket when on '/live' route
   useLiveTelemetryWS(isLive);
 
+  const handleLogout = () => {
+    logout();
+    toast.info('Signed Out', 'You are now browsing as Guest.');
+  };
+
   return (
     <div className="w-full h-screen flex overflow-hidden bg-brand-bg text-brand-10 relative font-sans">
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       
       {/* Mobile Backdrop Overlay */}
       {isSidebarOpen && (
@@ -130,7 +152,7 @@ function AppContent() {
             )}
           </div>
 
-          {/* View Switcher on Mobile (Charts, Map, Stats) */}
+          {/* View Switcher on Mobile (Charts, Map, Stats, AI) */}
           {isHistory && (
             <div className="md:hidden flex-1 min-w-0">
               <SegmentedTabs
@@ -141,16 +163,48 @@ function AppContent() {
             </div>
           )}
 
-          {/* Menu Toggle Button (Mobile Only) */}
-          <Button 
-            variant="secondary"
-            size="icon"
-            onClick={toggleSidebar}
-            className="md:hidden flex-none"
-            title="Toggle Menu"
-          >
-            <Menu size={18} />
-          </Button>
+          {/* Admin Status / Auth Control */}
+          <div className="flex items-center gap-2 flex-none">
+            {isAdmin ? (
+              <div className="flex items-center gap-1.5 bg-brand-60/80 border border-accent-red/30 rounded-lg px-2 py-1">
+                <Badge color="red" size="sm" beacon active>
+                  <ShieldCheck size={11} className="inline mr-1" />
+                  Admin
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLogout}
+                  title="Sign Out"
+                  className="h-5 w-5 text-brand-10/50 hover:text-accent-red"
+                >
+                  <LogOut size={12} />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsLoginModalOpen(true)}
+                leftIcon={<Shield size={13} className="text-accent-blue" />}
+                className="text-[11px] h-7 px-2.5"
+                title="Admin Authentication"
+              >
+                <span className="hidden sm:inline">Admin Login</span>
+              </Button>
+            )}
+
+            {/* Menu Toggle Button (Mobile Only) */}
+            <Button 
+              variant="secondary"
+              size="icon"
+              onClick={toggleSidebar}
+              className="md:hidden flex-none"
+              title="Toggle Menu"
+            >
+              <Menu size={18} />
+            </Button>
+          </div>
         </div>
 
         {/* Main Content Body */}
@@ -236,7 +290,7 @@ function AppContent() {
                 </Suspense>
               </div>
               
-              {/* Track Map & Stats Column (Visible on desktop or when mobileView === 'map' / 'stats') */}
+              {/* Track Map, Stats & AI Column (Visible on desktop or mobile tabs) */}
               <div className={`flex-1 min-w-0 md:min-w-[320px] flex flex-col gap-2 overflow-x-hidden overflow-y-scroll h-full pl-1 custom-scrollbar ${
                 mobileView !== 'charts' ? 'flex' : 'hidden md:flex'
               }`}>
@@ -256,6 +310,16 @@ function AppContent() {
                   <Suspense fallback={<PanelFallback />}>
                     <StatsWidget />
                   </Suspense>
+                </div>
+
+                {/* AI Telemetry Coach Widget */}
+                <div className={`flex-none p-0 overflow-visible ${
+                  mobileView === 'ai' ? 'block' : 'hidden'
+                } md:block`}>
+                  <AiAnalysisCard
+                    selectedLap={selectedLap}
+                    onOpenLogin={() => setIsLoginModalOpen(true)}
+                  />
                 </div>
               </div>
           </div>

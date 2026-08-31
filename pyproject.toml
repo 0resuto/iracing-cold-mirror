@@ -17,7 +17,10 @@ dependencies = [
     "pyirsdk",
     "websockets",
     "tqdm",
-    "colorlog"
+    "colorlog",
+    "pyjwt",
+    "bcrypt",
+    "passlib"
 ]
 
 [project.optional-dependencies]

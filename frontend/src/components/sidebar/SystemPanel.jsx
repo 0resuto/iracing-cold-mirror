@@ -1,20 +1,88 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSystemInfoQuery } from '../../api/queries';
 import { useAppStore } from '../../store/useAppStore';
-import { Badge, Checkbox, SidebarCard, StatPill } from '@0resuto/ui-kit';
-import { Sliders, Server, Database, BarChart3, Users, Layers, Activity } from 'lucide-react';
+import { useAuthStore } from '../../store/useAuthStore';
+import { Badge, Button, Checkbox, SidebarCard, StatPill, useToast } from '@0resuto/ui-kit';
+import { Sliders, Server, Database, BarChart3, Users, Layers, Activity, ShieldCheck, ShieldAlert, LogIn, LogOut } from 'lucide-react';
+import { LoginModal } from '../auth/LoginModal';
 
 export const SystemPanel = () => {
   const { data: systemInfo, isLoading, isError } = useSystemInfoQuery();
   const showOutlaps = useAppStore(state => state.showOutlaps);
   const toggleShowOutlaps = useAppStore(state => state.toggleShowOutlaps);
 
+  const isAdmin = useAuthStore(state => state.isAdmin);
+  const user = useAuthStore(state => state.user);
+  const logout = useAuthStore(state => state.logout);
+  const toast = useToast();
+
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    toast.info('Signed Out', 'You are now viewing as Guest.');
+  };
+
   return (
     <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar min-w-0 p-5">
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+
       <div className="flex justify-between items-center mb-1">
         <h2 className="text-xs uppercase tracking-wider text-brand-10/60 font-bold m-0">System Parameters</h2>
         <Badge color="brand">v0.2.0</Badge>
       </div>
+
+      {/* Admin Access & Session Card */}
+      <SidebarCard title="Access Control (RBAC)" icon={isAdmin ? ShieldCheck : ShieldAlert}>
+        <div className="space-y-3 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-brand-10/70">Role Status</span>
+            {isAdmin ? (
+              <Badge color="red" active beacon>Administrator</Badge>
+            ) : (
+              <Badge color="neutral">Guest (Read-Only)</Badge>
+            )}
+          </div>
+
+          {isAdmin ? (
+            <div className="space-y-2 pt-1 border-t border-brand-10/10">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-brand-10/50">Logged in as</span>
+                <span className="font-mono text-brand-10/90 font-bold">{user?.username || 'admin'}</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-brand-10/50">Privileges</span>
+                <span className="text-emerald-400 font-semibold">Full Access (Delete / AI / Config)</span>
+              </div>
+              <Button
+                variant="danger"
+                size="sm"
+                fullWidth
+                leftIcon={<LogOut size={13} />}
+                onClick={handleLogout}
+                className="mt-2"
+              >
+                Sign Out
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2 pt-1 border-t border-brand-10/10">
+              <p className="text-[11px] text-brand-10/50 leading-relaxed">
+                Elevated features (session deletion, AI analysis, admin settings) require authorization.
+              </p>
+              <Button
+                variant="primary"
+                size="sm"
+                fullWidth
+                leftIcon={<LogIn size={13} />}
+                onClick={() => setIsLoginModalOpen(true)}
+              >
+                Sign In as Admin
+              </Button>
+            </div>
+          )}
+        </div>
+      </SidebarCard>
 
       {/* Display Preferences Card */}
       <SidebarCard title="Display Preferences" icon={Sliders}>
