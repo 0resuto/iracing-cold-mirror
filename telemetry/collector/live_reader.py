@@ -23,9 +23,10 @@ class IRacingLiveReader:
         self.reconnect_interval = reconnect_interval
         self.ir = irsdk.IRSDK()
         self.names = []
-        self.track_name = "Unknown Track"
         self.player_name = "Unknown Player"
+        self.track_name = "Unknown Track"
         self.track_id = 165
+        self.track_length = None
         self.sectors = []
         self._last_session_tick = None
 
@@ -65,6 +66,12 @@ class IRacingLiveReader:
             self.track_name = weekend_info.get("TrackName", "Unknown Track")
             self.track_id = weekend_info.get("TrackID", self.track_id)
             self.sectors = split_info.get("Sectors", []) or []
+
+            raw_length = weekend_info.get("TrackLength", "")
+            try:
+                self.track_length = float(raw_length.replace("km", "").strip()) * 1000
+            except (ValueError, AttributeError):
+                self.track_length = None
 
             driver_car_idx = driver_info.get("DriverCarIdx")
 

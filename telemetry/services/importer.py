@@ -39,10 +39,17 @@ def _get_or_create_player(db, player_name: str) -> Player:
 
 
 def _create_session(
-    db, player_id: int, track_name: str, car_name: str, file_hash: str, redline_rpm: int = 8500
+    db,
+    player_id: int,
+    track_name: str,
+    car_name: str,
+    file_hash: str,
+    redline_rpm: int = 8500,
+    track_length: float | None = None,
 ) -> RacingSession:
     session = RacingSession(
         track_name=track_name,
+        track_length=track_length,
         player_id=player_id,
         car_name=car_name,
         file_hash=file_hash,
@@ -159,12 +166,13 @@ def import_ibt_to_db(file_path: str, db_session_factory, progress_callback=None)
         sector_start_time = 0.0
         player_name = getattr(reader, "player_name", "Unknown Player")
         track_name = getattr(reader, "track_name", "Unknown Track")
+        track_length = getattr(reader, "track_length", None)
         car_name = getattr(reader, "car_name", "Unknown Car")
         redline_rpm = getattr(reader, "redline_rpm", 8500)
 
         player = _get_or_create_player(db, player_name)
         current_session = _create_session(
-            db, player.id, track_name, car_name, file_hash, redline_rpm
+            db, player.id, track_name, car_name, file_hash, redline_rpm, track_length
         )
         db.flush()
 

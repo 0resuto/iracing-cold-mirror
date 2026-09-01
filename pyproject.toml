@@ -20,7 +20,8 @@ dependencies = [
     "colorlog",
     "pyjwt",
     "bcrypt",
-    "passlib"
+    "passlib",
+    "numpy>=2.5.2",
 ]
 
 [project.optional-dependencies]

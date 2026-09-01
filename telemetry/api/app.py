@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from telemetry.api.routes import auth, history, live
+from telemetry.api.routes import ai, auth, history, live
 from telemetry.config import settings
 
 logging.basicConfig(
@@ -62,6 +62,7 @@ app = FastAPI(
 )
 
 
+app.include_router(ai.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(history.router, prefix="/api/v1")
 app.include_router(live.router, prefix="/api/v1")

@@ -6,6 +6,8 @@ export function useHistoryQuery() {
     queryKey: ['history'],
     queryFn: () => apiFetch('/players_history'),
     refetchInterval: 5000, // keep history fresh for live updates
+    retry: 2,
+    retryDelay: 1000,
   });
 }
 
@@ -15,6 +17,7 @@ export function useLapTelemetryQuery(lapId, isLive) {
     queryFn: () => (lapId ? apiFetch(`/laps/${lapId}/telemetry`) : []),
     enabled: !!lapId && !isLive,
     staleTime: 1000 * 60 * 60, // Completed historical lap data is immutable
+    retry: 2,
   });
 }
 
@@ -24,6 +27,7 @@ export function useLapDeltaQuery(lapId, referenceLapId) {
     queryFn: () => (lapId && referenceLapId ? apiFetch(`/laps/${lapId}/delta?reference_lap_id=${referenceLapId}`) : []),
     enabled: !!lapId && !!referenceLapId,
     staleTime: 1000 * 60 * 60, // Historical delta calculation is immutable
+    retry: 2,
   });
 }
 
@@ -49,6 +53,7 @@ export function useSystemInfoQuery() {
     queryKey: ['systemInfo'],
     queryFn: () => apiFetch('/system_info'),
     refetchInterval: 10000,
+    retry: 2,
   });
 }
 
@@ -68,6 +73,25 @@ export function useDeleteSessionMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['history'] });
       queryClient.invalidateQueries({ queryKey: ['systemInfo'] });
+    },
+  });
+}
+
+/**
+ * Mutation for running AI Lap Telemetry Analysis (Admin only).
+ * Compares lap_id against reference_lap_id and returns structured coach feedback.
+ */
+export function useAnalyzeLapMutation() {
+  return useMutation({
+    mutationFn: async ({ lapId, referenceLapId = null }) => {
+      return apiFetch('/ai/analyze-lap', {
+        method: 'POST',
+        body: JSON.stringify({
+          lap_id: lapId,
+          reference_lap_id: referenceLapId,
+        }),
+        timeout: 60000, // 60s timeout for LLM analysis generation
+      });
     },
   });
 }

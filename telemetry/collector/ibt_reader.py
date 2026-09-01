@@ -39,6 +39,7 @@ class IBTReader:
         self.player_name = "Unknown Player"
         self.car_name = "Unknown Car"
         self.track_id = 165
+        self.track_length = None
         self.redline_rpm = 8500
         self.session_drivers = []
         self.sectors = []
@@ -58,6 +59,12 @@ class IBTReader:
             weekend_info = session_info.get("WeekendInfo", {})
             self.track_name = weekend_info.get("TrackName", "Unknown Track")
             self.track_id = weekend_info.get("TrackID", 165)
+
+            raw_length = weekend_info.get("TrackLength", "")
+            try:
+                self.track_length = float(raw_length.replace("km", "").strip()) * 1000
+            except (ValueError, AttributeError):
+                self.track_length = None
 
             driver_info = session_info.get("DriverInfo", {})
             self.redline_rpm = int(driver_info.get("DriverCarRedLine", 8500))

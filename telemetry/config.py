@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440
 
+    llm_api_key: str | None = None
+    llm_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    llm_model: str = "gemini-3.5-flash"
+
     iracing_telemetry_dir: str = os.path.expanduser(r"~\Documents\iRacing\telemetry")
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

@@ -12,7 +12,9 @@ class Player(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
 
-    sessions = relationship("Session", back_populates="player", cascade="all, delete-orphan")
+    sessions = relationship(
+        "Session", back_populates="player", cascade="all, delete-orphan", passive_deletes=True
+    )
 
 
 class Session(Base):
@@ -20,15 +22,20 @@ class Session(Base):
 
     file_hash = Column(String, unique=True, index=True, nullable=True)
     id = Column(Integer, primary_key=True, index=True)
-    player_id = Column(Integer, ForeignKey("players.id"), nullable=False, index=True)
+    player_id = Column(
+        Integer, ForeignKey("players.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     player = relationship("Player", back_populates="sessions")
     track_name = Column(String, nullable=False)
     track_id = Column(Integer, nullable=True, index=True)
+    track_length = Column(Float, nullable=True)
     car_name = Column(String, nullable=True)
     start_time = Column(DateTime, nullable=True, default=lambda: datetime.now(timezone.utc))
     duration_seconds = Column(Float, nullable=True, default=0.0)
     redline_rpm = Column(Integer, nullable=True, default=8500)
-    laps = relationship("Lap", back_populates="session", cascade="all, delete-orphan")
+    laps = relationship(
+        "Lap", back_populates="session", cascade="all, delete-orphan", passive_deletes=True
+    )
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
@@ -36,20 +43,26 @@ class Lap(Base):
     __tablename__ = "laps"
 
     id = Column(Integer, primary_key=True)
-    session_id = Column(Integer, ForeignKey("sessions.id"), nullable=False, index=True)
+    session_id = Column(
+        Integer, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     lap_number = Column(Integer, nullable=False)
     lap_time = Column(Float, default=0.0, index=True)
 
     session = relationship("Session", back_populates="laps")
-    telemetry_data = relationship("Telemetry", back_populates="lap", cascade="all, delete-orphan")
-    sectors = relationship("Sector", back_populates="lap", cascade="all, delete-orphan")
+    telemetry_data = relationship(
+        "Telemetry", back_populates="lap", cascade="all, delete-orphan", passive_deletes=True
+    )
+    sectors = relationship(
+        "Sector", back_populates="lap", cascade="all, delete-orphan", passive_deletes=True
+    )
 
 
 class Sector(Base):
     __tablename__ = "sectors"
 
     id = Column(Integer, primary_key=True)
-    lap_id = Column(Integer, ForeignKey("laps.id"), nullable=False, index=True)
+    lap_id = Column(Integer, ForeignKey("laps.id", ondelete="CASCADE"), nullable=False, index=True)
     sector_number = Column(Integer, nullable=False)
     sector_time = Column(Float, nullable=False)
 
@@ -60,7 +73,7 @@ class Telemetry(Base):
     __tablename__ = "telemetry"
 
     id = Column(Integer, primary_key=True)
-    lap_id = Column(Integer, ForeignKey("laps.id"), nullable=False, index=True)
+    lap_id = Column(Integer, ForeignKey("laps.id", ondelete="CASCADE"), nullable=False, index=True)
     session_time = Column(Float, nullable=False, index=True)
     speed = Column(Float, nullable=False)  # Speed (km/h)
     rpm = Column(Integer, nullable=False)  # Engine RPM

@@ -24,6 +24,10 @@ def verify_password(plain_password: str, hashed_or_plain: str) -> bool:
             return False
 
     # Plaintext fallback (dev mode)
+    logger.warning(
+        "CRITICAL SECURITY WARNING: Falling back to plaintext password comparison! "
+        "You MUST configure ADMIN_PASSWORD_HASH in your production .env file."
+    )
     return secrets.compare_digest(plain_password, hashed_or_plain)
 
 

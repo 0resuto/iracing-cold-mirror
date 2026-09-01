@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Timer, Radio, Settings, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Timer, Radio, Settings, X, ChevronLeft, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button, SegmentedTabs } from '@0resuto/ui-kit';
 
 import { LiveStreamPanel } from './sidebar/LiveStreamPanel';
@@ -32,7 +32,7 @@ export const Sidebar = React.memo(function Sidebar() {
   const [filterCar, setFilterCar] = useState('all');
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'fastest'
 
-  const { data: rawPlayers = [], isLoading, isError } = useHistoryQuery();
+  const { data: rawPlayers = [], isLoading, isError, error, refetch, isFetching } = useHistoryQuery();
   const { data: idealLap } = useIdealLapQuery(selectedLap?.player_id, selectedLap?.track_name);
 
   // Accordion state for players: null = auto-follow selected lap; else { selectedLapId, value } override
@@ -301,9 +301,30 @@ export const Sidebar = React.memo(function Sidebar() {
             {/* History Tree List */}
             <div className="flex-1 overflow-y-auto custom-scrollbar min-w-0 py-3">
               {isLoading ? (
-                <div className="text-xs text-brand-10/40 animate-pulse">Loading history tree...</div>
+                <div className="flex flex-col items-center justify-center py-8 px-4 space-y-2 text-center">
+                  <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs text-brand-10/50 animate-pulse">Loading history tree...</span>
+                </div>
               ) : isError ? (
-                <div className="text-xs text-red-500">Failed to load history</div>
+                <div className="p-3.5 mx-3 bg-red-950/20 border border-red-500/30 rounded-xl space-y-2 text-center">
+                  <div className="flex items-center justify-center gap-1.5 text-accent-red font-semibold text-xs">
+                    <AlertCircle size={15} />
+                    <span>Failed to load history</span>
+                  </div>
+                  <p className="text-[11px] text-brand-10/70 line-clamp-2">
+                    {error?.message || 'Could not connect to backend server'}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="xs"
+                    onClick={() => refetch()}
+                    isLoading={isFetching}
+                    leftIcon={<RefreshCw size={12} />}
+                    className="mt-1"
+                  >
+                    Retry Connection
+                  </Button>
+                </div>
               ) : processedPlayers.length === 0 ? (
                 <div className="text-xs text-brand-10/40 text-center py-6 border border-dashed border-brand-60 rounded-lg">
                   No matching sessions found
