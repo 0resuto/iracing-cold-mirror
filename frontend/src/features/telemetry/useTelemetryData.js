@@ -13,6 +13,20 @@ export function useTelemetryData() {
 
   const { data: playersData = [] } = useHistoryQuery();
   const players = playersData;
+
+  const currentSession = useMemo(() => {
+    if (!selectedLap || !players.length) return null;
+    for (const player of players) {
+      for (const session of player.sessions || []) {
+        if (session.laps?.some((l) => l.id === selectedLap.id)) {
+          return session;
+        }
+      }
+    }
+    return null;
+  }, [selectedLap, players]);
+
+  const trackLength = currentSession?.track_length || null;
   
   const { bestLapId, validReferenceLapId } = useMemo(() => {
     if (!selectedLap || !players.length) return { bestLapId: null, validReferenceLapId: null };
@@ -55,5 +69,15 @@ export function useTelemetryData() {
   const referenceData = isLive ? [] : rawReferenceData;
   const deltaData = isLive ? [] : rawDeltaData;
 
-  return { lapData, referenceData, deltaData, selectedLap, activeRefId, players, isLive };
+  return {
+    lapData,
+    referenceData,
+    deltaData,
+    selectedLap,
+    activeRefId,
+    players,
+    isLive,
+    currentSession,
+    trackLength,
+  };
 }

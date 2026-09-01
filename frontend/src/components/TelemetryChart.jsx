@@ -16,6 +16,7 @@ const FastDot = (props) => {
 
 const CustomTooltip = ({ active, payload, chartId, activeChart }) => {
   const setHoveredData = useAppStore(state => state.setHoveredData);
+  const { trackLength } = useTelemetryData();
   const rafIdRef = React.useRef(null);
   const latestPayloadRef = React.useRef(null);
   const lastSetTimeRef = React.useRef(null);
@@ -55,12 +56,16 @@ const CustomTooltip = ({ active, payload, chartId, activeChart }) => {
   const timeDelta = data.delta !== null && data.delta !== undefined ? data.delta : (hasRef ? (data.elapsed_time - data.ref_elapsed_time) : 0);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
+  const distText = trackLength && data.lap_dist_pct != null
+    ? `${Math.round(data.lap_dist_pct * trackLength).toLocaleString()}m (${(data.lap_dist_pct * 100).toFixed(1)}%)`
+    : `Dist: ${(data.lap_dist_pct * 100).toFixed(1)}%`;
+
   // On mobile, render a compact translucent summary at top of screen to avoid covering the chart
   if (isMobile) {
     return (
       <div className="glass border border-brand-60/80 p-2 text-xs z-[100] rounded-lg shadow-lg backdrop-blur-md max-w-[280px]">
         <div className="flex justify-between font-bold text-brand-10 border-b border-brand-60 pb-1 mb-1">
-          <span>Dist: {(data.lap_dist_pct * 100).toFixed(1)}%</span>
+          <span>{distText}</span>
           {hasRef && (
             <span className={timeDelta <= 0 ? 'text-green-400' : 'text-red-400'}>
               Δ {timeDelta > 0 ? '+' : ''}{timeDelta.toFixed(2)}s
@@ -81,7 +86,7 @@ const CustomTooltip = ({ active, payload, chartId, activeChart }) => {
   return (
     <div className="bg-brand-60 border border-brand-60 p-2 text-xs z-[100] rounded-md shadow-xl backdrop-blur-md bg-opacity-90 min-w-[150px]">
       <p className="m-0 font-bold text-brand-10 mb-1.5 flex justify-between">
-        <span>Dist: {(data.lap_dist_pct * 100).toFixed(1)}%</span>
+        <span>{distText}</span>
         {hasRef && (
           <span className={`ml-3 ${timeDelta <= 0 ? 'text-green-500' : 'text-red-500'}`}>
             Δ {timeDelta > 0 ? '+' : ''}{timeDelta.toFixed(2)}s

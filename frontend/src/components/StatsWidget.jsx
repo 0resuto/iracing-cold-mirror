@@ -31,17 +31,11 @@ function mapToWidgetFormat(data, delta, bestLapTime, sessionBestLap) {
 
 export const StatsWidget = React.memo(function StatsWidget() {
   const hoveredData = useAppStore((state) => state.hoveredData);
-  const { lapData, deltaData, players, selectedLap } = useTelemetryData();
+  const { lapData, deltaData, players, selectedLap, currentSession, trackLength } = useTelemetryData();
 
   const data = hoveredData || (lapData.length > 0 ? lapData[lapData.length - 1] : null);
 
-  const maxRpm = useMemo(() => {
-    if (!selectedLap || !players?.length) return 8500;
-    const player = players.find(p => p.id === selectedLap.player_id);
-    if (!player) return 8500;
-    const session = player.sessions?.find(s => s.laps?.some(l => l.id === selectedLap.id));
-    return session?.redline_rpm || 8500;
-  }, [selectedLap, players]);
+  const maxRpm = currentSession?.redline_rpm || 8500;
 
   const currentDelta = useMemo(() => {
     if (!data) return null;
@@ -103,7 +97,7 @@ export const StatsWidget = React.memo(function StatsWidget() {
   const widgetTelemetry = mapToWidgetFormat(data, currentDelta, bestLapTime, sessionBestLap);
 
   return (
-    <TelemetryProvider telemetry={widgetTelemetry} sessionDrivers={[]} sessionData={null} trackLength={0}>
+    <TelemetryProvider telemetry={widgetTelemetry} sessionDrivers={[]} sessionData={null} trackLength={trackLength || 0}>
       <div className="flex flex-wrap w-full gap-x-3 gap-y-6 p-4 justify-center items-center" style={{ '--widget-bg-color': 'rgba(30, 30, 36, 0.5)' }}>
 
         {/* Delta */}
