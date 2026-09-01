@@ -1,0 +1,52 @@
+{
+  "track_name": "daytona_road",
+  "display_name": "Daytona International Speedway - Road Course",
+  "length_m": 5729.0,
+  "aliases": [
+    "daytona road",
+    "daytona road course",
+    "daytona 2007 road"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1-2 - Infield Horseshoe (Turn 1)",
+      "start_pct": 0.12,
+      "apex_pct": 0.16,
+      "end_pct": 0.2,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - International Horseshoe",
+      "start_pct": 0.28,
+      "apex_pct": 0.32,
+      "end_pct": 0.36,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - Kink",
+      "start_pct": 0.41,
+      "apex_pct": 0.44,
+      "end_pct": 0.47,
+      "turn_type": "kink"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - Infield Exit Sweeper",
+      "start_pct": 0.5,
+      "apex_pct": 0.54,
+      "end_pct": 0.58,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7-10 - Le Mans Chicane (Bus Stop)",
+      "start_pct": 0.75,
+      "apex_pct": 0.78,
+      "end_pct": 0.83,
+      "turn_type": "chicane"
+    }
+  ]
+}

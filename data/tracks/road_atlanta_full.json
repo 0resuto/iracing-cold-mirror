@@ -1,0 +1,60 @@
+{
+  "track_name": "road_atlanta_full",
+  "display_name": "Michelin Raceway Road Atlanta",
+  "length_m": 4088.0,
+  "aliases": [
+    "road atlanta",
+    "roadatlanta",
+    "road atlanta full"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Turn 1",
+      "start_pct": 0.05,
+      "apex_pct": 0.08,
+      "end_pct": 0.12,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2-4 - The Esses",
+      "start_pct": 0.16,
+      "apex_pct": 0.22,
+      "end_pct": 0.29,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - Turn 5",
+      "start_pct": 0.32,
+      "apex_pct": 0.36,
+      "end_pct": 0.4,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6-7 - Turn 6 & 7",
+      "start_pct": 0.44,
+      "apex_pct": 0.48,
+      "end_pct": 0.54,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 10,
+      "name": "Turn 10A-10B - The Chicane",
+      "start_pct": 0.81,
+      "apex_pct": 0.85,
+      "end_pct": 0.89,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 12,
+      "name": "Turn 12 - Final Downhill Sweeper",
+      "start_pct": 0.92,
+      "apex_pct": 0.95,
+      "end_pct": 0.98,
+      "turn_type": "sweeper"
+    }
+  ]
+}

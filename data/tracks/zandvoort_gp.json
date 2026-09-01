@@ -1,0 +1,60 @@
+{
+  "track_name": "zandvoort_gp",
+  "display_name": "Circuit Zandvoort - Grand Prix",
+  "length_m": 4259.0,
+  "aliases": [
+    "zandvoort",
+    "circuit zandvoort",
+    "zandvoort gp"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Tarzan (Tarzanbocht)",
+      "start_pct": 0.08,
+      "apex_pct": 0.12,
+      "end_pct": 0.16,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2-3 - Gerlach & Hugenholtz (Banked)",
+      "start_pct": 0.19,
+      "apex_pct": 0.24,
+      "end_pct": 0.29,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7-8 - Scheivlak & Mastersbocht",
+      "start_pct": 0.44,
+      "apex_pct": 0.49,
+      "end_pct": 0.55,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 9,
+      "name": "Turn 9-10 - Bocht 9 & 10",
+      "start_pct": 0.61,
+      "apex_pct": 0.65,
+      "end_pct": 0.69,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 11,
+      "name": "Turn 11-12 - Hans Ernst Bocht (Chicane)",
+      "start_pct": 0.76,
+      "apex_pct": 0.8,
+      "end_pct": 0.84,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 13,
+      "name": "Turn 13-14 - Kumhobocht & Arie Luyendyk (Banked)",
+      "start_pct": 0.89,
+      "apex_pct": 0.94,
+      "end_pct": 0.99,
+      "turn_type": "sweeper"
+    }
+  ]
+}

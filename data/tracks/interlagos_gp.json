@@ -1,0 +1,84 @@
+{
+  "track_name": "interlagos_gp",
+  "display_name": "Autodromo Jose Carlos Pace (Interlagos)",
+  "length_m": 4309.0,
+  "aliases": [
+    "interlagos",
+    "autodromo jose carlos pace",
+    "interlagos gp"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1-2 - Senna S",
+      "start_pct": 0.08,
+      "apex_pct": 0.12,
+      "end_pct": 0.16,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - Curva do Sol",
+      "start_pct": 0.19,
+      "apex_pct": 0.23,
+      "end_pct": 0.28,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 4,
+      "name": "Turn 4 - Descida do Lago",
+      "start_pct": 0.4,
+      "apex_pct": 0.43,
+      "end_pct": 0.47,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6-7 - Ferradura",
+      "start_pct": 0.53,
+      "apex_pct": 0.57,
+      "end_pct": 0.62,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8 - Curva do Laranja",
+      "start_pct": 0.66,
+      "apex_pct": 0.69,
+      "end_pct": 0.72,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 9,
+      "name": "Turn 9 - Pinheirinho",
+      "start_pct": 0.75,
+      "apex_pct": 0.78,
+      "end_pct": 0.81,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 10,
+      "name": "Turn 10 - Bico de Pato",
+      "start_pct": 0.83,
+      "apex_pct": 0.86,
+      "end_pct": 0.89,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 11,
+      "name": "Turn 11 - Mergulho",
+      "start_pct": 0.9,
+      "apex_pct": 0.92,
+      "end_pct": 0.94,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 12,
+      "name": "Turn 12 - Juncao",
+      "start_pct": 0.95,
+      "apex_pct": 0.97,
+      "end_pct": 0.99,
+      "turn_type": "corner"
+    }
+  ]
+}

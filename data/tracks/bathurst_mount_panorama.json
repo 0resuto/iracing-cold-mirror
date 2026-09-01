@@ -1,0 +1,93 @@
+{
+  "track_name": "bathurst_mount_panorama",
+  "display_name": "Mount Panorama Circuit (Bathurst)",
+  "length_m": 6213.0,
+  "aliases": [
+    "bathurst",
+    "mount panorama",
+    "mount panorama circuit",
+    "bathurst mount panorama"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Hell Corner",
+      "start_pct": 0.03,
+      "apex_pct": 0.06,
+      "end_pct": 0.09,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2 - Mountain Straight Entry",
+      "start_pct": 0.12,
+      "apex_pct": 0.15,
+      "end_pct": 0.18,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3-4 - Griffins Bend",
+      "start_pct": 0.24,
+      "apex_pct": 0.27,
+      "end_pct": 0.31,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5-8 - The Cutting & Reid Park",
+      "start_pct": 0.34,
+      "apex_pct": 0.38,
+      "end_pct": 0.43,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 9,
+      "name": "Turn 9-11 - Sulman & McPhillamy Park",
+      "start_pct": 0.46,
+      "apex_pct": 0.5,
+      "end_pct": 0.55,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 12,
+      "name": "Turn 12-14 - Skyline",
+      "start_pct": 0.57,
+      "apex_pct": 0.6,
+      "end_pct": 0.63,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 15,
+      "name": "Turn 15-18 - The Dipper & The Esses",
+      "start_pct": 0.64,
+      "apex_pct": 0.67,
+      "end_pct": 0.71,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 19,
+      "name": "Turn 19 - Forrest Elbow",
+      "start_pct": 0.72,
+      "apex_pct": 0.75,
+      "end_pct": 0.78,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 21,
+      "name": "Turn 21-22 - The Chase",
+      "start_pct": 0.88,
+      "apex_pct": 0.91,
+      "end_pct": 0.95,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 23,
+      "name": "Turn 23 - Murrays Corner",
+      "start_pct": 0.96,
+      "apex_pct": 0.98,
+      "end_pct": 0.99,
+      "turn_type": "corner"
+    }
+  ]
+}

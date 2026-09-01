@@ -1,0 +1,61 @@
+{
+  "track_name": "fuji_gp",
+  "display_name": "Fuji International Speedway - Grand Prix",
+  "length_m": 4563.0,
+  "aliases": [
+    "fuji",
+    "fuji speedway",
+    "fuji gp",
+    "fuji international speedway"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - TGR Corner (First Corner)",
+      "start_pct": 0.29,
+      "apex_pct": 0.32,
+      "end_pct": 0.36,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2 - Coca-Cola Corner",
+      "start_pct": 0.4,
+      "apex_pct": 0.44,
+      "end_pct": 0.48,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3-5 - 100R & Advan Hairpin",
+      "start_pct": 0.54,
+      "apex_pct": 0.6,
+      "end_pct": 0.66,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - 300R",
+      "start_pct": 0.7,
+      "apex_pct": 0.73,
+      "end_pct": 0.76,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7-9 - Dunlop Chicane & Section 3",
+      "start_pct": 0.8,
+      "apex_pct": 0.84,
+      "end_pct": 0.88,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 10,
+      "name": "Turn 10-12 - GR Supra & Panasonic Corner",
+      "start_pct": 0.91,
+      "apex_pct": 0.95,
+      "end_pct": 0.99,
+      "turn_type": "corner"
+    }
+  ]
+}

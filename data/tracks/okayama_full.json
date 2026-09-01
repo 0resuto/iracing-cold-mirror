@@ -1,0 +1,93 @@
+{
+  "track_name": "okayama_full",
+  "display_name": "Okayama International Circuit - Full",
+  "length_m": 3703.0,
+  "aliases": [
+    "okayama",
+    "okayama full",
+    "okayama international",
+    "okayama international circuit"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - First Corner",
+      "start_pct": 0.05,
+      "apex_pct": 0.08,
+      "end_pct": 0.12,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2 - Williams Corner",
+      "start_pct": 0.13,
+      "apex_pct": 0.16,
+      "end_pct": 0.2,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - Moss S-Curves",
+      "start_pct": 0.24,
+      "apex_pct": 0.28,
+      "end_pct": 0.32,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 4,
+      "name": "Turn 4 - Attwood Curve",
+      "start_pct": 0.33,
+      "apex_pct": 0.37,
+      "end_pct": 0.42,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - Hairpin Corner",
+      "start_pct": 0.5,
+      "apex_pct": 0.54,
+      "end_pct": 0.58,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - Revolver Corner",
+      "start_pct": 0.6,
+      "apex_pct": 0.64,
+      "end_pct": 0.68,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7 - Piper Corner",
+      "start_pct": 0.69,
+      "apex_pct": 0.72,
+      "end_pct": 0.76,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8 - Redman Corner",
+      "start_pct": 0.77,
+      "apex_pct": 0.81,
+      "end_pct": 0.84,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 9,
+      "name": "Turn 9 - Hobbs Corner",
+      "start_pct": 0.85,
+      "apex_pct": 0.88,
+      "end_pct": 0.91,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 10,
+      "name": "Turn 10 - Mike Knight Corner",
+      "start_pct": 0.92,
+      "apex_pct": 0.95,
+      "end_pct": 0.98,
+      "turn_type": "corner"
+    }
+  ]
+}

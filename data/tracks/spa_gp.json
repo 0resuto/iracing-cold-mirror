@@ -1,0 +1,102 @@
+{
+  "track_name": "spa_gp",
+  "display_name": "Circuit de Spa-Francorchamps",
+  "length_m": 7004.0,
+  "aliases": [
+    "spa",
+    "spa-francorchamps",
+    "spa gp",
+    "circuit de spa-francorchamps",
+    "spa combined"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - La Source",
+      "start_pct": 0.01,
+      "apex_pct": 0.04,
+      "end_pct": 0.07,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2-4 - Eau Rouge / Raidillon",
+      "start_pct": 0.1,
+      "apex_pct": 0.13,
+      "end_pct": 0.17,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5-6 - Les Combes",
+      "start_pct": 0.29,
+      "apex_pct": 0.32,
+      "end_pct": 0.35,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7 - Malmedy",
+      "start_pct": 0.35,
+      "apex_pct": 0.37,
+      "end_pct": 0.4,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8 - Bruxelles",
+      "start_pct": 0.41,
+      "apex_pct": 0.44,
+      "end_pct": 0.47,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 9,
+      "name": "Turn 9 - Speaker Corner",
+      "start_pct": 0.47,
+      "apex_pct": 0.5,
+      "end_pct": 0.53,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 10,
+      "name": "Turn 10-11 - Pouhon (Double Gauche)",
+      "start_pct": 0.55,
+      "apex_pct": 0.59,
+      "end_pct": 0.64,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 12,
+      "name": "Turn 12-13 - Fagnes (Pif-Paf)",
+      "start_pct": 0.67,
+      "apex_pct": 0.7,
+      "end_pct": 0.74,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 14,
+      "name": "Turn 14-15 - Campus & Stavelot",
+      "start_pct": 0.75,
+      "apex_pct": 0.78,
+      "end_pct": 0.82,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 16,
+      "name": "Turn 16-17 - Blanchimont",
+      "start_pct": 0.88,
+      "apex_pct": 0.91,
+      "end_pct": 0.94,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 18,
+      "name": "Turn 18-19 - Bus Stop Chicane",
+      "start_pct": 0.95,
+      "apex_pct": 0.97,
+      "end_pct": 0.99,
+      "turn_type": "chicane"
+    }
+  ]
+}

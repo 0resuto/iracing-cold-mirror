@@ -1,0 +1,85 @@
+{
+  "track_name": "suzuka_gp",
+  "display_name": "Suzuka International Racing Course - Grand Prix",
+  "length_m": 5807.0,
+  "aliases": [
+    "suzuka",
+    "suzuka gp",
+    "suzuka grand prix",
+    "suzuka circuit"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1-2 - First Curve",
+      "start_pct": 0.08,
+      "apex_pct": 0.11,
+      "end_pct": 0.15,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3-6 - S-Curves & Gyaku-Bank",
+      "start_pct": 0.18,
+      "apex_pct": 0.24,
+      "end_pct": 0.31,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7 - Dunlop Curve",
+      "start_pct": 0.34,
+      "apex_pct": 0.37,
+      "end_pct": 0.4,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8-9 - Degner Curves (Degner 1 & 2)",
+      "start_pct": 0.43,
+      "apex_pct": 0.47,
+      "end_pct": 0.52,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 11,
+      "name": "Turn 11 - Hairpin (Turn 11)",
+      "start_pct": 0.57,
+      "apex_pct": 0.6,
+      "end_pct": 0.64,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 12,
+      "name": "Turn 12 - 200R Sweeper",
+      "start_pct": 0.67,
+      "apex_pct": 0.7,
+      "end_pct": 0.73,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 13,
+      "name": "Turn 13-14 - Spoon Curve",
+      "start_pct": 0.75,
+      "apex_pct": 0.79,
+      "end_pct": 0.84,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 15,
+      "name": "Turn 15 - 130R",
+      "start_pct": 0.9,
+      "apex_pct": 0.92,
+      "end_pct": 0.94,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 16,
+      "name": "Turn 16-18 - Casio Triangle (Chicane)",
+      "start_pct": 0.95,
+      "apex_pct": 0.97,
+      "end_pct": 0.99,
+      "turn_type": "chicane"
+    }
+  ]
+}

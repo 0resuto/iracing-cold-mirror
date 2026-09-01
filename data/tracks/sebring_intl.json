@@ -1,0 +1,78 @@
+{
+  "track_name": "sebring_intl",
+  "display_name": "Sebring International Raceway - International",
+  "length_m": 6019.0,
+  "aliases": [
+    "sebring",
+    "sebring international",
+    "sebring intl",
+    "sebring international raceway",
+    "sebring full"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Turn 1 (High-Speed Sweeper)",
+      "start_pct": 0.02,
+      "apex_pct": 0.05,
+      "end_pct": 0.09,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3-5 - The Esses",
+      "start_pct": 0.16,
+      "apex_pct": 0.2,
+      "end_pct": 0.25,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7 - The Hairpin",
+      "start_pct": 0.33,
+      "apex_pct": 0.36,
+      "end_pct": 0.4,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8-9 - Fangio Chicane",
+      "start_pct": 0.44,
+      "apex_pct": 0.47,
+      "end_pct": 0.51,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 10,
+      "name": "Turn 10 - Cunningham",
+      "start_pct": 0.54,
+      "apex_pct": 0.57,
+      "end_pct": 0.6,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 13,
+      "name": "Turn 13 - Tower Turn",
+      "start_pct": 0.68,
+      "apex_pct": 0.71,
+      "end_pct": 0.75,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 15,
+      "name": "Turn 15-16 - Bishop & Gendebien",
+      "start_pct": 0.81,
+      "apex_pct": 0.84,
+      "end_pct": 0.88,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 17,
+      "name": "Turn 17 - Sunset Bend",
+      "start_pct": 0.92,
+      "apex_pct": 0.96,
+      "end_pct": 0.99,
+      "turn_type": "sweeper"
+    }
+  ]
+}

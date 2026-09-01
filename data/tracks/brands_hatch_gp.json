@@ -1,0 +1,77 @@
+{
+  "track_name": "brands_hatch_gp",
+  "display_name": "Brands Hatch Circuit - Grand Prix",
+  "length_m": 3908.0,
+  "aliases": [
+    "brands hatch",
+    "brandshatch",
+    "brands hatch gp",
+    "brands hatch grand prix"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Paddock Hill Bend",
+      "start_pct": 0.08,
+      "apex_pct": 0.12,
+      "end_pct": 0.16,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2 - Druids Hairpin",
+      "start_pct": 0.21,
+      "apex_pct": 0.25,
+      "end_pct": 0.29,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - Graham Hill Bend",
+      "start_pct": 0.33,
+      "apex_pct": 0.36,
+      "end_pct": 0.4,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 4,
+      "name": "Turn 4 - Surtees",
+      "start_pct": 0.44,
+      "apex_pct": 0.47,
+      "end_pct": 0.5,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - Hawthorns",
+      "start_pct": 0.6,
+      "apex_pct": 0.63,
+      "end_pct": 0.67,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - Westfield Bend",
+      "start_pct": 0.7,
+      "apex_pct": 0.73,
+      "end_pct": 0.77,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7 - Dingle Dell & Sheene Curve",
+      "start_pct": 0.8,
+      "apex_pct": 0.84,
+      "end_pct": 0.88,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 9,
+      "name": "Turn 9 - Stirlings & Clearways",
+      "start_pct": 0.9,
+      "apex_pct": 0.94,
+      "end_pct": 0.99,
+      "turn_type": "sweeper"
+    }
+  ]
+}

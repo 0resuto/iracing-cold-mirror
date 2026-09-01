@@ -1,0 +1,78 @@
+{
+  "track_name": "tsukuba_2000",
+  "display_name": "Tsukuba Circuit - Course 2000",
+  "length_m": 2045.0,
+  "aliases": [
+    "tsukuba",
+    "tsukuba 2000",
+    "tsukuba 2kfull",
+    "tsukuba circuit",
+    "tsukuba_full"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - First Hairpin",
+      "start_pct": 0.04,
+      "apex_pct": 0.11,
+      "end_pct": 0.17,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2 - S-Curve Entry",
+      "start_pct": 0.18,
+      "apex_pct": 0.23,
+      "end_pct": 0.27,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - S-Curve Exit",
+      "start_pct": 0.28,
+      "apex_pct": 0.32,
+      "end_pct": 0.36,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 4,
+      "name": "Turn 4 - Dunlop Curve",
+      "start_pct": 0.37,
+      "apex_pct": 0.41,
+      "end_pct": 0.47,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - 80R Sweeper",
+      "start_pct": 0.48,
+      "apex_pct": 0.52,
+      "end_pct": 0.56,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - Second Hairpin",
+      "start_pct": 0.56,
+      "apex_pct": 0.6,
+      "end_pct": 0.68,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7 - Back Straight Kink",
+      "start_pct": 0.69,
+      "apex_pct": 0.73,
+      "end_pct": 0.78,
+      "turn_type": "kink"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8 - Final Corner Sweeper",
+      "start_pct": 0.82,
+      "apex_pct": 0.91,
+      "end_pct": 0.98,
+      "turn_type": "sweeper"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "track_name": "vir_full",
+  "display_name": "Virginia International Raceway - Full Course",
+  "length_m": 5262.0,
+  "aliases": [
+    "vir",
+    "virginia international raceway",
+    "vir full"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Turn 1 (Horseshoe Entry)",
+      "start_pct": 0.05,
+      "apex_pct": 0.09,
+      "end_pct": 0.13,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - NASCAR Bend",
+      "start_pct": 0.17,
+      "apex_pct": 0.2,
+      "end_pct": 0.23,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7-9 - The Climbing Esses",
+      "start_pct": 0.32,
+      "apex_pct": 0.38,
+      "end_pct": 0.45,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 10,
+      "name": "Turn 10 - South Bend",
+      "start_pct": 0.5,
+      "apex_pct": 0.53,
+      "end_pct": 0.56,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 11,
+      "name": "Turn 11-12 - Oak Tree Corner",
+      "start_pct": 0.6,
+      "apex_pct": 0.64,
+      "end_pct": 0.68,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 14,
+      "name": "Turn 14-16 - Roller Coaster",
+      "start_pct": 0.82,
+      "apex_pct": 0.86,
+      "end_pct": 0.9,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 17,
+      "name": "Turn 17 - Hog Pen",
+      "start_pct": 0.93,
+      "apex_pct": 0.96,
+      "end_pct": 0.99,
+      "turn_type": "sweeper"
+    }
+  ]
+}

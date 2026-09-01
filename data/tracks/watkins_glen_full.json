@@ -1,0 +1,87 @@
+{
+  "track_name": "watkins_glen_full",
+  "display_name": "Watkins Glen International - Full Course",
+  "length_m": 5430.0,
+  "aliases": [
+    "watkins glen",
+    "watkinsglen",
+    "watkinsglen 2021 fullcourse",
+    "watkins glen full",
+    "watkinsglen fullcourse",
+    "watkins glen boot"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - The Ninety",
+      "start_pct": 0.05,
+      "apex_pct": 0.09,
+      "end_pct": 0.13,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2-4 - The Esses",
+      "start_pct": 0.15,
+      "apex_pct": 0.2,
+      "end_pct": 0.27,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - The Bus Stop / Inner Loop",
+      "start_pct": 0.38,
+      "apex_pct": 0.42,
+      "end_pct": 0.47,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - The Carousel",
+      "start_pct": 0.48,
+      "apex_pct": 0.52,
+      "end_pct": 0.57,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7 - The Chute",
+      "start_pct": 0.6,
+      "apex_pct": 0.64,
+      "end_pct": 0.67,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8 - The Toe",
+      "start_pct": 0.68,
+      "apex_pct": 0.72,
+      "end_pct": 0.77,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 9,
+      "name": "Turn 9 - The Heel",
+      "start_pct": 0.79,
+      "apex_pct": 0.83,
+      "end_pct": 0.86,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 10,
+      "name": "Turn 10 - Turn 10",
+      "start_pct": 0.87,
+      "apex_pct": 0.9,
+      "end_pct": 0.93,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 11,
+      "name": "Turn 11 - Final Corner",
+      "start_pct": 0.94,
+      "apex_pct": 0.96,
+      "end_pct": 0.99,
+      "turn_type": "corner"
+    }
+  ]
+}

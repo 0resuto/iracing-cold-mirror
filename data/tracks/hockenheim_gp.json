@@ -1,0 +1,61 @@
+{
+  "track_name": "hockenheim_gp",
+  "display_name": "Hockenheimring Baden-Wuerttemberg - Grand Prix",
+  "length_m": 4574.0,
+  "aliases": [
+    "hockenheim",
+    "hockenheimring",
+    "hockenheim gp",
+    "hockenheimring baden-wuerttemberg"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Nordkurve",
+      "start_pct": 0.08,
+      "apex_pct": 0.11,
+      "end_pct": 0.15,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2-4 - Parabolika & Spitzkehre (Hairpin)",
+      "start_pct": 0.3,
+      "apex_pct": 0.35,
+      "end_pct": 0.4,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - Spitzkehre Hairpin",
+      "start_pct": 0.41,
+      "apex_pct": 0.44,
+      "end_pct": 0.48,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7-8 - Einfahrt Motodrom",
+      "start_pct": 0.58,
+      "apex_pct": 0.62,
+      "end_pct": 0.66,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 12,
+      "name": "Turn 12 - Sachskurve",
+      "start_pct": 0.74,
+      "apex_pct": 0.78,
+      "end_pct": 0.82,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 16,
+      "name": "Turn 16-17 - Suedkurve",
+      "start_pct": 0.9,
+      "apex_pct": 0.94,
+      "end_pct": 0.98,
+      "turn_type": "corner"
+    }
+  ]
+}

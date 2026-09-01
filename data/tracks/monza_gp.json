@@ -1,0 +1,69 @@
+{
+  "track_name": "monza_gp",
+  "display_name": "Autodromo Nazionale Monza - Grand Prix",
+  "length_m": 5793.0,
+  "aliases": [
+    "monza",
+    "monza gp",
+    "monza full",
+    "autodromo nazionale monza"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1-2 - Variante del Rettifilo",
+      "start_pct": 0.16,
+      "apex_pct": 0.19,
+      "end_pct": 0.23,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - Curva Grande (Curva Biassono)",
+      "start_pct": 0.24,
+      "apex_pct": 0.29,
+      "end_pct": 0.34,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 4,
+      "name": "Turn 4-5 - Variante della Roggia",
+      "start_pct": 0.4,
+      "apex_pct": 0.43,
+      "end_pct": 0.47,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - First Lesmo (Curva di Lesmo 1)",
+      "start_pct": 0.5,
+      "apex_pct": 0.53,
+      "end_pct": 0.56,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7 - Second Lesmo (Curva di Lesmo 2)",
+      "start_pct": 0.58,
+      "apex_pct": 0.61,
+      "end_pct": 0.65,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8-10 - Variante Ascari",
+      "start_pct": 0.72,
+      "apex_pct": 0.76,
+      "end_pct": 0.81,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 11,
+      "name": "Turn 11 - Curva Parabolica (Curva Alboreto)",
+      "start_pct": 0.88,
+      "apex_pct": 0.93,
+      "end_pct": 0.98,
+      "turn_type": "sweeper"
+    }
+  ]
+}

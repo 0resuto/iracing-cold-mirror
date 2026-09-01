@@ -1,0 +1,76 @@
+{
+  "track_name": "road_america_full",
+  "display_name": "Road America - Full Course",
+  "length_m": 6515.0,
+  "aliases": [
+    "road america",
+    "roadamerica",
+    "road america full"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Turn 1",
+      "start_pct": 0.08,
+      "apex_pct": 0.11,
+      "end_pct": 0.14,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - Turn 3",
+      "start_pct": 0.22,
+      "apex_pct": 0.25,
+      "end_pct": 0.28,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - Turn 5",
+      "start_pct": 0.35,
+      "apex_pct": 0.38,
+      "end_pct": 0.42,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - Turn 6",
+      "start_pct": 0.45,
+      "apex_pct": 0.48,
+      "end_pct": 0.51,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7-8 - Hurry Downs",
+      "start_pct": 0.53,
+      "apex_pct": 0.56,
+      "end_pct": 0.6,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 9,
+      "name": "Turn 9-10 - The Carousel",
+      "start_pct": 0.63,
+      "apex_pct": 0.67,
+      "end_pct": 0.72,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 12,
+      "name": "Turn 12 - Canada Corner",
+      "start_pct": 0.81,
+      "apex_pct": 0.84,
+      "end_pct": 0.88,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 13,
+      "name": "Turn 13-14 - Thunder Valley & Final Turn",
+      "start_pct": 0.91,
+      "apex_pct": 0.95,
+      "end_pct": 0.99,
+      "turn_type": "corner"
+    }
+  ]
+}

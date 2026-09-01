@@ -1,0 +1,77 @@
+{
+  "track_name": "barcelona_gp",
+  "display_name": "Circuit de Barcelona-Catalunya - Grand Prix",
+  "length_m": 4675.0,
+  "aliases": [
+    "barcelona",
+    "catalunya",
+    "circuit de barcelona-catalunya",
+    "barcelona gp"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1-2 - Elf Chicane",
+      "start_pct": 0.15,
+      "apex_pct": 0.18,
+      "end_pct": 0.22,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - Renault (Curva 3 Sweeper)",
+      "start_pct": 0.24,
+      "apex_pct": 0.29,
+      "end_pct": 0.34,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 4,
+      "name": "Turn 4 - Repsol",
+      "start_pct": 0.37,
+      "apex_pct": 0.4,
+      "end_pct": 0.44,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - Seat Hairpin",
+      "start_pct": 0.47,
+      "apex_pct": 0.5,
+      "end_pct": 0.53,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7-8 - Wurth & Campsa",
+      "start_pct": 0.58,
+      "apex_pct": 0.63,
+      "end_pct": 0.68,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 10,
+      "name": "Turn 10 - La Caixa Hairpin",
+      "start_pct": 0.76,
+      "apex_pct": 0.79,
+      "end_pct": 0.83,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 12,
+      "name": "Turn 12 - Banc Sabadell",
+      "start_pct": 0.86,
+      "apex_pct": 0.89,
+      "end_pct": 0.92,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 13,
+      "name": "Turn 13-14 - Final Sweepers",
+      "start_pct": 0.94,
+      "apex_pct": 0.97,
+      "end_pct": 0.99,
+      "turn_type": "sweeper"
+    }
+  ]
+}

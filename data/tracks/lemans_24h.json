@@ -1,0 +1,77 @@
+{
+  "track_name": "lemans_24h",
+  "display_name": "Circuit des 24 Heures du Mans",
+  "length_m": 13626.0,
+  "aliases": [
+    "le mans",
+    "lemans",
+    "circuit de la sarthe",
+    "lemans 24h"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Dunlop Chicane",
+      "start_pct": 0.04,
+      "apex_pct": 0.07,
+      "end_pct": 0.1,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 4,
+      "name": "Turn 4 - Tertre Rouge",
+      "start_pct": 0.13,
+      "apex_pct": 0.16,
+      "end_pct": 0.19,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5-7 - First Mulsanne Chicane (Daytona)",
+      "start_pct": 0.28,
+      "apex_pct": 0.31,
+      "end_pct": 0.34,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8-10 - Second Mulsanne Chicane (Michelin)",
+      "start_pct": 0.4,
+      "apex_pct": 0.43,
+      "end_pct": 0.46,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 11,
+      "name": "Turn 11 - Mulsanne Corner",
+      "start_pct": 0.53,
+      "apex_pct": 0.56,
+      "end_pct": 0.59,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 12,
+      "name": "Turn 12-14 - Indianapolis & Arnage",
+      "start_pct": 0.65,
+      "apex_pct": 0.7,
+      "end_pct": 0.75,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 15,
+      "name": "Turn 15-20 - Porsche Curves & Corvette Corner",
+      "start_pct": 0.82,
+      "apex_pct": 0.88,
+      "end_pct": 0.93,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 21,
+      "name": "Turn 21-24 - Ford Chicanes",
+      "start_pct": 0.95,
+      "apex_pct": 0.97,
+      "end_pct": 0.99,
+      "turn_type": "chicane"
+    }
+  ]
+}

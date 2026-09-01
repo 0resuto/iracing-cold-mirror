@@ -1,0 +1,109 @@
+{
+  "track_name": "nurburgring_nordschleife",
+  "display_name": "Nuerburgring Nordschleife",
+  "length_m": 20832.0,
+  "aliases": [
+    "nurburgring nordschleife",
+    "nordschleife",
+    "nurburgring_nordschleife",
+    "green hell"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Hatzenbach",
+      "start_pct": 0.05,
+      "apex_pct": 0.08,
+      "end_pct": 0.11,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 2,
+      "name": "Hocheichen & Quiddelbacher Hoehe",
+      "start_pct": 0.12,
+      "apex_pct": 0.15,
+      "end_pct": 0.18,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 3,
+      "name": "Flugplatz & Schwedenkreuz",
+      "start_pct": 0.19,
+      "apex_pct": 0.23,
+      "end_pct": 0.26,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 4,
+      "name": "Aremberg & Fuchsroehre",
+      "start_pct": 0.27,
+      "apex_pct": 0.31,
+      "end_pct": 0.36,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 5,
+      "name": "Adenauer Forst & Metzgesfeld",
+      "start_pct": 0.37,
+      "apex_pct": 0.41,
+      "end_pct": 0.45,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 6,
+      "name": "Kallenhard & Wehrseifen",
+      "start_pct": 0.46,
+      "apex_pct": 0.5,
+      "end_pct": 0.54,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 7,
+      "name": "Breidscheid & Ex-Muehle",
+      "start_pct": 0.55,
+      "apex_pct": 0.58,
+      "end_pct": 0.61,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 8,
+      "name": "Bergwerk & Kesselchen",
+      "start_pct": 0.62,
+      "apex_pct": 0.66,
+      "end_pct": 0.7,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 9,
+      "name": "Klostertal & Karussell (Caracciola)",
+      "start_pct": 0.71,
+      "apex_pct": 0.75,
+      "end_pct": 0.78,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 10,
+      "name": "Hohe Acht & Wippermann",
+      "start_pct": 0.79,
+      "apex_pct": 0.82,
+      "end_pct": 0.85,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 11,
+      "name": "Bruennchen & Pflanzgarten",
+      "start_pct": 0.86,
+      "apex_pct": 0.89,
+      "end_pct": 0.93,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 12,
+      "name": "Schwalbenschwanz & Galgenkopf",
+      "start_pct": 0.94,
+      "apex_pct": 0.97,
+      "end_pct": 0.99,
+      "turn_type": "sweeper"
+    }
+  ]
+}

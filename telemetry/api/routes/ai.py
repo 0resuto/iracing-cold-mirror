@@ -58,7 +58,7 @@ def analyze_lap(
     if not ref_lap:
         raise HTTPException(status_code=400, detail="No suitable reference lap found")
 
-    # 1. Check Redis cache
+    # Check Redis cache
     cache_key = f"ai_analysis:{cur_lap.id}:{ref_lap.id}"
     cached_data = redis_sync.get(cache_key)
     if cached_data:
@@ -67,7 +67,7 @@ def analyze_lap(
         except Exception:
             pass
 
-    # 2. Fetch telemetry samples from database
+    # Fetch telemetry samples from database
     cur_telemetry = (
         db.query(Telemetry)
         .filter(Telemetry.lap_id == cur_lap.id)
@@ -84,15 +84,20 @@ def analyze_lap(
     if not cur_telemetry or not ref_telemetry:
         raise HTTPException(status_code=404, detail="Telemetry points missing for analysis")
 
-    # 3. Physics feature extraction
+    # Physics feature extraction
     session_obj = db.query(Session).filter(Session.id == cur_lap.session_id).first()
     track_name = session_obj.track_name if session_obj else "Unknown Track"
     car_name = session_obj.car_name if session_obj else "Unknown Car"
 
     track_length = session_obj.track_length if session_obj else None
-    corners_data = extract_lap_corners(cur_telemetry, ref_telemetry, track_length)
+    corners_data = extract_lap_corners(
+        cur_telemetry=cur_telemetry,
+        ref_telemetry=ref_telemetry,
+        track_name=track_name,
+        track_length=track_length,
+    )
 
-    # 4. Generate AI insights
+    # Generate AI insights
     try:
         analysis_result = generate_coach_insights(
             track_name=track_name,
@@ -105,7 +110,7 @@ def analyze_lap(
         logger.error(f"Failed to generate AI insights: {e}", exc_info=True)
         raise HTTPException(status_code=502, detail=f"AI Engine error: {str(e)}")
 
-    # 5. Cache response in Redis for 1 day (86400 seconds)
+    # Cache response in Redis for 1 day (86400 seconds)
     redis_sync.setex(cache_key, 86400, json.dumps(analysis_result))
 
     return analysis_result

@@ -1,0 +1,61 @@
+{
+  "track_name": "algarve_gp",
+  "display_name": "Autodromo Internacional do Algarve (Portimao)",
+  "length_m": 4653.0,
+  "aliases": [
+    "algarve",
+    "portimao",
+    "autodromo internacional do algarve",
+    "algarve gp"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1-2 - Primeira & Segunda",
+      "start_pct": 0.15,
+      "apex_pct": 0.19,
+      "end_pct": 0.23,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - Lagos Hairpin",
+      "start_pct": 0.28,
+      "apex_pct": 0.32,
+      "end_pct": 0.36,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - Torre VIP Hairpin",
+      "start_pct": 0.42,
+      "apex_pct": 0.46,
+      "end_pct": 0.5,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8-9 - Samsung & Craig Jones",
+      "start_pct": 0.6,
+      "apex_pct": 0.65,
+      "end_pct": 0.7,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 11,
+      "name": "Turn 11 - Portimao (Uphill Blind Crest)",
+      "start_pct": 0.76,
+      "apex_pct": 0.8,
+      "end_pct": 0.84,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 14,
+      "name": "Turn 14-15 - Galp Sweeper",
+      "start_pct": 0.9,
+      "apex_pct": 0.94,
+      "end_pct": 0.99,
+      "turn_type": "sweeper"
+    }
+  ]
+}

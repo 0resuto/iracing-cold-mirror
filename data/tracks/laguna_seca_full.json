@@ -1,0 +1,85 @@
+{
+  "track_name": "laguna_seca_full",
+  "display_name": "WeatherTech Raceway Laguna Seca",
+  "length_m": 3602.0,
+  "aliases": [
+    "laguna seca",
+    "lagunaseca",
+    "weathertech raceway laguna seca",
+    "laguna seca full"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Andretti Hairpin",
+      "start_pct": 0.08,
+      "apex_pct": 0.12,
+      "end_pct": 0.16,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - Turn 3",
+      "start_pct": 0.22,
+      "apex_pct": 0.25,
+      "end_pct": 0.28,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 4,
+      "name": "Turn 4 - Turn 4",
+      "start_pct": 0.31,
+      "apex_pct": 0.34,
+      "end_pct": 0.37,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - Turn 5",
+      "start_pct": 0.41,
+      "apex_pct": 0.44,
+      "end_pct": 0.48,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - Turn 6",
+      "start_pct": 0.52,
+      "apex_pct": 0.55,
+      "end_pct": 0.59,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 8,
+      "name": "Turn 8-8A - The Corkscrew",
+      "start_pct": 0.65,
+      "apex_pct": 0.69,
+      "end_pct": 0.73,
+      "turn_type": "chicane"
+    },
+    {
+      "turn_number": 9,
+      "name": "Turn 9 - Rainey Curve",
+      "start_pct": 0.77,
+      "apex_pct": 0.8,
+      "end_pct": 0.84,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 10,
+      "name": "Turn 10 - Turn 10",
+      "start_pct": 0.86,
+      "apex_pct": 0.89,
+      "end_pct": 0.92,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 11,
+      "name": "Turn 11 - Final Hairpin",
+      "start_pct": 0.94,
+      "apex_pct": 0.97,
+      "end_pct": 0.99,
+      "turn_type": "hairpin"
+    }
+  ]
+}

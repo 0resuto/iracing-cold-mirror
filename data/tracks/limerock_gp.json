@@ -1,0 +1,61 @@
+{
+  "track_name": "limerock_gp",
+  "display_name": "Lime Rock Park - Grand Prix",
+  "length_m": 2462.0,
+  "aliases": [
+    "lime rock",
+    "limerock",
+    "lime rock park",
+    "limerock gp"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1-2 - Big Bend",
+      "start_pct": 0.1,
+      "apex_pct": 0.16,
+      "end_pct": 0.22,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - The Left Hander",
+      "start_pct": 0.31,
+      "apex_pct": 0.35,
+      "end_pct": 0.39,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 4,
+      "name": "Turn 4 - The Right Hander",
+      "start_pct": 0.44,
+      "apex_pct": 0.48,
+      "end_pct": 0.52,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - The Uphill",
+      "start_pct": 0.59,
+      "apex_pct": 0.63,
+      "end_pct": 0.68,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - West Bend",
+      "start_pct": 0.75,
+      "apex_pct": 0.79,
+      "end_pct": 0.83,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 7,
+      "name": "Turn 7 - The Downhill",
+      "start_pct": 0.88,
+      "apex_pct": 0.93,
+      "end_pct": 0.98,
+      "turn_type": "sweeper"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "track_name": "redbull_ring_gp",
+  "display_name": "Red Bull Ring - Grand Prix",
+  "length_m": 4318.0,
+  "aliases": [
+    "red bull ring",
+    "redbull ring",
+    "redbullring",
+    "spielberg",
+    "oesterreichring"
+  ],
+  "turns": [
+    {
+      "turn_number": 1,
+      "name": "Turn 1 - Niki Lauda Kurve",
+      "start_pct": 0.07,
+      "apex_pct": 0.1,
+      "end_pct": 0.14,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 2,
+      "name": "Turn 2 - Remus (Turn 3 Hairpin)",
+      "start_pct": 0.28,
+      "apex_pct": 0.32,
+      "end_pct": 0.36,
+      "turn_type": "hairpin"
+    },
+    {
+      "turn_number": 3,
+      "name": "Turn 3 - Rauch (Schlossgold)",
+      "start_pct": 0.45,
+      "apex_pct": 0.48,
+      "end_pct": 0.52,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 4,
+      "name": "Turn 4 - Rauch / Würth Kurve",
+      "start_pct": 0.57,
+      "apex_pct": 0.6,
+      "end_pct": 0.64,
+      "turn_type": "sweeper"
+    },
+    {
+      "turn_number": 5,
+      "name": "Turn 5 - Rindt Kurve",
+      "start_pct": 0.77,
+      "apex_pct": 0.8,
+      "end_pct": 0.84,
+      "turn_type": "corner"
+    },
+    {
+      "turn_number": 6,
+      "name": "Turn 6 - Red Bull Mobile",
+      "start_pct": 0.91,
+      "apex_pct": 0.94,
+      "end_pct": 0.98,
+      "turn_type": "corner"
+    }
+  ]
+}
