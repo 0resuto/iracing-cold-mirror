@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from telemetry.api.routes import ai, auth, history, live
+from telemetry.api.routes import ai, auth, history, live, tracks
 from telemetry.config import settings
 
 logging.basicConfig(
@@ -37,6 +37,10 @@ tags_metadata = [
         "name": "System",
         "description": "System status and health checks.",
     },
+    {
+        "name": "Tracks",
+        "description": "Track definitions, corner geometries, and road centerlines.",
+    },
 ]
 
 
@@ -66,6 +70,7 @@ app.include_router(ai.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(history.router, prefix="/api/v1")
 app.include_router(live.router, prefix="/api/v1")
+app.include_router(tracks.router, prefix="/api/v1")
 
 
 app.add_middleware(

@@ -90,3 +90,30 @@ def test_get_best_lap_success(client, db_session):
     data = response.json()
     assert data["lap_time"] == 125.2
     assert data["lap_number"] == 2
+
+
+def test_list_tracks_endpoint(client):
+    response = client.get("/api/v1/tracks")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) >= 28
+    assert any(t["track_name"] == "tsukuba_2000" for t in data)
+
+
+def test_get_track_endpoint(client):
+    # Success canonical name
+    res = client.get("/api/v1/tracks/tsukuba_2000")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["display_name"] == "Tsukuba Circuit - Course 2000"
+    assert len(data["turns"]) == 8
+    assert len(data["centerline"]) > 0
+
+    # Success alias
+    res_alias = client.get("/api/v1/tracks/tsukuba 2kfull")
+    assert res_alias.status_code == 200
+    assert res_alias.json()["track_name"] == "tsukuba_2000"
+
+    # 404 Not Found
+    res_404 = client.get("/api/v1/tracks/fictional_unknown_circuit")
+    assert res_404.status_code == 404

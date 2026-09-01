@@ -9,12 +9,15 @@ const REAL_CAR_LENGTH_METERS = 4.8;
 const BASE_CAR_PATH_LENGTH = 20;
 
 /**
- * Build the complete SVG scene data from GPS reference + lap points.
+ * Build the complete SVG scene data from GPS reference, lap points, and official centerline.
  * Computes a lon/lat -> viewBox projection and every derived path/scale.
  */
-export function buildTrackScene({ refGpsPoints, lapGpsPoints, isLive }) {
-  // Use the current lap as the scaling basis, but only for historical mode
-  const boundsSource = (lapGpsPoints && lapGpsPoints.length > 0 && !isLive) ? lapGpsPoints : refGpsPoints;
+export function buildTrackScene({ refGpsPoints, lapGpsPoints, centerlinePoints, trackWidthM = 12.0, isLive }) {
+  // Use official centerline as the primary bounds source if available, otherwise current/ref lap
+  const boundsSource = (centerlinePoints && centerlinePoints.length >= 2)
+    ? centerlinePoints
+    : ((lapGpsPoints && lapGpsPoints.length > 0 && !isLive) ? lapGpsPoints : refGpsPoints);
+
   if (!boundsSource || boundsSource.length === 0) return null;
 
   let minLon = Infinity, maxLon = -Infinity;
@@ -60,19 +63,31 @@ export function buildTrackScene({ refGpsPoints, lapGpsPoints, isLive }) {
     y: VB_HEIGHT - ((lat - minY) * scale + yOffset)
   });
 
+  // Official geometric road centerline from track registry
+  let centerlinePath = null;
+  if (centerlinePoints && centerlinePoints.length >= 2) {
+    const scaledCenterline = centerlinePoints.map(p => projectToScreen(p.lon, p.lat));
+    centerlinePath = getCatmullRomSpline(scaledCenterline, true);
+  }
+
+  // Reference driver racing line
   const scaledBase = refGpsPoints ? refGpsPoints.map(p => projectToScreen(p.lon, p.lat)) : [];
   const basePath = scaledBase.length >= 2 ? getCatmullRomSpline(scaledBase, true) : null;
 
+  // Current lap driver racing line
   let lapPath = null;
   if (lapGpsPoints && lapGpsPoints.length >= 2) {
     const scaledLap = lapGpsPoints.map(p => projectToScreen(p.lon, p.lat));
     lapPath = getCatmullRomSpline(scaledLap, true);
   }
 
+  const nominalWidth = typeof trackWidthM === 'number' && trackWidthM > 0 ? trackWidthM : 12.0;
   const metersPerVbUnit = METERS_PER_DEGREE_LAT / (scale || 1);
   const realisticCarScale = (REAL_CAR_LENGTH_METERS * (scale / METERS_PER_DEGREE_LAT)) / BASE_CAR_PATH_LENGTH;
+  const trackWidthVbUnits = Math.max(2.5, nominalWidth * (scale / METERS_PER_DEGREE_LAT));
 
   return {
+    centerlinePath,
     basePath,
     lapPath,
     projectToScreen,
@@ -86,6 +101,7 @@ export function buildTrackScene({ refGpsPoints, lapGpsPoints, isLive }) {
     minY,
     lonScale,
     realisticCarScale,
-    metersPerVbUnit
+    metersPerVbUnit,
+    trackWidthVbUnits
   };
 }

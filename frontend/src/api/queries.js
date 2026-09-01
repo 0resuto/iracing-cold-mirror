@@ -48,6 +48,33 @@ export function useIdealLapQuery(playerId, trackName) {
   });
 }
 
+export function useTrackQuery(trackName) {
+  return useQuery({
+    queryKey: ['track', trackName],
+    queryFn: async () => {
+      if (!trackName) return null;
+      try {
+        return await apiFetch(`/tracks/${encodeURIComponent(trackName)}`);
+      } catch (err) {
+        if (err.status === 404) return null;
+        throw err;
+      }
+    },
+    enabled: !!trackName,
+    staleTime: Infinity, // Static track geometry is immutable
+    gcTime: 1000 * 60 * 60 * 24, // Keep in memory for 24h
+  });
+}
+
+export function useTracksListQuery() {
+  return useQuery({
+    queryKey: ['tracksList'],
+    queryFn: () => apiFetch('/tracks'),
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
+}
+
 export function useSystemInfoQuery() {
   return useQuery({
     queryKey: ['systemInfo'],

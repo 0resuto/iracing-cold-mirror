@@ -15,6 +15,7 @@ const TelemetryChart = React.lazy(() => import('./components/TelemetryChart').th
 const TrackMap = React.lazy(() => import('./components/TrackMap').then(m => ({ default: m.TrackMap })));
 const StatsWidget = React.lazy(() => import('./components/StatsWidget').then(m => ({ default: m.StatsWidget })));
 const LiveDashboard = React.lazy(() => import('./features/live/LiveDashboard').then(m => ({ default: m.LiveDashboard })));
+const TracksGallery = React.lazy(() => import('./features/tracks/TracksGallery').then(m => ({ default: m.TracksGallery })));
 
 const PanelFallback = () => (
   <div className="flex-1 flex items-center justify-center p-4">
@@ -28,6 +29,7 @@ function AppContent() {
   const toast = useToast();
   
   const isLive = pathname === '/live';
+  const isTracks = pathname.startsWith('/tracks');
   const isSystem = pathname === '/system';
   const isHistory = pathname === '/history';
 
@@ -147,7 +149,12 @@ function AppContent() {
                 <span className="truncate">{sessionDateTime}</span>
               </div>
             )}
-            {(!trackName && !playerName && !carName) && (
+            {isTracks ? (
+              <div className="flex items-center gap-1.5 text-brand-30 font-semibold truncate">
+                <Map size={13} className="text-brand-30 flex-none" />
+                <span>Circuit Registry & Track Geometries</span>
+              </div>
+            ) : (!trackName && !playerName && !carName) && (
               <span className="text-brand-10/40 text-[11px] italic">Waiting for telemetry...</span>
             )}
           </div>
@@ -208,7 +215,11 @@ function AppContent() {
         </div>
 
         {/* Main Content Body */}
-        {isSystem ? (
+        {isTracks ? (
+          <Suspense fallback={<PanelFallback />}>
+            <TracksGallery />
+          </Suspense>
+        ) : isSystem ? (
           <div className="flex-1 flex flex-col items-center justify-center text-brand-10/60 gap-4 glass rounded-xl border border-brand-60/60 p-6 m-4 overflow-y-auto">
             <div className="w-14 h-14 rounded-full bg-brand-60 border border-brand-60 flex items-center justify-center text-2xl">
               <Settings size={28} className="text-brand-10/40" />

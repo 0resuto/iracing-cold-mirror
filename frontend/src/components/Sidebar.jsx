@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Timer, Radio, Settings, X, ChevronLeft, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react';
+import { Timer, Radio, Settings, X, ChevronLeft, ChevronRight, AlertCircle, RefreshCw, Map } from 'lucide-react';
 import { Button, SegmentedTabs } from '@0resuto/ui-kit';
 
 import { LiveStreamPanel } from './sidebar/LiveStreamPanel';
@@ -18,6 +18,7 @@ export const Sidebar = React.memo(function Sidebar() {
   
   const isHistory = pathname === '/history';
   const isLive = pathname === '/live';
+  const isTracks = pathname.startsWith('/tracks');
   const isSystem = pathname === '/system';
   const selectedLap = useAppStore(state => state.selectedLap);
   const setSelectedLap = useAppStore(state => state.setSelectedLap);
@@ -234,6 +235,20 @@ export const Sidebar = React.memo(function Sidebar() {
             <Radio size={20} />
           </div>
 
+          {/* Circuit Gallery Tab */}
+          <div 
+            title="Circuit Gallery" 
+            onClick={() => {
+              navigate('/tracks');
+              if (!isOpen) toggleSidebar();
+            }} 
+            className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
+              isTracks ? 'border-brand-30 text-brand-30 font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
+            }`}
+          >
+            <Map size={20} />
+          </div>
+
           {/* System & Parameters Tab */}
           <div 
             title="System & Parameters" 
@@ -260,9 +275,10 @@ export const Sidebar = React.memo(function Sidebar() {
               tabs={[
                 { id: 'history', label: 'History', icon: Timer },
                 { id: 'live', label: 'Live', icon: Radio },
+                { id: 'tracks', label: 'Tracks', icon: Map },
                 { id: 'system', label: 'System', icon: Settings },
               ]}
-              activeTab={isHistory ? 'history' : isLive ? 'live' : 'system'}
+              activeTab={isHistory ? 'history' : isLive ? 'live' : isTracks ? 'tracks' : 'system'}
               onChange={(id) => navigate('/' + id)}
             />
           </div>
