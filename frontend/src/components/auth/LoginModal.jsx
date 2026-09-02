@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Button, Input, useToast, Badge } from '@0resuto/ui-kit';
-import { ShieldCheck, Lock, User, LogIn, AlertCircle } from 'lucide-react';
+import { Modal, Button, Input, useToast } from '@0resuto/ui-kit';
+import { Lock, User, LogIn, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export function LoginModal({ isOpen, onClose }) {
@@ -46,13 +46,7 @@ export function LoginModal({ isOpen, onClose }) {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={
-        <div className="flex items-center gap-2.5">
-          <ShieldCheck className="text-accent-blue w-5 h-5" />
-          <span>Admin Authentication</span>
-        </div>
-      }
-      description="Enter your credentials to unlock elevated controls and telemetry management."
+      title="Login"
       size="sm"
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
@@ -64,9 +58,8 @@ export function LoginModal({ isOpen, onClose }) {
         )}
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-brand-10/80 uppercase tracking-wider flex items-center justify-between">
-            <span>Username</span>
-            <Badge color="neutral" size="sm">ENV</Badge>
+          <label className="text-xs font-semibold text-brand-10/80 uppercase tracking-wider">
+            Username
           </label>
           <Input
             value={username}

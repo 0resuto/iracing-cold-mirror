@@ -4,7 +4,7 @@ import { useAppStore } from './store/useAppStore';
 import { useAuthStore } from './store/useAuthStore';
 import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront, Calendar, ShieldCheck, Shield, LogOut, Sparkles } from 'lucide-react';
+import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront, Calendar, LogOut, Sparkles } from 'lucide-react';
 import { useTelemetryData } from './features/telemetry/useTelemetryData';
 import { useLiveStore } from './store/useLiveStore';
 import { Button, Checkbox, NumberStepper, SegmentedTabs, ProgressBar, Badge, useToast } from '@0resuto/ui-kit';
@@ -40,6 +40,7 @@ function AppContent() {
   const showOutlaps = useAppStore(state => state.showOutlaps);
 
   const isAdmin = useAuthStore(state => state.isAdmin);
+  const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
   const checkAuth = useAuthStore(state => state.checkAuth);
 
@@ -173,31 +174,29 @@ function AppContent() {
           {/* Admin Status / Auth Control */}
           <div className="flex items-center gap-2 flex-none">
             {isAdmin ? (
-              <div className="flex items-center gap-1.5 bg-brand-60/80 border border-accent-red/30 rounded-lg px-2 py-1">
-                <Badge color="red" size="sm" beacon active>
-                  <ShieldCheck size={11} className="inline mr-1" />
-                  Admin
-                </Badge>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-flex items-center h-7 px-2.5 text-[11px] font-semibold rounded-lg bg-brand-60/90 text-brand-10/90 border border-brand-10/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-sm select-none">
+                  {user?.username || 'User'}
+                </span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleLogout}
                   title="Sign Out"
-                  className="h-5 w-5 text-brand-10/50 hover:text-accent-red"
+                  className="h-7 w-7 text-brand-10/50 hover:text-accent-red"
                 >
-                  <LogOut size={12} />
+                  <LogOut size={13} />
                 </Button>
               </div>
             ) : (
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={() => setIsLoginModalOpen(true)}
-                leftIcon={<Shield size={13} className="text-accent-blue" />}
                 className="text-[11px] h-7 px-2.5"
-                title="Admin Authentication"
+                title="Login"
               >
-                <span className="hidden sm:inline">Admin Login</span>
+                Login
               </Button>
             )}
 
