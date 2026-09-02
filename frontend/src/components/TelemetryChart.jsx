@@ -53,7 +53,7 @@ const CustomTooltip = ({ active, payload, chartId, activeChart }) => {
 
   const data = payload[0].payload;
   const hasRef = data.ref_elapsed_time !== null && data.ref_elapsed_time !== undefined;
-  const timeDelta = data.delta !== null && data.delta !== undefined ? data.delta : (hasRef ? (data.elapsed_time - data.ref_elapsed_time) : 0);
+  const timeDelta = data.delta !== null && data.delta !== undefined ? data.delta : (hasRef ? (data.ref_elapsed_time - data.elapsed_time) : null);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   const distText = trackLength && data.lap_dist_pct != null
@@ -66,8 +66,8 @@ const CustomTooltip = ({ active, payload, chartId, activeChart }) => {
       <div className="glass border border-brand-60/80 p-2 text-xs z-[100] rounded-lg shadow-lg backdrop-blur-md max-w-[280px]">
         <div className="flex justify-between font-bold text-brand-10 border-b border-brand-60 pb-1 mb-1">
           <span>{distText}</span>
-          {hasRef && (
-            <span className={timeDelta <= 0 ? 'text-green-400' : 'text-red-400'}>
+          {timeDelta !== null && (
+            <span className={timeDelta >= 0 ? 'text-green-400' : 'text-red-400'}>
               Δ {timeDelta > 0 ? '+' : ''}{timeDelta.toFixed(2)}s
             </span>
           )}
@@ -87,8 +87,8 @@ const CustomTooltip = ({ active, payload, chartId, activeChart }) => {
     <div className="bg-brand-60 border border-brand-60 p-2 text-xs z-[100] rounded-md shadow-xl backdrop-blur-md bg-opacity-90 min-w-[150px]">
       <p className="m-0 font-bold text-brand-10 mb-1.5 flex justify-between">
         <span>{distText}</span>
-        {hasRef && (
-          <span className={`ml-3 ${timeDelta <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+        {timeDelta !== null && (
+          <span className={`ml-3 ${timeDelta >= 0 ? 'text-green-500' : 'text-red-500'}`}>
             Δ {timeDelta > 0 ? '+' : ''}{timeDelta.toFixed(2)}s
           </span>
         )}
@@ -118,6 +118,17 @@ const CustomTooltip = ({ active, payload, chartId, activeChart }) => {
 };
 
 const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChart, onChartActive }) => {
+  const gradientOffset = useMemo(() => {
+    if (!mergedData || mergedData.length === 0) return 0.5;
+    const values = mergedData.map(d => d.delta).filter(v => v !== null && !isNaN(v));
+    if (values.length === 0) return 0.5;
+    const dataMax = Math.max(...values, 0);
+    const dataMin = Math.min(...values, 0);
+    if (dataMax <= 0) return 0;
+    if (dataMin >= 0) return 1;
+    return dataMax / (dataMax - dataMin);
+  }, [mergedData]);
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart 
@@ -127,12 +138,35 @@ const DeltaMinimapChart = React.memo(({ mergedData, sectorBoundaries, activeChar
         margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
         onMouseEnter={() => { onChartActive('delta'); }}
       >
+        <defs>
+          <linearGradient id="deltaStroke" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-accent-green, #22c55e)" />
+            <stop offset={`${gradientOffset * 100}%`} stopColor="var(--color-accent-green, #22c55e)" />
+            <stop offset={`${gradientOffset * 100}%`} stopColor="var(--color-accent-red, #ef4444)" />
+            <stop offset="100%" stopColor="var(--color-accent-red, #ef4444)" />
+          </linearGradient>
+          <linearGradient id="deltaFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-accent-green, #22c55e)" stopOpacity={0.25} />
+            <stop offset={`${gradientOffset * 100}%`} stopColor="var(--color-accent-green, #22c55e)" stopOpacity={0.05} />
+            <stop offset={`${gradientOffset * 100}%`} stopColor="var(--color-accent-red, #ef4444)" stopOpacity={0.05} />
+            <stop offset="100%" stopColor="var(--color-accent-red, #ef4444)" stopOpacity={0.25} />
+          </linearGradient>
+        </defs>
         <CartesianGrid fill="var(--color-brand-bg-deep)" strokeDasharray="3 3" stroke="var(--color-zinc-800)" vertical={false} />
         <XAxis dataKey="lap_dist_pct" hide type="number" domain={[0, 1]} />
-        <YAxis domain={['auto', 'auto']} stroke="var(--color-zinc-400)" fontSize={9} tickCount={3} tickFormatter={v => v.toFixed(1)} width={35} />
+        <YAxis domain={['auto', 'auto']} stroke="var(--color-zinc-400)" fontSize={9} tickCount={3} tickFormatter={v => (v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1))} width={35} />
         <Tooltip isAnimationActive={false} wrapperStyle={{ zIndex: 1000 }} content={<CustomTooltip chartId="delta" activeChart={activeChart} />} />
-        <ReferenceLine y={0} stroke="var(--color-zinc-400)" opacity={0.5} />
-        <Area type="linear" dataKey="delta" stroke="var(--color-brand-10)" fillOpacity={0} strokeWidth={1.5} isAnimationActive={false} activeDot={<FastDot />} />
+        <ReferenceLine y={0} stroke="var(--color-zinc-400)" strokeDasharray="2 2" opacity={0.6} />
+        <Area 
+          type="linear" 
+          dataKey="delta" 
+          stroke="url(#deltaStroke)" 
+          fill="url(#deltaFill)" 
+          baseValue={0}
+          strokeWidth={1} 
+          isAnimationActive={false} 
+          activeDot={<FastDot />} 
+        />
 
         {sectorBoundaries.map((pct, i) => (
           <ReferenceLine key={`sector-${i}`} x={pct} stroke="var(--color-zinc-600)" strokeDasharray="3 3" opacity={0.4} />
@@ -329,7 +363,9 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         while (dIdx < deltaData.length - 1 && deltaData[dIdx + 1].lap_dist_pct <= targetPct) {
           dIdx++;
         }
-        delta = deltaData[dIdx].delta;
+        delta = deltaData[dIdx].delta != null ? -deltaData[dIdx].delta : null;
+      } else if (point.elapsed_time != null && refPoint?.elapsed_time != null) {
+        delta = refPoint.elapsed_time - point.elapsed_time;
       }
 
       return {
@@ -364,6 +400,38 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
     if (!mergedData || mergedData.length === 0) return [];
     return brushRange ? mergedData.slice(brushRange[0], brushRange[1] + 1) : mergedData;
   }, [mergedData, brushRange]);
+
+  const UNIFIED_CHART_HEIGHT = 110;
+
+  const SUB_CHARTS_CONFIG = useMemo(() => [
+    {
+      id: 'speed', title: 'SPEED (km/h)', dataKey: 'speed', refDataKey: 'ref_speed',
+      stroke: 'var(--color-accent-red)', type: 'line-speed', domain: [0, dataMax => Math.ceil(((dataMax || 200) * 1.05) / 10) * 10],
+    },
+    {
+      id: 'throttle', title: 'THROTTLE (%)', dataKey: 'throttle', refDataKey: 'ref_throttle',
+      stroke: 'var(--color-accent-green)', type: 'area', domain: [0, 1], tickFormatter: v => (v*100).toFixed(0),
+      extraAreas: [{ dataKey: 'tc_active', fill: 'var(--color-accent-yellow)' }]
+    },
+    {
+      id: 'brake', title: 'BRAKE (%)', dataKey: 'brake', refDataKey: 'ref_brake',
+      stroke: 'var(--color-accent-red)', type: 'area', domain: [0, 1], tickFormatter: v => (v*100).toFixed(0),
+      extraAreas: [{ dataKey: 'abs_active', fill: 'var(--color-accent-blue)', opacity: 0.2 }, { dataKey: 'wheel_lock', fill: 'var(--color-accent-red)', opacity: 0.3 }]
+    },
+    {
+      id: 'steering', title: 'STEERING (deg)', dataKey: 'wheel_angle_deg', refDataKey: 'ref_wheel_angle_deg',
+      stroke: 'var(--color-brand-10)', type: 'line', domain: ['auto', 'auto'],
+    },
+    {
+      id: 'slip', title: 'SLIP ANGLE (deg)', dataKey: 'slip_angle', refDataKey: 'ref_slip_angle',
+      stroke: 'var(--color-accent-blue)', type: 'area', domain: ['auto', 'auto'],
+    }
+  ], []);
+
+  const lastVisibleChartId = useMemo(() => {
+    const visible = SUB_CHARTS_CONFIG.filter(c => visibleCharts[c.id]);
+    return visible.length > 0 ? visible[visible.length - 1].id : null;
+  }, [SUB_CHARTS_CONFIG, visibleCharts]);
 
   if (!lapData?.length) {
     return (
@@ -481,9 +549,14 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       >
         {/* Delta Chart */}
         {visibleCharts.delta && deltaData?.length > 0 && (
-          <div className="flex-none h-28 flex flex-col relative group min-w-0">
-            <div className="absolute left-10 top-0 text-[9px] text-brand-10/40 font-bold tracking-widest z-10 group-hover:text-brand-10/80 transition-colors">DELTA (s)</div>
-            <div className="flex-1 mt-3 flex flex-col relative">
+          <div 
+            className="flex-1 flex flex-col relative group min-w-0" 
+            style={{ minHeight: `${UNIFIED_CHART_HEIGHT}px` }}
+          >
+            <div className="absolute left-10 top-0 text-[9px] text-brand-10/40 font-bold tracking-widest z-10 group-hover:text-brand-10/80 transition-colors">
+              DELTA (s)
+            </div>
+            <div className="flex-1 mt-2 flex flex-col relative min-h-0">
               <div className="flex-1 min-h-0">
                 <DeltaMinimapChart 
                   mergedData={mergedData} 
@@ -503,33 +576,7 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         )}
 
         {/* Chart Configuration Array */}
-        {[
-          {
-            id: 'speed', title: 'SPEED (km/h)', dataKey: 'speed', refDataKey: 'ref_speed',
-            stroke: 'var(--color-accent-red)', type: 'line-speed', domain: [0, dataMax => Math.ceil(((dataMax || 200) * 1.05) / 10) * 10],
-            minHeight: 130
-          },
-          {
-            id: 'throttle', title: 'THROTTLE (%)', dataKey: 'throttle', refDataKey: 'ref_throttle',
-            stroke: 'var(--color-accent-green)', type: 'area', domain: [0, 1], tickFormatter: v => (v*100).toFixed(0),
-            minHeight: 90, extraAreas: [{ dataKey: 'tc_active', fill: 'var(--color-accent-yellow)' }]
-          },
-          {
-            id: 'brake', title: 'BRAKE (%)', dataKey: 'brake', refDataKey: 'ref_brake',
-            stroke: 'var(--color-accent-red)', type: 'area', domain: [0, 1], tickFormatter: v => (v*100).toFixed(0),
-            minHeight: 90, extraAreas: [{ dataKey: 'abs_active', fill: 'var(--color-accent-blue)', opacity: 0.2 }, { dataKey: 'wheel_lock', fill: 'var(--color-accent-red)', opacity: 0.3 }]
-          },
-          {
-            id: 'steering', title: 'STEERING (deg)', dataKey: 'wheel_angle_deg', refDataKey: 'ref_wheel_angle_deg',
-            stroke: 'var(--color-brand-10)', type: 'line', domain: ['auto', 'auto'],
-            minHeight: 90
-          },
-          {
-            id: 'slip', title: 'SLIP ANGLE (deg)', dataKey: 'slip_angle', refDataKey: 'ref_slip_angle',
-            stroke: 'var(--color-accent-blue)', type: 'area', domain: ['auto', 'auto'],
-            minHeight: 90, showXAxis: true
-          }
-        ].map(chart => visibleCharts[chart.id] && (
+        {SUB_CHARTS_CONFIG.map(chart => visibleCharts[chart.id] && (
           <TelemetrySubChart
             key={chart.id}
             title={chart.title}
@@ -546,8 +593,8 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
             type={chart.type}
             domain={chart.domain}
             tickFormatter={chart.tickFormatter}
-            minHeight={chart.minHeight}
-            showXAxis={chart.showXAxis}
+            minHeight={UNIFIED_CHART_HEIGHT}
+            showXAxis={lastVisibleChartId === chart.id}
             extraAreas={chart.extraAreas}
           />
         ))}

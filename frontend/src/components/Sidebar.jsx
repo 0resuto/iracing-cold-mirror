@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Timer, Radio, Settings, X, ChevronLeft, ChevronRight, AlertCircle, RefreshCw, Map } from 'lucide-react';
-import { Button, SegmentedTabs } from '@0resuto/ui-kit';
+import { Timer, Radio, Settings, AlertCircle, RefreshCw, Map, Menu, ChevronLeft } from 'lucide-react';
+import { Button, Rail, Drawer } from '@0resuto/ui-kit';
 
 import { LiveStreamPanel } from './sidebar/LiveStreamPanel';
 import { SystemPanel } from './sidebar/SystemPanel';
@@ -20,10 +20,13 @@ export const Sidebar = React.memo(function Sidebar() {
   const isLive = pathname === '/live';
   const isTracks = pathname.startsWith('/tracks');
   const isSystem = pathname === '/system';
+
   const selectedLap = useAppStore(state => state.selectedLap);
   const setSelectedLap = useAppStore(state => state.setSelectedLap);
   const isOpen = useAppStore(state => state.isSidebarOpen);
   const toggleSidebar = useAppStore(state => state.toggleSidebar);
+  const setSidebarOpen = useAppStore(state => state.setSidebarOpen);
+  const closeSidebar = useAppStore(state => state.closeSidebar);
   const selectedLapId = selectedLap?.id || null;
 
   // Filter & Search State
@@ -53,11 +56,11 @@ export const Sidebar = React.memo(function Sidebar() {
       : activePlayerId;
 
   // Auto-close sidebar on mobile when selecting a lap
-  const handleSelectLapMobile = () => {
+  const handleSelectLapMobile = useCallback(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 768 && isOpen) {
-      toggleSidebar();
+      closeSidebar();
     }
-  };
+  }, [isOpen, closeSidebar]);
 
   // Extract unique players, tracks, and cars (only from valid sessions with complete laps)
   const { uniquePlayers, uniqueTracks, uniqueCars } = useMemo(() => {
@@ -190,113 +193,90 @@ export const Sidebar = React.memo(function Sidebar() {
     }
   }, [rawPlayers, selectedLapId, setSelectedLap]);
 
+  const hasDrawerContent = isHistory || isLive || isSystem;
+  const isDrawerOpen = isOpen && hasDrawerContent;
+
+  // Rail Top Navigation Actions
+  const topActions = useMemo(() => [
+    {
+      icon: isDrawerOpen ? ChevronLeft : Menu,
+      title: isDrawerOpen ? 'Collapse Side Menu' : 'Expand Side Menu',
+      active: false,
+      onClick: () => {
+        if (!hasDrawerContent) {
+          navigate('/history');
+          setSidebarOpen(true);
+        } else {
+          toggleSidebar();
+        }
+      },
+    },
+    {
+      icon: Timer,
+      title: 'History',
+      active: isHistory,
+      divider: true,
+      onClick: () => {
+        navigate('/history');
+      },
+    },
+    {
+      icon: Radio,
+      title: 'Live Telemetry',
+      active: isLive,
+      onClick: () => {
+        navigate('/live');
+      },
+    },
+    {
+      icon: Map,
+      title: 'Circuit Gallery',
+      active: isTracks,
+      onClick: () => {
+        navigate('/tracks');
+      },
+    },
+    {
+      icon: Settings,
+      title: 'System & Parameters',
+      active: isSystem,
+      onClick: () => {
+        navigate('/system');
+      },
+    },
+  ], [isDrawerOpen, hasDrawerContent, isHistory, isLive, isTracks, isSystem, navigate, toggleSidebar, setSidebarOpen]);
+
+  const drawerTitle = isHistory 
+    ? 'Telemetry History' 
+    : isLive 
+    ? 'Live Telemetry' 
+    : isSystem 
+    ? 'System Settings' 
+    : '';
+
+  const drawerSubtitle = isHistory
+    ? 'Session & Lap Selection'
+    : isLive
+    ? 'Real-time Stream & Diagnostics'
+    : isSystem
+    ? 'Hardware & Preferences'
+    : '';
+
   return (
-    <div className="flex h-full w-full bg-brand-60 min-w-0">
-      
-      {/* Left Icon Navigation Bar (DESKTOP ONLY) */}
-      <div className="hidden md:flex w-11 min-w-[44px] border-r border-brand-60 flex-col items-center py-4 bg-brand-bg flex-none z-10">
-        {/* Toggle Sidebar Arrow Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-          className="mt-1 mb-10"
-        >
-          {isOpen ? <ChevronLeft size={20} strokeWidth={2.5} /> : <ChevronRight size={20} strokeWidth={2.5} />}
-        </Button>
-
-        <div className="flex flex-col gap-4 w-full">
-          {/* History Tab */}
-          <div 
-            title="History" 
-            onClick={() => {
-              navigate('/history');
-              if (!isOpen) toggleSidebar();
-            }} 
-            className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              isHistory ? 'border-accent-blue text-accent-blue font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
-            }`}
-          >
-            <Timer size={20} />
-          </div>
-
-          {/* Live Telemetry Tab */}
-          <div 
-            title="Live Telemetry" 
-            onClick={() => {
-              navigate('/live');
-              if (!isOpen) toggleSidebar();
-            }} 
-            className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              isLive ? 'border-accent-red text-accent-red font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
-            }`}
-          >
-            <Radio size={20} />
-          </div>
-
-          {/* Circuit Gallery Tab */}
-          <div 
-            title="Circuit Gallery" 
-            onClick={() => {
-              navigate('/tracks');
-              if (!isOpen) toggleSidebar();
-            }} 
-            className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              isTracks ? 'border-brand-30 text-brand-30 font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
-            }`}
-          >
-            <Map size={20} />
-          </div>
-
-          {/* System & Parameters Tab */}
-          <div 
-            title="System & Parameters" 
-            onClick={() => {
-              navigate('/system');
-              if (!isOpen) toggleSidebar();
-            }} 
-            className={`cursor-pointer flex justify-center border-l-2 py-2 transition-colors ${
-              isSystem ? 'border-accent-green text-accent-green font-bold' : 'border-transparent text-brand-10/60 hover:text-brand-10'
-            }`}
-          >
-            <Settings size={20} />
-          </div>
-        </div>
-      </div>
-
-      {/* Expanded Content Area (Full width on Mobile) */}
-      <div className={`flex-1 flex-col overflow-hidden min-w-0 ${isOpen ? 'flex' : 'hidden'}`}>
-        
-        {/* MOBILE TOP BAR (Segmented Tabs + Close Button) */}
-        <div className="flex md:hidden items-center justify-between bg-brand-bg border-b border-brand-60 flex-none gap-3 min-h-[60px] px-5 py-4">
-          <div className="flex-1 min-w-0">
-            <SegmentedTabs
-              tabs={[
-                { id: 'history', label: 'History', icon: Timer },
-                { id: 'live', label: 'Live', icon: Radio },
-                { id: 'tracks', label: 'Tracks', icon: Map },
-                { id: 'system', label: 'System', icon: Settings },
-              ]}
-              activeTab={isHistory ? 'history' : isLive ? 'live' : isTracks ? 'tracks' : 'system'}
-              onChange={(id) => navigate('/' + id)}
-            />
-          </div>
-
-          {/* Close Drawer Button */}
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={toggleSidebar}
-            className="min-w-[44px] min-h-[44px]"
-            title="Close Drawer"
-          >
-            <X size={22} />
-          </Button>
-        </div>
-
+    <>
+      <Rail
+        topActions={topActions}
+        isDrawerOpen={isDrawerOpen}
+      />
+      <Drawer
+        isOpen={isDrawerOpen}
+        onClose={closeSidebar}
+        title={drawerTitle}
+        subtitle={drawerSubtitle}
+        footerText="Cold Mirror Telemetry"
+      >
         {isHistory ? (
-          <>
+          <div className="flex flex-col gap-4">
             <FilterControls
               processedPlayers={processedPlayers}
               searchQuery={searchQuery}
@@ -315,14 +295,14 @@ export const Sidebar = React.memo(function Sidebar() {
             />
 
             {/* History Tree List */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar min-w-0 py-3">
+            <div className="flex flex-col min-w-0">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-8 px-4 space-y-2 text-center">
                   <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
                   <span className="text-xs text-brand-10/50 animate-pulse">Loading history tree...</span>
                 </div>
               ) : isError ? (
-                <div className="p-3.5 mx-3 bg-red-950/20 border border-red-500/30 rounded-xl space-y-2 text-center">
+                <div className="p-3.5 bg-red-950/20 border border-red-500/30 rounded-xl space-y-2 text-center">
                   <div className="flex items-center justify-center gap-1.5 text-accent-red font-semibold text-xs">
                     <AlertCircle size={15} />
                     <span>Failed to load history</span>
@@ -364,26 +344,23 @@ export const Sidebar = React.memo(function Sidebar() {
 
             {/* Ideal Lap Section */}
             {idealLap && (
-              <div className="border-t border-brand-60 bg-black/10 flex-none min-w-0 px-5 py-1.5">
-                 <div className="flex justify-between items-center min-w-0">
-                    <h3 className="text-xs uppercase tracking-wider text-brand-10/60 font-semibold m-0 truncate">Theoretical Best</h3>
-                    <span className="font-mono font-bold text-purple-400 text-xs flex-none">
-                      {idealLap.ideal_lap_time.toFixed(2)}s
-                    </span>
-                 </div>
+              <div className="border border-brand-60/80 rounded-xl bg-black/20 p-3 flex justify-between items-center min-w-0">
+                 <h3 className="text-xs uppercase tracking-wider text-brand-10/60 font-semibold m-0 truncate">Theoretical Best</h3>
+                 <span className="font-mono font-bold text-purple-400 text-xs flex-none">
+                   {idealLap.ideal_lap_time.toFixed(2)}s
+                 </span>
               </div>
             )}
 
             {/* Sectors Widget */}
             <SectorsWidget selectedLap={selectedLap} players={rawPlayers} />
-          </>
+          </div>
         ) : isLive ? (
           <LiveStreamPanel />
         ) : isSystem ? (
           <SystemPanel />
         ) : null}
-
-      </div>
-    </div>
+      </Drawer>
+    </>
   );
 });

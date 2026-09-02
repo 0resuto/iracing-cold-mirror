@@ -4,7 +4,7 @@ import { useAppStore } from './store/useAppStore';
 import { useAuthStore } from './store/useAuthStore';
 import { useLiveTelemetryWS } from './features/live/useLiveTelemetryWS';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront, Calendar, LogOut, Sparkles } from 'lucide-react';
+import { MapPin, Settings, Clock, Menu, Activity, Map, BarChart2, User, CarFront, Calendar, LogOut, Sparkles, Timer } from 'lucide-react';
 import { useTelemetryData } from './features/telemetry/useTelemetryData';
 import { useLiveStore } from './store/useLiveStore';
 import { Button, Checkbox, NumberStepper, SegmentedTabs, ProgressBar, Badge, useToast } from '@0resuto/ui-kit';
@@ -57,25 +57,26 @@ function AppContent() {
   const livePlayerName = useLiveStore(state => state.livePlayerName);
   const liveCarName = useLiveStore(state => state.liveCarName);
 
-  const trackName = isLive ? liveTrackName : selectedLap?.track_name;
-  
-  let playerName = isLive ? livePlayerName : null;
-  if (!isLive && selectedLap) {
-    playerName = players?.find(p => p.id === selectedLap.player_id)?.name;
-  }
-  const carName = isLive ? liveCarName : selectedLap?.car_name;
+  const isStreaming = useLiveStore(state => state.isStreaming);
+  const latestTelemetry = useLiveStore(state => state.latestTelemetry);
 
-  let sessionDateTime = null;
-  if (!isLive && selectedLap && players) {
+  const playerName = useMemo(() => {
+    if (!selectedLap || !players) return null;
+    return players.find(p => p.id === selectedLap.player_id)?.name || null;
+  }, [selectedLap, players]);
+
+  const sessionDateTime = useMemo(() => {
+    if (!selectedLap || !players) return null;
     const player = players.find(p => p.id === selectedLap.player_id);
     if (player) {
       const session = player.sessions?.find(s => s.laps?.some(l => l.id === selectedLap.id));
       if (session?.start_time) {
         const d = new Date(session.start_time);
-        sessionDateTime = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       }
     }
-  }
+    return null;
+  }, [selectedLap, players]);
 
   // Mobile View Tab state
   const [mobileView, setMobileView] = useState('charts'); // 'charts' | 'map' | 'stats' | 'ai'
@@ -99,77 +100,129 @@ function AppContent() {
     <div className="w-full h-screen flex overflow-hidden bg-brand-bg text-brand-10 relative font-sans">
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       
-      {/* Mobile Backdrop Overlay */}
-      {isSidebarOpen && (
-        <div 
-          onClick={toggleSidebar} 
-          className="fixed inset-0 bg-black/75 backdrop-blur-md z-40 md:hidden transition-opacity"
-        />
-      )}
+      {/* Branded Sidebar: encapsulates Rail + Drawer */}
+      <Sidebar />
 
-      {/* Left Sidebar (Desktop + Mobile 100% Full-Width Drawer) */}
-      <div 
-        className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-brand-60 ${
-          isSidebarOpen 
-            ? 'fixed md:relative inset-y-0 left-0 right-0 w-full md:w-[380px] z-50 md:z-auto shadow-2xl md:shadow-none bg-brand-60' 
-            : 'w-0 md:w-11 border-none md:border-r border-brand-60'
-        }`}
-      >
-        <Sidebar />
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-brand-bg min-w-0">
+      {/* Main Content Area (Offset by pl-14 to account for fixed 56px Rail) */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-brand-bg min-w-0 pl-14">
         
         {/* Header Bar */}
         <div className="flex items-center justify-between flex-none px-4 pt-1.5 pb-1 border-b border-brand-60/30 gap-3 w-full min-w-0">
           
-          {/* Session Info (Desktop) */}
-          <div className="hidden md:flex items-center gap-4 text-[11px] text-brand-10/70 flex-1 truncate">
-            {trackName && (
-              <div className="flex items-center gap-1.5 text-brand-10/90 truncate">
-                <MapPin size={12} className="text-brand-30 flex-none" />
-                <span className="font-semibold truncate">{trackName}</span>
-              </div>
-            )}
-            {playerName && (
-              <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
-                <User size={12} className="text-brand-30/70 flex-none" />
-                <span className="truncate">{playerName}</span>
-              </div>
-            )}
-            {carName && (
-              <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
-                <CarFront size={12} className="text-brand-30/70 flex-none" />
-                <span className="truncate">{carName}</span>
-              </div>
-            )}
-            {sessionDateTime && (
-              <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
-                <Calendar size={12} className="text-brand-30/70 flex-none" />
-                <span className="truncate">{sessionDateTime}</span>
-              </div>
-            )}
-            {isTracks ? (
-              <div className="flex items-center gap-1.5 text-brand-30 font-semibold truncate">
-                <Map size={13} className="text-brand-30 flex-none" />
-                <span>Circuit Registry & Track Geometries</span>
-              </div>
-            ) : (!trackName && !playerName && !carName) && (
-              <span className="text-brand-10/40 text-[11px] italic">Waiting for telemetry...</span>
-            )}
-          </div>
-
-          {/* View Switcher on Mobile (Charts, Map, Stats, AI) */}
+          {/* History Tab Header */}
           {isHistory && (
-            <div className="md:hidden flex-1 min-w-0">
-              <SegmentedTabs
-                tabs={mobileViewTabs}
-                activeTab={mobileView}
-                onChange={setMobileView}
-              />
+            <>
+              {/* Desktop Session Info */}
+              <div className="hidden md:flex items-center gap-4 text-[11px] text-brand-10/70 flex-1 truncate">
+                {selectedLap ? (
+                  <>
+                    {selectedLap.track_name && (
+                      <div className="flex items-center gap-1.5 text-brand-10/90 truncate">
+                        <MapPin size={12} className="text-brand-30 flex-none" />
+                        <span className="font-semibold truncate">{selectedLap.track_name}</span>
+                      </div>
+                    )}
+                    {playerName && (
+                      <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
+                        <User size={12} className="text-brand-30/70 flex-none" />
+                        <span className="truncate">{playerName}</span>
+                      </div>
+                    )}
+                    {selectedLap.car_name && (
+                      <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
+                        <CarFront size={12} className="text-brand-30/70 flex-none" />
+                        <span className="truncate">{selectedLap.car_name}</span>
+                      </div>
+                    )}
+
+                    {sessionDateTime && (
+                      <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
+                        <Calendar size={12} className="text-brand-30/70 flex-none" />
+                        <span className="truncate">{sessionDateTime}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-brand-10/40 text-[11px] italic">
+                    <Timer size={12} className="text-brand-30/50 flex-none" />
+                    <span>Telemetry History — Select a lap from the menu to analyze</span>
+                  </div>
+                )}
+              </div>
+
+              {/* View Switcher on Mobile (Charts, Map, Stats, AI) */}
+              <div className="md:hidden flex-1 min-w-0">
+                <SegmentedTabs
+                  tabs={mobileViewTabs}
+                  activeTab={mobileView}
+                  onChange={setMobileView}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Live Telemetry Tab Header */}
+          {isLive && (
+            <div className="flex items-center gap-3 text-[11px] text-brand-10/70 flex-1 truncate">
+              {isStreaming || latestTelemetry ? (
+                <>
+                  <Badge color="red" beacon active size="sm" className="text-[10px] py-0 px-2 uppercase font-bold flex-none">
+                    LIVE
+                  </Badge>
+                  {liveTrackName && (
+                    <div className="flex items-center gap-1.5 text-brand-10/90 truncate">
+                      <MapPin size={12} className="text-brand-30 flex-none" />
+                      <span className="font-semibold truncate">{liveTrackName}</span>
+                    </div>
+                  )}
+                  {livePlayerName && (
+                    <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
+                      <User size={12} className="text-brand-30/70 flex-none" />
+                      <span className="truncate">{livePlayerName}</span>
+                    </div>
+                  )}
+                  {liveCarName && (
+                    <div className="flex items-center gap-1.5 text-brand-10/70 truncate">
+                      <CarFront size={12} className="text-brand-30/70 flex-none" />
+                      <span className="truncate">{liveCarName}</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex items-center gap-2 truncate">
+                  <Badge color="neutral" size="sm" className="text-[10px] py-0 px-1.5 flex-none">
+                    OFFLINE
+                  </Badge>
+                  <span className="text-brand-10/40 text-[11px] italic truncate">
+                    Live Telemetry Stream — Waiting for iRacing connection...
+                  </span>
+                </div>
+              )}
             </div>
           )}
+
+          {/* Tracks Gallery Tab Header */}
+          {isTracks && (
+            <div className="flex items-center gap-2 text-[11px] text-brand-10/70 flex-1 truncate">
+              <Map size={13} className="text-brand-30 flex-none" />
+              <span className="font-semibold text-brand-10/90">Circuit Registry</span>
+              <span className="text-brand-10/40 hidden sm:inline truncate">
+                • Official track geometries & sector definitions
+              </span>
+            </div>
+          )}
+
+          {/* System Parameters Tab Header */}
+          {isSystem && (
+            <div className="flex items-center gap-2 text-[11px] text-brand-10/70 flex-1 truncate">
+              <Settings size={13} className="text-accent-green flex-none" />
+              <span className="font-semibold text-brand-10/90">System Parameters</span>
+              <span className="text-brand-10/40 hidden sm:inline truncate">
+                • Hardware calibration & display preferences
+              </span>
+            </div>
+          )}
+
 
           {/* Admin Status / Auth Control */}
           <div className="flex items-center gap-2 flex-none">

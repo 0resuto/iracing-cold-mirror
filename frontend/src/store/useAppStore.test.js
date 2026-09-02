@@ -11,7 +11,7 @@ describe('useAppStore', () => {
     const state = useAppStore.getState();
     expect(state.selectedLap).toBeNull();
     expect(state.referenceLapId).toBeNull();
-    expect(state.isSidebarOpen).toBe(true);
+    expect(state.isSidebarOpen).toBe(false);
     expect(state.hoveredData).toBeNull();
     expect(state.steeringMax).toBe(450);
     expect(state.liveDeltaReferenceMode).toBe('optimal');
@@ -33,10 +33,10 @@ describe('useAppStore', () => {
 
   it('should toggle sidebar', () => {
     useAppStore.getState().toggleSidebar();
-    expect(useAppStore.getState().isSidebarOpen).toBe(false);
+    expect(useAppStore.getState().isSidebarOpen).toBe(true);
     
     useAppStore.getState().toggleSidebar();
-    expect(useAppStore.getState().isSidebarOpen).toBe(true);
+    expect(useAppStore.getState().isSidebarOpen).toBe(false);
   });
 
   it('should toggle standings columns', () => {
