@@ -1,0 +1,60 @@
+{
+  "track_name": "echopark_speedway_atlanta_legends_oval_2008",
+  "display_name": "EchoPark Speedway (Atlanta) - Legends Oval - 2008",
+  "length_m": 500.0,
+  "track_width_m": 12.0,
+  "aliases": [
+    "echopark_speedway_atlanta_legends_oval_2008",
+    "echopark speedway (atlanta) - legends oval - 2008",
+    "52"
+  ],
+  "iracing_track_id": 52,
+  "view_box": "0 0 1920 1080",
+  "svg_path": "M1064.63,967.09H905.39c-38.6,0-70-27.62-70-61.57s31.4-61.57,70-61.57h159.24c38.6,0,70,27.62,70,61.57S1103.23,967.09,1064.63,967.09Z",
+  "svg_path_outside": "M905.39,864c-27.57,0-50,18.65-50,41.57s22.43,41.57,50,41.57h159.24c27.57,0,50-18.65,50-41.57s-22.43-41.57-50-41.57Z",
+  "start_finish": {
+    "line": "M986.05,993.41a5,5,0,0,0,5-5v-61a5,5,0,0,0-10,0v61A5,5,0,0,0,986.05,993.41Z",
+    "arrow": "M1077,1033l-87.78-37,13.61,32H941.12a5,5,0,1,0,0,10h61.67l-13.61,32Z",
+    "point": {
+      "x": 991.05,
+      "y": 967.09,
+      "length": 73.58
+    },
+    "direction": "clockwise"
+  },
+  "turns": [
+    {
+      "label": "1",
+      "name": "Turn 1",
+      "apex_pct": 0.18,
+      "x": 1130.92,
+      "y": 958.09,
+      "turn_number": 1
+    },
+    {
+      "label": "2",
+      "name": "Turn 2",
+      "apex_pct": 0.29,
+      "x": 1130.85,
+      "y": 865.35,
+      "turn_number": 2
+    },
+    {
+      "label": "3",
+      "name": "Turn 3",
+      "apex_pct": 0.7,
+      "x": 823.5,
+      "y": 863.09,
+      "turn_number": 3
+    },
+    {
+      "label": "4",
+      "name": "Turn 4",
+      "apex_pct": 0.794,
+      "x": 826.21,
+      "y": 962.19,
+      "turn_number": 4
+    }
+  ],
+  "turn_labels": []
+}

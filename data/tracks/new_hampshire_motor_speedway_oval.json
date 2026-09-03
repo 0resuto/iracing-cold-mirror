@@ -1,0 +1,60 @@
+{
+  "track_name": "new_hampshire_motor_speedway_oval",
+  "display_name": "New Hampshire Motor Speedway - Oval",
+  "length_m": 1609.3,
+  "track_width_m": 12.0,
+  "aliases": [
+    "new_hampshire_motor_speedway_oval",
+    "new hampshire motor speedway - oval",
+    "131"
+  ],
+  "iracing_track_id": 131,
+  "view_box": "0 0 1920 1080",
+  "svg_path": "M1582.47,413a289.55,289.55,0,0,0-206.08-85.35H461a291.43,291.43,0,0,0,0,582.86h915.38A291.43,291.43,0,0,0,1582.47,413Z",
+  "svg_path_outside": "M1376.39,890.51H461c-149.67,0-271.43-121.76-271.43-271.43S311.34,347.65,461,347.65h915.38c149.67,0,271.44,121.76,271.44,271.43S1526.06,890.51,1376.39,890.51Z",
+  "start_finish": {
+    "line": "M912.89,863.69a5,5,0,0,0-5,5v61a5,5,0,0,0,10,0v-61A5,5,0,0,0,912.89,863.69Z",
+    "arrow": "M872.09,991.63h61.67l-13.61-32,87.79,37-87.79,37,13.61-32H872.09a5,5,0,0,1,0-10Z",
+    "point": {
+      "x": 907.89,
+      "y": 910.51,
+      "length": 2506.81
+    },
+    "direction": "anticlockwise"
+  },
+  "turns": [
+    {
+      "label": "1",
+      "name": "Turn 1",
+      "apex_pct": 0.174,
+      "x": 1562.49,
+      "y": 906.82,
+      "turn_number": 1
+    },
+    {
+      "label": "2",
+      "name": "Turn 2",
+      "apex_pct": 0.341,
+      "x": 1511.42,
+      "y": 338.29,
+      "turn_number": 2
+    },
+    {
+      "label": "3",
+      "name": "Turn 3",
+      "apex_pct": 0.675,
+      "x": 284.78,
+      "y": 350.83,
+      "turn_number": 3
+    },
+    {
+      "label": "4",
+      "name": "Turn 4",
+      "apex_pct": 0.832,
+      "x": 277.19,
+      "y": 905.92,
+      "turn_number": 4
+    }
+  ],
+  "turn_labels": []
+}

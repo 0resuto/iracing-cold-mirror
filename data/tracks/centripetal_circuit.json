@@ -1,0 +1,60 @@
+{
+  "track_name": "centripetal_circuit",
+  "display_name": "Centripetal Circuit",
+  "length_m": 500.0,
+  "track_width_m": 12.0,
+  "aliases": [
+    "centripetal_circuit",
+    "centripetal circuit",
+    "143"
+  ],
+  "iracing_track_id": 143,
+  "view_box": "0 0 1920 1080",
+  "svg_path": "M965.13,318.9c-126.71,0-229.8,103.08-229.8,229.79s103.09,229.8,229.8,229.8,229.8-103.09,229.8-229.8S1091.84,318.9,965.13,318.9Z",
+  "svg_path_outside": "m0,436.74c-114.11,0-207-92.84-207-206.95s92.84-207,207-207,206.95,92.84,206.95,207S1079.24,755.64,965.13,755.64Z",
+  "start_finish": {
+    "line": "M1466,553.3H968.63a5,5,0,1,1,0-10H1466a5,5,0,0,1,0,10Z",
+    "arrow": "M1391.4,511.12l-23-57.21,34.8.66L1336,387l-1.56,95.26,24.63-24.58,23,57.2a5,5,0,0,0,9.28-3.73Z",
+    "point": {
+      "x": 1194.88,
+      "y": 553.3,
+      "length": 1078.16
+    },
+    "direction": "anticlockwise"
+  },
+  "turns": [
+    {
+      "label": "1",
+      "name": "Turn 1",
+      "apex_pct": 0.13,
+      "x": 1364.19,
+      "y": 141.92,
+      "turn_number": 1
+    },
+    {
+      "label": "2",
+      "name": "Turn 2",
+      "apex_pct": 0.383,
+      "x": 548.35,
+      "y": 141.92,
+      "turn_number": 2
+    },
+    {
+      "label": "3",
+      "name": "Turn 3",
+      "apex_pct": 0.626,
+      "x": 548.35,
+      "y": 955.46,
+      "turn_number": 3
+    },
+    {
+      "label": "4",
+      "name": "Turn 4",
+      "apex_pct": 0.874,
+      "x": 1361.89,
+      "y": 955.46,
+      "turn_number": 4
+    }
+  ],
+  "turn_labels": []
+}

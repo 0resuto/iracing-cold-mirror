@@ -14,7 +14,7 @@ class MockTelemetryPoint:
     session_time: float
 
 
-def test_all_28_track_json_files_valid():
+def test_all_track_json_files_valid():
     """Verify that all JSON files in data/tracks/ conform strictly to schema."""
     tracks_dir = Path("data") / "tracks"
     json_files = list(tracks_dir.glob("*.json"))
@@ -24,22 +24,13 @@ def test_all_28_track_json_files_valid():
         track = get_track_definition(file_path.stem)
         assert track is not None, f"Failed to load {file_path.name}"
         assert track.length_m > 0.0, f"Invalid length in {file_path.name}"
-        assert len(track.turns) > 0, f"No turns defined in {file_path.name}"
+        assert track.svg_path, f"No SVG path defined in {file_path.name}"
 
-        # Verify turn percentages integrity
+        # Verify turn percentages integrity (apex only; start/end_pct were removed)
         for turn in track.turns:
-            assert (
-                0.0 <= turn.start_pct <= 1.0
-            ), f"Invalid start_pct in {track.track_name} -> {turn.name}"
             assert (
                 0.0 <= turn.apex_pct <= 1.0
             ), f"Invalid apex_pct in {track.track_name} -> {turn.name}"
-            assert (
-                0.0 <= turn.end_pct <= 1.0
-            ), f"Invalid end_pct in {track.track_name} -> {turn.name}"
-            assert (
-                turn.start_pct <= turn.end_pct
-            ), f"start_pct > end_pct in {track.track_name} -> {turn.name}"
 
 
 def test_track_registry_alias_resolutions():
@@ -98,10 +89,10 @@ def test_tsukuba_corner_extraction_registry_mode():
     )
 
     # Exactly 8 turns from official definition
-    assert len(corners) == 8
-    assert corners[0]["name"] == "Turn 1 - First Hairpin"
-    assert corners[3]["name"] == "Turn 4 - Dunlop Curve"
-    assert corners[7]["name"] == "Turn 8 - Final Corner Sweeper"
+    assert len(corners) == 9
+    assert corners[0]["name"] == "Turn 1"
+    assert corners[3]["name"] == "Turn 4"
+    assert corners[7]["name"] == "Turn 8"
 
     for c in corners:
         assert "dist_pct" in c

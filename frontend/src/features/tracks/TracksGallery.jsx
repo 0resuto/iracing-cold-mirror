@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useTracksListQuery } from '../../api/queries';
 import { TrackCard } from './TrackCard';
 import { TrackDetailModal } from './TrackDetailModal';
-import { Search, Map } from 'lucide-react';
+import { computeTrackGroups } from './trackGrouping';
+import { Search, Map, ChevronRight, Layers } from 'lucide-react';
 import { ProgressBar, Badge } from '@0resuto/ui-kit';
 
 export const TracksGallery = React.memo(function TracksGallery() {
@@ -12,6 +13,7 @@ export const TracksGallery = React.memo(function TracksGallery() {
   const [filterLength, setFilterLength] = useState('all'); // 'all' | 'short' | 'medium' | 'long' | 'turns'
   const [sortBy, setSortBy] = useState('name_asc'); // 'name_asc' | 'len_desc' | 'len_asc' | 'turns_desc'
   const [selectedTrack, setSelectedTrack] = useState(null);
+  const [collapsedParents, setCollapsedParents] = useState(() => new Set());
 
   // Filter & Sort Pipeline
   const filteredTracks = useMemo(() => {
@@ -45,6 +47,9 @@ export const TracksGallery = React.memo(function TracksGallery() {
         return 0;
       });
   }, [tracks, searchQuery, filterLength, sortBy]);
+
+  // Group configurations under their parent circuit
+  const groupedTracks = useMemo(() => computeTrackGroups(filteredTracks), [filteredTracks]);
 
   return (
     <div className="flex-1 w-full h-full flex flex-col bg-brand-bg text-brand-10 overflow-hidden select-none">
@@ -143,13 +148,71 @@ export const TracksGallery = React.memo(function TracksGallery() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredTracks.map((track) => (
-              <TrackCard
-                key={track.track_name}
-                track={track}
-                onSelect={(t) => setSelectedTrack(t.track_name)}
-              />
-            ))}
+            {groupedTracks.map((group) => {
+              const isMulti = group.items.length > 1;
+              const isCollapsed = isMulti && collapsedParents.has(group.parent);
+
+              if (!isMulti) {
+                return (
+                  <TrackCard
+                    key={group.parent}
+                    track={group.items[0]}
+                    onSelect={(t) => setSelectedTrack(t.track_name)}
+                  />
+                );
+              }
+
+              return (
+                <div
+                  key={group.parent}
+                  className="sm:col-span-2 lg:col-span-3 xl:col-span-4 flex flex-col gap-2"
+                >
+                  {/* Group Header */}
+                  <button
+                    onClick={() =>
+                      setCollapsedParents((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(group.parent)) next.delete(group.parent);
+                        else next.add(group.parent);
+                        return next;
+                      })
+                    }
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-white/10 bg-brand-bg-deep/70 hover:border-brand-30/40 hover:bg-brand-bg-deep/90 transition-all cursor-pointer text-left group/acc"
+                  >
+                    <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-brand-30/10 border border-brand-30/30 text-brand-30 flex-none">
+                      <Layers size={15} />
+                    </span>
+                    <span className="flex-1 min-w-0 text-sm font-bold text-slate-100 truncate group-hover/acc:text-brand-30 transition-colors">
+                      {group.parent}
+                    </span>
+                    <Badge variant="secondary" size="sm" className="font-mono text-[10px] flex-none">
+                      {group.items.length} configs
+                    </Badge>
+                    <ChevronRight
+                      size={16}
+                      className={`text-brand-10/50 transition-transform duration-200 flex-none ${
+                        isCollapsed ? 'rotate-0' : 'rotate-90'
+                      }`}
+                    />
+                  </button>
+
+                  {/* Group Body */}
+                  {!isCollapsed && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {group.items.map((track) => (
+                        <TrackCard
+                          key={track.track_name}
+                          track={track}
+                          displayName={track.display_name.replace(group.parent + ' - ', '')}
+                          hideSlug
+                          onSelect={(t) => setSelectedTrack(t.track_name)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

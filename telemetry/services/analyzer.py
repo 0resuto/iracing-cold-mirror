@@ -38,9 +38,12 @@ def extract_lap_corners(
 
     if track_def and track_def.turns:
         # Official Track Registry Definitions
+        apex_window = 0.02
         for turn in track_def.turns:
-            c_mask = (cur_pct >= turn.start_pct) & (cur_pct <= turn.end_pct)
-            r_mask = (ref_pct >= turn.start_pct) & (ref_pct <= turn.end_pct)
+            lo = max(0.0, turn.apex_pct - apex_window)
+            hi = min(1.0, turn.apex_pct + apex_window)
+            c_mask = (cur_pct >= lo) & (cur_pct <= hi)
+            r_mask = (ref_pct >= lo) & (ref_pct <= hi)
 
             c_indices = np.where(c_mask)[0]
             r_indices = np.where(r_mask)[0]

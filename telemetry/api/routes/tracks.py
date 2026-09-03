@@ -20,7 +20,6 @@ def list_tracks() -> List[TrackSummaryResponse]:
                 length_m=t.length_m,
                 turn_count=len(t.turns),
                 track_width_m=t.track_width_m,
-                has_centerline=len(t.centerline) > 0,
                 svg_path=t.svg_path,
             )
         )

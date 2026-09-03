@@ -8,6 +8,13 @@ import { Select, ProgressBar } from '@0resuto/ui-kit';
 import { buildTrackScene } from '../../utils/trackScene';
 import { buildColorSegments } from './colorSegments';
 import { useCarPosition } from './useCarPosition';
+import { getPathBounds, createTrackSampler, computeSimilarityTransform } from '../../features/tracks/trackGeometry';
+import {
+  TrackAsphaltRibbon,
+  TrackStartFinish,
+  TrackTurnLabels,
+  TrackTurnBadges,
+} from '../../features/tracks/TrackElements';
 
 const MIN_CAR_SCREEN_PX = 18;
 const BASE_CAR_PATH_LENGTH = 20;
@@ -61,7 +68,6 @@ export const TrackMap = React.memo(function TrackMap() {
     return buildTrackScene({
       refGpsPoints,
       lapGpsPoints,
-      centerlinePoints: trackDef?.centerline,
       trackWidthM: trackDef?.track_width_m,
       isLive,
     });
@@ -128,6 +134,93 @@ export const TrackMap = React.memo(function TrackMap() {
   }, [hoveredData, referenceData, svgData]);
 
   const refCarState = useCarPosition(resolvedRefCar?.currentData, resolvedRefCar?.prevData, svgData, refGpsPoints);
+
+  const trackBounds = useMemo(() => {
+    return trackDef?.svg_path ? getPathBounds(trackDef.svg_path) : null;
+  }, [trackDef]);
+
+  const trackSampler = useMemo(() => {
+    return trackDef ? createTrackSampler(trackDef) : null;
+  }, [trackDef]);
+
+  const schematicCarState = useMemo(() => {
+    if (!trackSampler) return { isValid: false };
+    const targetPct = hoveredData?.lap_dist_pct != null
+      ? parseFloat(hoveredData.lap_dist_pct)
+      : (lapData && lapData[0]?.lap_dist_pct != null ? parseFloat(lapData[0].lap_dist_pct) : 0);
+    const speed = hoveredData?.speed ?? (lapData && lapData[0]?.speed) ?? 0;
+    const res = trackSampler.getCoordAndHeading(targetPct);
+    return {
+      isValid: true,
+      x: res.x,
+      y: res.y,
+      headingAngle: res.headingDeg,
+      travelAngle: res.headingDeg,
+      speed,
+    };
+  }, [trackSampler, hoveredData, lapData]);
+
+  const schematicRefCarState = useMemo(() => {
+    if (!trackSampler || !referenceData || referenceData.length === 0) return { isValid: false };
+    let refPct = 0;
+    if (hoveredData?.session_time != null && lapData && lapData.length > 0) {
+      const curTime = hoveredData.session_time - lapData[0].session_time;
+      const refStartTime = referenceData[0].session_time;
+      let closest = referenceData[0];
+      let minDiff = Infinity;
+      for (const p of referenceData) {
+        const diff = Math.abs((p.session_time - refStartTime) - curTime);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = p;
+        }
+      }
+      refPct = closest?.lap_dist_pct || 0;
+    } else {
+      refPct = referenceData[0]?.lap_dist_pct || 0;
+    }
+
+    const res = trackSampler.getCoordAndHeading(refPct);
+    return {
+      isValid: true,
+      x: res.x,
+      y: res.y,
+      headingAngle: res.headingDeg,
+      travelAngle: res.headingDeg,
+      speed: 100,
+    };
+  }, [trackSampler, referenceData, hoveredData, lapData]);
+
+  const underlayTransform = useMemo(() => {
+    if (!trackDef?.svg_path_outside || !trackSampler || !svgData || !lapGpsPoints || lapGpsPoints.length < 10) {
+      return null;
+    }
+
+    const sampleCount = 60;
+    const srcPts = [];
+    const dstPts = [];
+
+    for (let i = 0; i < sampleCount; i++) {
+      const pct = i / sampleCount;
+      const ptSvg = trackSampler.getCoordAtPct(pct);
+
+      let closest = lapGpsPoints[0];
+      let minDiff = Infinity;
+      for (const p of lapGpsPoints) {
+        const diff = Math.abs((p.lap_dist_pct || 0) - pct);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = p;
+        }
+      }
+
+      const ptGps = svgData.projectToScreen(closest.lon, closest.lat);
+      srcPts.push(ptSvg);
+      dstPts.push(ptGps);
+    }
+
+    return computeSimilarityTransform(srcPts, dstPts);
+  }, [trackDef, trackSampler, svgData, lapGpsPoints]);
 
   const sectorBoundaries = useMemo(() => {
     if (!selectedLap || !selectedLap.sectors || selectedLap.sectors.length === 0 || !lapData || lapData.length === 0 || !svgData) return [];
@@ -240,10 +333,21 @@ export const TrackMap = React.memo(function TrackMap() {
   }, [svgData, zoomK, containerWidth]);
 
   const getAdaptiveCarScale = useCallback((k, svgDataObj, contWidth) => {
-    if (!svgDataObj) return 1;
-    const vbToScreen = (contWidth || 500) / svgDataObj.vbWidth;
+    const isSchematic = mapMode === 'schematic' && trackBounds;
+    const width = isSchematic ? trackBounds.vbWidth : (svgDataObj?.vbWidth || 1000);
+    const realisticScale = isSchematic ? (trackBounds.trackWidthVbUnits / 12) : (svgDataObj?.realisticCarScale || 1);
+    const vbToScreen = (contWidth || 500) / width;
     const minScaleForZoom = MIN_CAR_SCREEN_PX / (BASE_CAR_PATH_LENGTH * (vbToScreen || 0.5) * (k || 1));
-    return Math.max(svgDataObj.realisticCarScale, minScaleForZoom);
+    return Math.max(realisticScale, minScaleForZoom);
+  }, [mapMode, trackBounds]);
+
+  const handleMapModeChange = useCallback((newMode) => {
+    setMapMode(newMode);
+    if (svgRef.current && zoomBehaviorRef.current) {
+      d3Selection.select(svgRef.current).call(zoomBehaviorRef.current.transform, zoomIdentity);
+      zoomKRef.current = 1;
+      setZoomK(1);
+    }
   }, []);
 
   useEffect(() => {
@@ -361,7 +465,7 @@ export const TrackMap = React.memo(function TrackMap() {
           <Select
             size="sm"
             value={mapMode}
-            onChange={setMapMode}
+            onChange={handleMapModeChange}
             options={[
               { value: 'gps', label: 'GPS' },
               { value: 'schematic', label: 'Schematic' }
@@ -409,7 +513,7 @@ export const TrackMap = React.memo(function TrackMap() {
           <div className="w-full h-full flex items-center justify-center text-brand-10/60 text-sm font-mono tracking-widest">
             Select a lap to view map
           </div>
-        ) : svgData ? (
+        ) : (svgData || (mapMode === 'schematic' && trackBounds)) ? (
           <div className="w-full h-full cursor-grab active:cursor-grabbing absolute top-0 left-0">
             {/* Dynamic Map Scale Bar (Top-Left HUD) in GPS mode */}
             {mapMode === 'gps' && scaleBarInfo && (
@@ -438,18 +542,34 @@ export const TrackMap = React.memo(function TrackMap() {
               height="100%"
               shapeRendering="geometricPrecision"
               style={{ minHeight: '300px', cursor: 'grab' }}
-              viewBox={`0 0 ${svgData.vbWidth} ${svgData.vbHeight}`}
+              viewBox={mapMode === 'schematic' && trackBounds ? trackBounds.viewBox : `0 0 ${svgData?.vbWidth || 1000} ${svgData?.vbHeight || 1000}`}
               preserveAspectRatio="xMidYMid meet"
             >
               <g ref={gRef}>
                 {/* Background rect to catch pointer events for panning everywhere */}
-                <rect width={svgData.vbWidth} height={svgData.vbHeight} fill="transparent" />
+                <rect
+                  x={mapMode === 'schematic' && trackBounds ? trackBounds.vbX : 0}
+                  y={mapMode === 'schematic' && trackBounds ? trackBounds.vbY : 0}
+                  width={mapMode === 'schematic' && trackBounds ? trackBounds.vbWidth : (svgData?.vbWidth || 1000)}
+                  height={mapMode === 'schematic' && trackBounds ? trackBounds.vbHeight : (svgData?.vbHeight || 1000)}
+                  fill="transparent"
+                />
 
                 {mapMode === 'gps' ? (
                   <>
+                    {/* Official Track Surface Underlay (aligned to GPS via similarity transform) */}
+                    {underlayTransform && trackDef && (
+                      <g transform={underlayTransform} opacity="0.35">
+                        <TrackAsphaltRibbon
+                          trackDef={trackDef}
+                          trackWidthVbUnits={trackBounds?.trackWidthVbUnits}
+                        />
+                      </g>
+                    )}
+
                     {/* Reference Lap Trajectory */}
                     <path
-                      d={svgData.basePath}
+                      d={svgData?.basePath}
                       fill="none"
                       stroke="rgba(56, 189, 248, 0.45)"
                       strokeWidth="1.5"
@@ -476,7 +596,7 @@ export const TrackMap = React.memo(function TrackMap() {
                       </g>
                     ) : (
                       <path
-                        d={svgData.lapPath}
+                        d={svgData?.lapPath}
                         fill="none"
                         stroke="var(--color-accent-red)"
                         strokeWidth="1.5"
@@ -486,55 +606,21 @@ export const TrackMap = React.memo(function TrackMap() {
                       />
                     )}
 
-                    {/* Ghost Reference Car */}
-                    {renderCar(refCarState, 'var(--color-slate-500)')}
-                  </>
-                ) : (
-                  <>
-                    {/* Official Physical Track Asphalt Ribbon (Real road geometry from OSM / Registry) */}
-                    <path
-                      d={svgData.centerlinePath || svgData.basePath || svgData.lapPath}
-                      fill="none"
-                      stroke="rgba(148, 163, 184, 0.25)"
-                      strokeWidth={svgData.trackWidthVbUnits + 1}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d={svgData.centerlinePath || svgData.basePath || svgData.lapPath}
-                      fill="none"
-                      stroke="rgba(30, 41, 59, 0.85)"
-                      strokeWidth={svgData.trackWidthVbUnits}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-
-                    {/* Geometric Centerline of the Physical Road */}
-                    <path
-                      d={svgData.centerlinePath || svgData.basePath || svgData.lapPath}
-                      fill="none"
-                      stroke="rgba(226, 232, 240, 0.4)"
-                      strokeWidth="1"
-                      strokeDasharray="4 6"
-                      vectorEffect="non-scaling-stroke"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-
-                    {/* Actual Driven Racing Line */}
-                    {svgData.lapPath && (
-                      <path
-                        d={svgData.lapPath}
-                        fill="none"
-                        stroke="var(--color-accent-red)"
+                    {/* Sector Boundaries */}
+                    {sectorBoundaries.map((boundary, i) => (
+                      <circle
+                        key={`sector-${i}`}
+                        cx={boundary.x}
+                        cy={boundary.y}
+                        r="4"
+                        fill="var(--color-brand-bg-deep)"
+                        stroke="var(--color-accent-blue)"
                         strokeWidth="1.5"
                         vectorEffect="non-scaling-stroke"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
                       />
-                    )}
+                    ))}
 
-                    {/* Official Turn Number Badges */}
+                    {/* Turn markers in GPS */}
                     {turnMarkers.map((turn, i) => (
                       <g key={`turn-${i}`} transform={`translate(${turn.x}, ${turn.y})`}>
                         <circle
@@ -552,29 +638,43 @@ export const TrackMap = React.memo(function TrackMap() {
                           fill="#f8fafc"
                           className="font-mono select-none pointer-events-none"
                         >
-                          {turn.turn_number}
+                          {turn.label || turn.turn_number}
                         </text>
                       </g>
                     ))}
+
+                    {/* Ghost Reference Car */}
+                    {renderCar(refCarState, 'var(--color-slate-500)', 0.5)}
+                    {/* Primary Car */}
+                    {renderCar(carState, 'var(--color-accent-red)', 1.0)}
+                  </>
+                ) : (
+                  <>
+                    {/* Official Real 2D Asphalt Ribbon */}
+                    <TrackAsphaltRibbon
+                      trackDef={trackDef}
+                      trackWidthVbUnits={trackBounds?.trackWidthVbUnits}
+                    />
+
+                    {/* Official Start/Finish Line & Arrow */}
+                    <TrackStartFinish startFinish={trackDef?.start_finish} />
+
+                    {/* Official Turn Name Labels */}
+                    <TrackTurnLabels turnLabels={trackDef?.turn_labels} />
+
+                    {/* Official Turn Badges */}
+                    <TrackTurnBadges
+                      turnMarkers={trackDef?.turns}
+                      badgeRadius={Math.max((trackBounds?.trackWidthVbUnits || 14) * 0.85, 9)}
+                    />
+
+                    {/* Ghost Reference Car on Official Track */}
+                    {renderCar(schematicRefCarState, 'var(--color-slate-500)', 0.5)}
+
+                    {/* Primary Car on Official Track */}
+                    {renderCar(schematicCarState, 'var(--color-accent-red)', 1.0)}
                   </>
                 )}
-
-                {/* Sector Boundaries */}
-                {sectorBoundaries.map((boundary, i) => (
-                  <circle
-                    key={`sector-${i}`}
-                    cx={boundary.x}
-                    cy={boundary.y}
-                    r="4"
-                    fill="var(--color-brand-bg-deep)"
-                    stroke="var(--color-accent-blue)"
-                    strokeWidth="1.5"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                ))}
-
-                {/* Car Position and Vectors */}
-                {renderCar(carState, 'var(--color-accent-red)', mapMode === 'schematic' ? 1.0 : 0.5)}
               </g>
             </svg>
           </div>

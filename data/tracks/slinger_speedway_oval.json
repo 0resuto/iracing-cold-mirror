@@ -1,0 +1,60 @@
+{
+  "track_name": "slinger_speedway_oval",
+  "display_name": "Slinger Speedway - Oval",
+  "length_m": 500.0,
+  "track_width_m": 12.0,
+  "aliases": [
+    "slinger_speedway_oval",
+    "slinger speedway - oval",
+    "500"
+  ],
+  "iracing_track_id": 500,
+  "view_box": "0 0 1920 1080",
+  "svg_path": "m1156.04,723.6h-352.74c-90.59,0-164.3-73.7-164.3-164.3s73.7-164.3,164.3-164.3h352.74c90.59,0,164.3,73.7,164.3,164.3s-73.7,164.3-164.3,164.3Z",
+  "svg_path_outside": "m-352.74-308.6c-79.57,0-144.3,64.73-144.3,144.3s64.73,144.3,144.3,144.3h352.74c79.57,0,144.3-64.73,144.3-144.3s-64.73-144.3-144.3-144.3h-352.74Z",
+  "start_finish": {
+    "line": "M948.9,672l23.7-19.3L950,632l99.4,22.8L948.9,672zM993.3,750.6l10,0.1l0.5-70l-10-0.1L993.3,750.6z",
+    "arrow": "M948.9,672l23.7-19.3L950,632l99.4,22.8L948.9,672zM993.3,750.6l10,0.1l0.5-70l-10-0.1L993.3,750.6z",
+    "point": {
+      "x": 1003.49,
+      "y": 723.6,
+      "length": 152.55
+    },
+    "direction": "clockwise"
+  },
+  "turns": [
+    {
+      "label": "1",
+      "name": "Turn 1",
+      "apex_pct": 0.163,
+      "x": 1287.45,
+      "y": 695.32,
+      "turn_number": 1
+    },
+    {
+      "label": "2",
+      "name": "Turn 2",
+      "apex_pct": 0.301,
+      "x": 1297.25,
+      "y": 443.69,
+      "turn_number": 2
+    },
+    {
+      "label": "3",
+      "name": "Turn 3",
+      "apex_pct": 0.679,
+      "x": 641.72,
+      "y": 443.69,
+      "turn_number": 3
+    },
+    {
+      "label": "4",
+      "name": "Turn 4",
+      "apex_pct": 0.801,
+      "x": 702.67,
+      "y": 647.45,
+      "turn_number": 4
+    }
+  ],
+  "turn_labels": []
+}

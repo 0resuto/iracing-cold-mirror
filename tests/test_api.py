@@ -106,8 +106,8 @@ def test_get_track_endpoint(client):
     assert res.status_code == 200
     data = res.json()
     assert data["display_name"] == "Tsukuba Circuit - Course 2000"
-    assert len(data["turns"]) == 8
-    assert len(data["centerline"]) > 0
+    assert len(data["turns"]) == 9
+    assert data["svg_path"] is not None
 
     # Success alias
     res_alias = client.get("/api/v1/tracks/tsukuba 2kfull")

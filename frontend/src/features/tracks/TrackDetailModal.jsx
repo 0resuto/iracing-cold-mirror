@@ -1,6 +1,12 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useTrackQuery } from '../../api/queries';
-import { buildTrackScene } from '../../utils/trackScene';
+import { getPathBounds } from './trackGeometry';
+import {
+  TrackAsphaltRibbon,
+  TrackStartFinish,
+  TrackTurnLabels,
+  TrackTurnBadges,
+} from './TrackElements';
 import { Button, Badge, ProgressBar } from '@0resuto/ui-kit';
 import { X, Tag, Compass } from 'lucide-react';
 import * as d3Selection from 'd3-selection';
@@ -12,32 +18,42 @@ export const TrackDetailModal = React.memo(function TrackDetailModal({ trackName
   const svgRef = useRef(null);
   const gRef = useRef(null);
   const [selectedTurn, setSelectedTurn] = useState(null);
+  const turnRefs = useRef({});
 
-  // Build SVG Scene projection from official centerline
-  const svgData = useMemo(() => {
-    if (!trackDef?.centerline || trackDef.centerline.length < 3) return null;
-    return buildTrackScene({
-      refGpsPoints: null,
-      lapGpsPoints: null,
-      centerlinePoints: trackDef.centerline,
-      trackWidthM: trackDef.track_width_m || 12.0,
-      isLive: false,
-    });
+  // Auto-scroll the sidebar list to the selected turn
+  useEffect(() => {
+    if (selectedTurn && turnRefs.current[selectedTurn.turn_number]) {
+      turnRefs.current[selectedTurn.turn_number].scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [selectedTurn]);
+
+  // Official iRacing SVG geometry with pixel-perfect coordinates
+  const activeScene = useMemo(() => {
+    if (!trackDef?.svg_path) return null;
+    const bounds = getPathBounds(trackDef.svg_path);
+
+    const markers = (trackDef.turns || []).map(turn => ({
+      ...turn,
+      x: turn.x,
+      y: turn.y,
+    }));
+
+    return {
+      viewBox: bounds.viewBox,
+      vbWidth: bounds.vbWidth,
+      vbHeight: bounds.vbHeight,
+      vbX: bounds.vbX,
+      vbY: bounds.vbY,
+      pathD: trackDef.svg_path,
+      trackWidthVbUnits: bounds.trackWidthVbUnits,
+      turnMarkers: markers,
+    };
   }, [trackDef]);
 
-  // Project turn apexes
-  const turnMarkers = useMemo(() => {
-    if (!trackDef?.turns || !trackDef.centerline || !svgData) return [];
-    const n = trackDef.centerline.length;
-    return trackDef.turns.map(turn => {
-      // Map apex_pct to node index in centerline
-      const idx = Math.min(Math.floor(turn.apex_pct * n), n - 1);
-      const node = trackDef.centerline[idx];
-      if (!node) return null;
-      const pt = svgData.projectToScreen(node.lon, node.lat);
-      return { ...turn, x: pt.x, y: pt.y };
-    }).filter(Boolean);
-  }, [trackDef, svgData]);
+  const turnMarkers = activeScene?.turnMarkers || [];
 
   // Setup D3 Zoom & Pan
   useEffect(() => {
@@ -57,7 +73,7 @@ export const TrackDetailModal = React.memo(function TrackDetailModal({ trackName
     return () => {
       svgEl.on('.zoom', null);
     };
-  }, [svgData]);
+  }, [activeScene]);
 
   if (!trackName) return null;
 
@@ -108,85 +124,43 @@ export const TrackDetailModal = React.memo(function TrackDetailModal({ trackName
                 <ProgressBar value={100} pulse size="sm" className="w-40" />
                 <span className="text-xs font-mono">Loading geometry...</span>
               </div>
-            ) : svgData ? (
+            ) : activeScene ? (
               <svg
                 ref={svgRef}
                 width="100%"
                 height="100%"
                 shapeRendering="geometricPrecision"
-                viewBox={`0 0 ${svgData.vbWidth} ${svgData.vbHeight}`}
+                viewBox={activeScene.viewBox}
                 preserveAspectRatio="xMidYMid meet"
                 className="w-full h-full"
               >
                 <g ref={gRef}>
-                  <rect width={svgData.vbWidth} height={svgData.vbHeight} fill="transparent" />
-
-                  {/* Asphalt Outer Border */}
-                  <path
-                    d={svgData.centerlinePath}
-                    fill="none"
-                    stroke="rgba(148, 163, 184, 0.25)"
-                    strokeWidth={svgData.trackWidthVbUnits + 1}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                  <rect
+                    x={activeScene.vbX}
+                    y={activeScene.vbY}
+                    width={activeScene.vbWidth}
+                    height={activeScene.vbHeight}
+                    fill="transparent"
                   />
 
-                  {/* 12m Asphalt Ribbon */}
-                  <path
-                    d={svgData.centerlinePath}
-                    fill="none"
-                    stroke="rgba(30, 41, 59, 0.9)"
-                    strokeWidth={svgData.trackWidthVbUnits}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                  {/* Real 2D Asphalt Track Ribbon */}
+                  <TrackAsphaltRibbon
+                    trackDef={trackDef}
+                    trackWidthVbUnits={activeScene.trackWidthVbUnits}
                   />
 
-                  {/* Geometric Road Centerline */}
-                  <path
-                    d={svgData.centerlinePath}
-                    fill="none"
-                    stroke="rgba(226, 232, 240, 0.5)"
-                    strokeWidth="1.2"
-                    strokeDasharray="4 6"
-                    vectorEffect="non-scaling-stroke"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                  {/* Official Start/Finish Line & Direction Arrow */}
+                  <TrackStartFinish startFinish={trackDef?.start_finish} />
 
-                  {/* Turn Badges */}
-                  {turnMarkers.map((turn, i) => {
-                    const isHovered = selectedTurn?.turn_number === turn.turn_number;
-                    return (
-                      <g
-                        key={`turn-${i}`}
-                        transform={`translate(${turn.x}, ${turn.y})`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedTurn(turn);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <circle
-                          r={isHovered ? 9 : 7}
-                          fill={isHovered ? "var(--color-brand-30)" : "rgba(15, 23, 42, 0.95)"}
-                          stroke={isHovered ? "white" : "var(--color-slate-400)"}
-                          strokeWidth={isHovered ? 1.5 : 0.8}
-                          vectorEffect="non-scaling-stroke"
-                          className="transition-all duration-150"
-                        />
-                        <text
-                          y="2.5"
-                          textAnchor="middle"
-                          fontSize="6"
-                          fontWeight="bold"
-                          fill={isHovered ? "#0f172a" : "#f8fafc"}
-                          className="font-mono select-none pointer-events-none"
-                        >
-                          {turn.turn_number}
-                        </text>
-                      </g>
-                    );
-                  })}
+                  {/* Official Turn Name Labels */}
+                  <TrackTurnLabels turnLabels={trackDef?.turn_labels} />
+
+                  {/* Official Turn Badges */}
+                  <TrackTurnBadges
+                    turnMarkers={turnMarkers}
+                    selectedTurnNumber={selectedTurn?.turn_number}
+                    onSelectTurn={setSelectedTurn}
+                  />
                 </g>
               </svg>
             ) : (
@@ -219,28 +193,26 @@ export const TrackDetailModal = React.memo(function TrackDetailModal({ trackName
                   return (
                     <div
                       key={turn.turn_number}
+                      ref={(el) => {
+                        turnRefs.current[turn.turn_number] = el;
+                      }}
                       onClick={() => setSelectedTurn(turn)}
                       className={`p-2.5 rounded-lg border transition-all cursor-pointer text-left ${
                         isSelected
-                          ? 'bg-brand-30/15 border-brand-30/50 shadow-sm'
+                          ? 'bg-brand-30/15 border-brand-30/50 shadow-sm ring-1 ring-brand-30/30'
                           : 'bg-white/5 border-white/5 hover:border-white/20 hover:bg-white/10'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
                           <span className="w-5 h-5 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-[10px] font-mono text-brand-30">
-                            {turn.turn_number}
+                            {turn.label || turn.turn_number}
                           </span>
                           {turn.name}
                         </span>
-                        <Badge variant="outline" size="sm" className="text-[9px] uppercase font-mono px-1.5 py-0.5">
-                          {turn.turn_type}
-                        </Badge>
-                      </div>
-                      <div className="mt-1.5 text-[10px] font-mono text-brand-10/50 flex items-center justify-between">
-                        <span>Entry: {(turn.start_pct * 100).toFixed(1)}%</span>
-                        <span>Apex: {(turn.apex_pct * 100).toFixed(1)}%</span>
-                        <span>Exit: {(turn.end_pct * 100).toFixed(1)}%</span>
+                        <span className="text-[10px] font-mono text-brand-30/80 px-1.5 py-0.5 rounded bg-brand-30/10 border border-brand-30/20">
+                          #{turn.label || turn.turn_number}
+                        </span>
                       </div>
                     </div>
                   );

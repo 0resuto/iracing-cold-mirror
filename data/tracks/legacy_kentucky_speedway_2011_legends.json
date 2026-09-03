@@ -1,0 +1,60 @@
+{
+  "track_name": "legacy_kentucky_speedway_2011_legends",
+  "display_name": "[Legacy] Kentucky Speedway - 2011 - Legends",
+  "length_m": 500.0,
+  "track_width_m": 12.0,
+  "aliases": [
+    "legacy_kentucky_speedway_2011_legends",
+    "[legacy] kentucky speedway - 2011 - legends",
+    "189"
+  ],
+  "iracing_track_id": 189,
+  "view_box": "0 0 1920 1080",
+  "svg_path": "M1039.74,175.94H897.48c-33.08,0-60,29.85-60,66.53S864.4,309,897.48,309h142.26c33.08,0,60-29.84,60-66.53S1072.82,175.94,1039.74,175.94Z",
+  "svg_path_outside": "m0,113.06H897.48c-22.06,0-40-20.87-40-46.53s17.94-46.53,40-46.53h142.26c22.06,0,40,20.88,40,46.53S1061.8,289,1039.74,289Z",
+  "start_finish": {
+    "line": "M960.67,221.46a5,5,0,0,1-5-5v-61a5,5,0,1,1,10,0v61A5,5,0,0,1,960.67,221.46Z",
+    "arrow": "M960.67,221.46a5,5,0,0,1-5-5v-61a5,5,0,1,1,10,0v61A5,5,0,0,1,960.67,221.46Z",
+    "point": {
+      "x": 965.67,
+      "y": 175.94,
+      "length": 74.07
+    },
+    "direction": "anticlockwise"
+  },
+  "turns": [
+    {
+      "label": "1",
+      "name": "Turn 1",
+      "apex_pct": 0.195,
+      "x": 819.94,
+      "y": 199.71,
+      "turn_number": 1
+    },
+    {
+      "label": "2",
+      "name": "Turn 2",
+      "apex_pct": 0.349,
+      "x": 849.92,
+      "y": 336.03,
+      "turn_number": 2
+    },
+    {
+      "label": "3",
+      "name": "Turn 3",
+      "apex_pct": 0.623,
+      "x": 1062.52,
+      "y": 337.31,
+      "turn_number": 3
+    },
+    {
+      "label": "4",
+      "name": "Turn 4",
+      "apex_pct": 0.805,
+      "x": 1098.15,
+      "y": 196.34,
+      "turn_number": 4
+    }
+  ],
+  "turn_labels": []
+}

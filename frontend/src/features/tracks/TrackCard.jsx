@@ -3,8 +3,9 @@ import { TrackMiniPreview } from './TrackMiniPreview';
 import { Badge } from '@0resuto/ui-kit';
 import { MapPin, Milestone, Maximize2 } from 'lucide-react';
 
-export const TrackCard = React.memo(function TrackCard({ track, onSelect }) {
+export const TrackCard = React.memo(function TrackCard({ track, onSelect, displayName, hideSlug = false }) {
   const lengthKm = (track.length_m / 1000).toFixed(2);
+  const title = displayName ?? track.display_name;
 
   return (
     <div
@@ -14,12 +15,14 @@ export const TrackCard = React.memo(function TrackCard({ track, onSelect }) {
       {/* Top Details & Badges */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-1.5 text-xs text-brand-10/50 font-mono">
-            <MapPin size={12} className="text-brand-30 flex-none" />
-            <span className="truncate">{track.track_name}</span>
-          </div>
+          {!hideSlug && (
+            <div className="flex items-center gap-1.5 text-xs text-brand-10/50 font-mono">
+              <MapPin size={12} className="text-brand-30 flex-none" />
+              <span className="truncate">{track.track_name}</span>
+            </div>
+          )}
           <h3 className="text-sm font-bold text-slate-100 group-hover:text-brand-30 transition-colors line-clamp-1 mt-0.5">
-            {track.display_name}
+            {title}
           </h3>
         </div>
 
@@ -33,8 +36,11 @@ export const TrackCard = React.memo(function TrackCard({ track, onSelect }) {
 
       {/* Interactive Vector Preview */}
       <div className="w-full h-36 my-2 px-3 py-2 flex items-center justify-center bg-black/20 rounded-lg border border-white/5 group-hover:border-brand-30/20 transition-all relative overflow-hidden">
-        <div className="w-28 h-28 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-          <TrackMiniPreview svgPath={track.svg_path} />
+        <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+          <TrackMiniPreview
+            svgPath={track.svg_path}
+            strokeWidth={Math.max(1.8, Math.min(3.8, ((track.track_width_m || 12.0) / 12.0) * 2.5))}
+          />
         </div>
       </div>
 

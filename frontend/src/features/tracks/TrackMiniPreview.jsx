@@ -1,11 +1,14 @@
-﻿import React from 'react';
+import React, { useMemo } from 'react';
+import { getPathBounds } from './trackGeometry';
 
 /**
- * Renders a lightweight normalized SVG preview of a race track.
- * Uses the precomputed 0 0 100 100 viewBox SVG path.
+ * Renders a lightweight SVG preview of a race track.
+ * Auto-scales any SVG path bounds to fit perfectly inside its container.
  */
-export const TrackMiniPreview = React.memo(function TrackMiniPreview({ svgPath, className = '', strokeWidth = 2.5 }) {
-  if (!svgPath) {
+export const TrackMiniPreview = React.memo(function TrackMiniPreview({ svgPath, className = '', strokeWidth }) {
+  const bounds = useMemo(() => getPathBounds(svgPath), [svgPath]);
+
+  if (!svgPath || !bounds) {
     return (
       <div className={`w-full h-full flex items-center justify-center text-brand-10/30 text-xs font-mono ${className}`}>
         No preview
@@ -13,9 +16,11 @@ export const TrackMiniPreview = React.memo(function TrackMiniPreview({ svgPath, 
     );
   }
 
+  const effectiveWidth = strokeWidth || Math.max((bounds.vbWidth + bounds.vbHeight) * 0.014, 12);
+
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox={bounds.viewBox}
       className={`w-full h-full overflow-visible transition-transform duration-300 ${className}`}
       preserveAspectRatio="xMidYMid meet"
     >
@@ -24,7 +29,7 @@ export const TrackMiniPreview = React.memo(function TrackMiniPreview({ svgPath, 
         d={svgPath}
         fill="none"
         stroke="rgba(56, 189, 248, 0.2)"
-        strokeWidth={strokeWidth + 3}
+        strokeWidth={effectiveWidth * 1.5}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -34,7 +39,7 @@ export const TrackMiniPreview = React.memo(function TrackMiniPreview({ svgPath, 
         d={svgPath}
         fill="none"
         stroke="var(--color-brand-30, #38bdf8)"
-        strokeWidth={strokeWidth}
+        strokeWidth={effectiveWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
       />

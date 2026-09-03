@@ -1,0 +1,60 @@
+{
+  "track_name": "williams_grove_speedway",
+  "display_name": "Williams Grove Speedway",
+  "length_m": 804.7,
+  "track_width_m": 12.0,
+  "aliases": [
+    "williams_grove_speedway",
+    "williams grove speedway",
+    "274"
+  ],
+  "iracing_track_id": 274,
+  "view_box": "0 0 1920 1080",
+  "svg_path": "M1840.85,441.29a344,344,0,0,0-317.1-210.19H393.15a344.17,344.17,0,1,0,0,688.33h1130.6a344.34,344.34,0,0,0,317.1-478.14Z",
+  "svg_path_outside": "m-317.1,398.14H393.15C247.49,839.43,129,720.92,129,575.26S247.49,311.1,393.15,311.1h1130.6c145.66,0,264.16,118.51,264.16,264.16S1669.41,839.43,1523.75,839.43Z",
+  "start_finish": {
+    "line": "M1062.4,940.75a5,5,0,0,0,5-5v-104a5,5,0,0,0-10,0v104A5,5,0,0,0,1062.4,940.75Z",
+    "arrow": "M1170.53,980.5l-87.78-37,13.6,32h-61.67a5,5,0,0,0,0,10h61.67l-13.6,32Z",
+    "point": {
+      "x": 1057.4,
+      "y": 919.43,
+      "length": 3282.91
+    },
+    "direction": "anticlockwise"
+  },
+  "turns": [
+    {
+      "label": "1",
+      "name": "Turn 1",
+      "apex_pct": 0.151,
+      "x": 1734.44,
+      "y": 893.74,
+      "turn_number": 1
+    },
+    {
+      "label": "2",
+      "name": "Turn 2",
+      "apex_pct": 0.299,
+      "x": 1747.6,
+      "y": 286.8,
+      "turn_number": 2
+    },
+    {
+      "label": "3",
+      "name": "Turn 3",
+      "apex_pct": 0.67,
+      "x": 112.27,
+      "y": 316.95,
+      "turn_number": 3
+    },
+    {
+      "label": "4",
+      "name": "Turn 4",
+      "apex_pct": 0.79,
+      "x": 123.67,
+      "y": 856.06,
+      "turn_number": 4
+    }
+  ],
+  "turn_labels": []
+}

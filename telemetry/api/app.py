@@ -39,7 +39,7 @@ tags_metadata = [
     },
     {
         "name": "Tracks",
-        "description": "Track definitions, corner geometries, and road centerlines.",
+        "description": "Track definitions, corner geometries, and SVG layouts.",
     },
 ]
 
