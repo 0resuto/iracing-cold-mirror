@@ -5,8 +5,9 @@ import {
 import { useAppStore } from '../store/useAppStore';
 import { useTelemetryData } from '../features/telemetry/useTelemetryData';
 import { Select, Button, Badge } from '@0resuto/ui-kit';
-import { Search } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 import { TelemetrySubChart } from './TelemetrySubChart';
+import { SessionSelectModal } from './sidebar/SessionSelectModal';
 
 const FastDot = (props) => {
   const { cx, cy, stroke, fill } = props;
@@ -218,6 +219,7 @@ const DeltaBrushOverlay = React.memo(({ mergedData, setBrushRange }) => {
 
 export const TelemetryChart = React.memo(function TelemetryChart() {
   const [activeChart, setActiveChart] = React.useState('speed');
+  const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
   const setIsUserHovering = useAppStore(state => state.setIsUserHovering);
   const setReferenceLapId = useAppStore(state => state.setReferenceLapId);
   const { lapData, referenceData, deltaData, selectedLap, activeRefId, players } = useTelemetryData();
@@ -447,16 +449,32 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
       <div className="flex flex-wrap justify-between items-center mb-0 pb-0 border-b-0 flex-none gap-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap min-h-[38px]">
             {selectedLap ? (
-              <div className="flex items-center gap-2 flex-none">
-                <span className="text-xs sm:text-sm font-bold text-brand-10 flex-none">
-                  Lap {selectedLap.lap_number}
-                </span>
-                <span className="text-[11px] font-mono font-bold text-brand-10/80 flex-none">
-                  {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Outlap'}
-                </span>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsSelectModalOpen(true)}
+                className="flex items-center gap-2 flex-none px-2.5 py-1 rounded-lg bg-brand-60/80 hover:bg-brand-60 border border-brand-10/10 hover:border-brand-30/50 text-brand-10 transition-all cursor-pointer group active:scale-[0.98] shadow-sm"
+                title="Select track, session or lap"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs sm:text-sm font-bold text-brand-10 flex-none">
+                    Lap {selectedLap.lap_number}
+                  </span>
+                  <span className="text-[11px] font-mono font-bold text-brand-10/80 flex-none">
+                    {selectedLap.lap_time > 0 ? selectedLap.lap_time.toFixed(2) + 's' : 'Outlap'}
+                  </span>
+                </div>
+                <ChevronDown size={14} className="text-brand-10/50 group-hover:text-brand-10 transition-colors" />
+              </button>
             ) : (
-              <h2 className="text-xs uppercase tracking-wider text-brand-10/80 font-extrabold m-0 flex-none">Telemetry Analysis</h2>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsSelectModalOpen(true)}
+                rightIcon={<ChevronDown size={14} />}
+                className="text-xs font-bold uppercase tracking-wider"
+              >
+                Select Track & Session
+              </Button>
             )}
             {availableLaps.length > 0 && (() => {
                 let bestLapId = null;
@@ -600,6 +618,11 @@ export const TelemetryChart = React.memo(function TelemetryChart() {
         ))}
 
       </div>
+
+      <SessionSelectModal
+        isOpen={isSelectModalOpen}
+        onClose={() => setIsSelectModalOpen(false)}
+      />
     </div>
   );
 });

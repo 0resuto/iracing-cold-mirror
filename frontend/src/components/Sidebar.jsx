@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useHistoryQuery, useIdealLapQuery } from '../api/queries';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Timer, Radio, Settings, AlertCircle, RefreshCw, Map, Menu, ChevronLeft } from 'lucide-react';
+import { Timer, Radio, Settings, AlertCircle, RefreshCw, Map, Menu, ChevronLeft, Table2 } from 'lucide-react';
 import { Button, Rail, Drawer } from '@0resuto/ui-kit';
 
 import { LiveStreamPanel } from './sidebar/LiveStreamPanel';
@@ -10,6 +10,7 @@ import { SystemPanel } from './sidebar/SystemPanel';
 import { FilterControls } from './sidebar/FilterControls';
 import { PlayerItem } from './sidebar/PlayerItem';
 import { SectorsWidget } from './sidebar/SectorsWidget';
+import { SessionSelectModal } from './sidebar/SessionSelectModal';
 
 export const Sidebar = React.memo(function Sidebar() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export const Sidebar = React.memo(function Sidebar() {
   const selectedLapId = selectedLap?.id || null;
 
   // Filter & Search State
+  const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPlayer, setFilterPlayer] = useState('all');
   const [filterTrack, setFilterTrack] = useState('all');
@@ -277,6 +279,16 @@ export const Sidebar = React.memo(function Sidebar() {
       >
         {isHistory ? (
           <div className="flex flex-col gap-4">
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<Table2 size={13} className="text-brand-30" />}
+              onClick={() => setIsSelectModalOpen(true)}
+              className="w-full justify-center text-xs font-semibold h-8"
+            >
+              Open Table View
+            </Button>
+
             <FilterControls
               processedPlayers={processedPlayers}
               searchQuery={searchQuery}
@@ -361,6 +373,10 @@ export const Sidebar = React.memo(function Sidebar() {
           <SystemPanel />
         ) : null}
       </Drawer>
+      <SessionSelectModal
+        isOpen={isSelectModalOpen}
+        onClose={() => setIsSelectModalOpen(false)}
+      />
     </>
   );
 });
